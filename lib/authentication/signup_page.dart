@@ -1,16 +1,29 @@
 import 'package:flutter/material.dart';
-import '../home.dart';
+import 'package:homebased_project/authentication/login_page.dart';
+import 'package:homebased_project/widgets/confirmation_dialog.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class SignUpPage extends StatefulWidget {
+  const SignUpPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<SignUpPage> createState() => _SignUpPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  void _showLogoutDialog() async {
+    String textBody = 'Go back to log in page?';
+    final confirmed = await showLogoutConfirmation(context, textBody);
+    if (!mounted) return; // make sure widget is still mounted
+    if (confirmed) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -19,16 +32,11 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _handleLogin() {
+  void _handleSignUp() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => MyHomePage()),
+      MaterialPageRoute(builder: (context) => LoginPage()),
     );
-  }
-
-  void _handleSignUp() {
-    // Replace with real sign-up logic
-    debugPrint('Sign up pressed');
   }
 
   Widget _buildTextField({
@@ -46,16 +54,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildLoginButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: _handleLogin,
-        child: const Text('Log in'),
-      ),
-    );
-  }
-
   Widget _buildSignUpButton() {
     return SizedBox(
       width: double.infinity,
@@ -66,23 +64,17 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildDividerLabel(String text) {
-    return Row(
-      children: [
-        const Expanded(child: Divider(thickness: 1)),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Text(text, style: TextStyle(color: Colors.grey[600])),
-        ),
-        const Expanded(child: Divider(thickness: 1)),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Log in / Sign up')),
+      appBar: AppBar(
+        title: const Text('Sign up'),
+        leading: IconButton(
+          icon: const Icon(Icons.backspace_rounded),
+          onPressed: _showLogoutDialog,
+          tooltip: 'Back',
+        ),
+      ),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -99,10 +91,6 @@ class _LoginPageState extends State<LoginPage> {
                 label: 'Password',
                 obscureText: true,
               ),
-              const SizedBox(height: 24),
-              _buildLoginButton(),
-              const SizedBox(height: 24),
-              _buildDividerLabel("OR"),
               const SizedBox(height: 24),
               _buildSignUpButton(),
             ],

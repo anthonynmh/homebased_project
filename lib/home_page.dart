@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'authentication/login.dart';
-import 'widgets/logout_dialog.dart';
+import 'package:homebased_project/authentication/login_page.dart';
+import 'package:homebased_project/widgets/confirmation_dialog.dart';
 
 class MyHomePage extends StatefulWidget {
   @override
@@ -11,7 +11,9 @@ class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 1;
 
   void _showLogoutDialog() async {
-    final confirmed = await showLogoutConfirmation(context);
+    String textBody = 'Are you sure you want to log out?';
+    final confirmed = await showLogoutConfirmation(context, textBody);
+    if (!mounted) return; // make sure widget is still mounted
     if (confirmed) {
       Navigator.pushReplacement(
         context,
