@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'login.dart';
+import 'authentication/login.dart';
 import 'widgets/logout_dialog.dart';
 
 class MyHomePage extends StatefulWidget {
