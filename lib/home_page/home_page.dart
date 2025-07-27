@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
-import 'login.dart';
-import 'widgets/logout_dialog.dart';
+import 'package:provider/provider.dart';
+import 'package:homebased_project/providers/auth_state.dart';
+import 'package:homebased_project/landing_page/landing_page.dart';
+import 'package:homebased_project/widgets/confirmation_dialog.dart';
 
 class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key});
+
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
@@ -10,28 +14,49 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 1;
 
-  void _showLogoutDialog() async {
-    final confirmed = await showLogoutConfirmation(context);
-    if (confirmed) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
+  void _logout() async {
+    final authState = Provider.of<AuthState>(context, listen: false);
+
+    try {
+      await authState.auth0?.webAuthentication().logout(
+        useHTTPS: false,
+      ); // TODO: set to true for deployment
+    } catch (e) {
+      print('Logout error: $e');
     }
+
+    authState.clear();
+
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LandingPage()),
+    );
+  }
+
+  void _showLogoutDialog() async {
+    final confirmed = await showLogoutConfirmation(
+      context,
+      'Are you sure you want to log out?',
+    );
+    if (confirmed) _logout();
   }
 
   @override
   Widget build(BuildContext context) {
+    // final credentials = Provider.of<AuthState>(context).credentials;
+
     Widget page;
+
     switch (_selectedIndex) {
       case 0:
-        page = const Placeholder();
+        page = const Center(child: Placeholder(fallbackHeight: 200));
         break;
       case 1:
-        page = const Placeholder();
+        page = const Center(child: Placeholder(fallbackHeight: 200));
         break;
       case 2:
-        page = const Placeholder();
+        page = const Center(child: Placeholder(fallbackHeight: 200));
         break;
       default:
         throw UnimplementedError('No page for index $_selectedIndex');
@@ -48,7 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
       ),
-      body: Center(child: page),
+      body: page,
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
@@ -56,7 +81,6 @@ class _MyHomePageState extends State<MyHomePage> {
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Theme.of(context).colorScheme.primary,
         onTap: (value) {
           setState(() {
             _selectedIndex = value;
