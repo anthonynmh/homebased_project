@@ -26,13 +26,10 @@ class _MyHomePageState extends State<MyHomePage> {
     switch (_selectedIndex) {
       case 0:
         page = const Placeholder();
-        break;
       case 1:
         page = const Placeholder();
-        break;
       case 2:
         page = const Placeholder();
-        break;
       default:
         throw UnimplementedError('No page for index $_selectedIndex');
     }
