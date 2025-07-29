@@ -6,9 +6,9 @@ plugins {
 }
 
 android {
-    namespace = "com.homebased-project.app"
+    namespace = "com.example.homebased_project"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -30,9 +30,12 @@ android {
         versionName = flutter.versionName
         // For Auth0
         // manifestPlaceholders += [auth0Domain: "dev-vltrrhemn7q01gih.us.auth0.com", auth0Scheme: "https"]
-        manifestPlaceholders = [
-            'appAuthRedirectScheme': "com.homebased-project.app"
-        ]
+        manifestPlaceholders.putAll(
+            mutableMapOf(
+                "auth0Domain" to "dev-vltrrhemn7q01gih.us.auth0.com",
+                "auth0Scheme" to "com.example.homebased_project"
+            )
+        )
     }
 
     buildTypes {
