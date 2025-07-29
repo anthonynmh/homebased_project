@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
-import 'login.dart';
+import 'package:provider/provider.dart';
+import 'package:homebased_project/landing_page/landing_page.dart';
+import 'package:homebased_project/providers/auth_state.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(create: (_) => AuthState(), child: const MyApp()),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -15,7 +19,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
       ),
-      home: const LoginPage(),
+      home: const LandingPage(),
     );
   }
 }
