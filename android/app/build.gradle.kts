@@ -32,7 +32,7 @@ android {
         manifestPlaceholders.putAll(
             mapOf(
                 "auth0Domain" to "dev-vltrrhemn7q01gih.us.auth0.com",
-                "auth0Scheme" to "http"
+                "auth0Scheme" to "demo"
             )
         )
     }
