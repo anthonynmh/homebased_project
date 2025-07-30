@@ -18,9 +18,9 @@ class _MyHomePageState extends State<MyHomePage> {
     final authState = Provider.of<AuthState>(context, listen: false);
 
     try {
-      await authState.auth0?.webAuthentication().logout(
-        useHTTPS: false,
-      ); // TODO: set to true for deployment
+      await authState.auth0
+          ?.webAuthentication(scheme: "demo")
+          .logout(useHTTPS: false); // TODO: set to true for deployment
     } catch (e) {
       print('Logout error: $e');
     }

@@ -25,9 +25,11 @@ class _LandingPageState extends State<LandingPage> {
 
   Future<void> _handleAuth0Login() async {
     try {
-      final credentials = await auth0.webAuthentication().login(
-        useHTTPS: false, // TODO: set to true for production
-      );
+      final credentials = await auth0
+          .webAuthentication(scheme: "demo")
+          .login(
+            useHTTPS: true, // TODO: set to true for production
+          );
 
       if (!mounted) return;
 
