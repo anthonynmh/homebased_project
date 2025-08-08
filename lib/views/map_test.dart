@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:homebased_project/models/location.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -11,47 +12,39 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
+  final Color _markerColor = Color.fromARGB(255, 230, 87, 30);
 
   // List of locations that are displayed as markers
-  final List<Map<String, dynamic>> _locations = [
-    {
-      "name": "Clementi",
-      "coords": LatLng(1.3162, 103.7649),
-      "color": Colors.red
-    },
-    {
-      "name": "National University of Singapore",
-      "coords": LatLng(1.2976, 103.7767),
-      "color": Colors.green
-    },
+
+  final List<Location> _locations = [
+    Location(name: "Clementi", latitude: 1.3162, longitude: 103.7649),
+    Location(name: "National University of Singapore", latitude: 1.2976, longitude: 103.7767),
   ];
 
-  // Function to add new markers, currently random
-  void _addLocation() {
+  // Function to add new random marker
+  void _addRandomLocation() {
     setState(() {
-      _locations.add({
-        "name": "Random Place #${_locations.length + 1}",
-        "coords": LatLng(
-          1.3162 + (0.01 * _locations.length),
-          103.7649 + (0.01 * _locations.length),
-        ),
-        "color": Colors.purple,
-      });
+      _locations.add(Location(
+        name: "Random Place #${_locations.length + 1}",
+        latitude: 1.3162 + (0.01 * _locations.length),
+        longitude: 103.7649 + (0.01 * _locations.length),
+      ));
     });
   }
 
-  // void _addLocation() {
-  //   setState(() {
-  //     _locations.add({
-  //       "name": "Random Place #${_locations.length + 1}",
-  //       "coords": LatLng(
-  //         1.3162 + (0.01 * _locations.length),
-  //         103.7649 + (0.01 * _locations.length),
-  //       ),
-  //       "color": Colors.purple,
-  //     });
-  //   });
-  // }
+  // Function to add a new location marker
+  void addLocation({Location? location, String? name, double? lat, double? lng}) {
+  setState(() {
+    if (location != null) {
+      _locations.add(location);
+    } else if (name != null && lat != null && lng != null) {
+      _locations.add(Location(name: name, latitude: lat, longitude: lng));
+    } else {
+      // Throw error
+    }
+  });
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +54,7 @@ class _MapScreenState extends State<MapScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add_location_alt),
-            onPressed: _addLocation,
+            onPressed: _addRandomLocation,
           )
         ],
       ),
@@ -79,18 +72,18 @@ class _MapScreenState extends State<MapScreen> {
           MarkerLayer(
             markers: _locations.map((location) {
               return Marker(
-                point: location["coords"],
+                point: location.getLatLng(),
                 width: 80,
                 height: 80,
                 child: GestureDetector(
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(location["name"])),
+                      SnackBar(content: Text(location.name)),
                     );
                   },
                   child: Icon(
                     Icons.location_on,
-                    color: location["color"],
+                    color: _markerColor,
                     size: 40,
                   ),
                 ),
