@@ -19,13 +19,34 @@ class _MapScreenState extends State<MapScreen> {
       body: FlutterMap(
         mapController: _mapController,
         options: MapOptions(
-          initialCenter: LatLng(1.290270, 103.851959), // Singapore
+          initialCenter: LatLng(1.3404, 103.7090), // Singapore
           initialZoom: 13.0,
         ),
         children: [
           TileLayer(
             urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
             userAgentPackageName: 'com.example.app',
+          ),
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: LatLng(1.3404, 103.7090), 
+                width: 80,
+                height: 80,
+                child: GestureDetector(
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('This is Jurong West!')),
+                    );
+                  },
+                  child: Icon(
+                    Icons.location_on,
+                    color: Colors.red,
+                    size: 40,
+                  ),
+                )
+              )
+            ]
           ),
         ],
       ),
