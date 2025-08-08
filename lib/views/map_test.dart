@@ -11,6 +11,8 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
+
+  // List of locations that are displayed as markers
   final List<Map<String, dynamic>> _locations = [
     {
       "name": "Clementi",
@@ -24,6 +26,7 @@ class _MapScreenState extends State<MapScreen> {
     },
   ];
 
+  // Function to add new markers, currently random
   void _addLocation() {
     setState(() {
       _locations.add({
@@ -36,6 +39,19 @@ class _MapScreenState extends State<MapScreen> {
       });
     });
   }
+
+  // void _addLocation() {
+  //   setState(() {
+  //     _locations.add({
+  //       "name": "Random Place #${_locations.length + 1}",
+  //       "coords": LatLng(
+  //         1.3162 + (0.01 * _locations.length),
+  //         103.7649 + (0.01 * _locations.length),
+  //       ),
+  //       "color": Colors.purple,
+  //     });
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {

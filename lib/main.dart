@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:homebased_project/views/map_test.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -67,8 +66,7 @@ class MyApp extends StatelessWidget {
           titleLarge: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
         ),
       ),
-      home: const MapScreen(),
-      // home: const LandingPage(),
+      home: const LandingPage(),
     );
   }
 }
