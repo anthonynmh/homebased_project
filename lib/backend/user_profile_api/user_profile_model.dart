@@ -1,19 +1,35 @@
 class UserProfile {
-  final String id;
+  final int id;
+  final String auth0Sub;
   final String name;
-  final String? avatarUrl;
+  final String email;
+  final String? profilePhotoUrl;
 
-  UserProfile({required this.id, required this.name, this.avatarUrl});
+  UserProfile({
+    required this.id,
+    required this.auth0Sub,
+    required this.name,
+    required this.email,
+    this.profilePhotoUrl,
+  });
 
   factory UserProfile.fromMap(Map<String, dynamic> map) {
     return UserProfile(
-      id: map['id'] as String,
+      id: map['id'] as int,
+      auth0Sub: map['auth0_sub'] as String,
       name: map['name'] as String,
-      avatarUrl: map['avatar_url'] as String?,
+      email: map['email'] as String,
+      profilePhotoUrl: map['profile_photo_url'] as String?,
     );
   }
 
   Map<String, dynamic> toMap() {
-    return {'id': id, 'username': name, 'avatar_url': avatarUrl};
+    return {
+      'id': id,
+      'auth0_sub': auth0Sub,
+      'name': name,
+      'email': email,
+      'profile_photo_url': profilePhotoUrl,
+    };
   }
 }

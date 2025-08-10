@@ -1,15 +1,24 @@
 import 'package:auth0_flutter/auth0_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import 'package:homebased_project/providers/auth_state.dart';
 import 'package:homebased_project/home_page/home_page.dart';
-// import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
+import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
 
 class AuthService {
-  static final Auth0 _auth0 = Auth0(
-    'dev-vltrrhemn7q01gih.us.auth0.com',
-    'bdduBcs7SNMc7MZG4RjIcuGoH4uV0Szn',
-  );
+  static final auth0Domain = dotenv.env['AUTH0_DOMAIN'] ?? '';
+  static final auth0ClientId = dotenv.env['AUTH0_CLIENT_ID'] ?? '';
+
+  static final Auth0 _auth0 = _createAuth0();
+
+  static Auth0 _createAuth0() {
+    if (auth0Domain.isEmpty || auth0ClientId.isEmpty) {
+      throw Exception('AUTH0_DOMAIN or AUTH0_CLIENT_ID is missing in .env');
+    }
+    return Auth0(auth0Domain, auth0ClientId);
+  }
 
   /// Handles Auth0 login and creates a profile only for new signups
   static Future<void> login(BuildContext context) async {
@@ -34,22 +43,21 @@ class AuthService {
         return;
       }
 
-      // // Check if user profile already exists in Supabase
-      // final existingProfile = await UserProfileService.getProfileByAuth0Sub(
-      //   auth0Sub,
-      // );
+      // Check if user profile already exists in Supabase
+      final existingProfile = await UserProfileService.getProfileByAuth0Sub(
+        auth0Sub,
+      );
 
-      // if (existingProfile == null) {
-      //   // First time signup → create profile
-      //   await UserProfileService.createProfileFromAuth0(
-      //     auth0Sub: auth0Sub,
-      //     email: email,
-      //     name: credentials.user.name ?? '',
-      //   );
-      //   debugPrint("New user profile created for $email");
-      // } else {
-      //   debugPrint("User already has a profile, skipping creation.");
-      // }
+      if (existingProfile == null) {
+        // First time signup → create profile
+        await UserProfileService.createProfileFromAuth0(
+          auth0Sub: auth0Sub,
+          email: email,
+        );
+        print("New user profile created for $email");
+      } else {
+        print("User already has a profile, skipping creation.");
+      }
 
       // Navigate to home page
       if (context.mounted) {
