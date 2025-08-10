@@ -1,0 +1,102 @@
+import 'package:flutter/material.dart';
+
+class BusinessNamePage extends StatefulWidget {
+  final String name;
+  final ValueChanged<String> onNameChanged;
+  final VoidCallback onNext;
+
+  BusinessNamePage({
+    required this.name,
+    required this.onNameChanged,
+    required this.onNext,
+  });
+
+  @override
+  State<BusinessNamePage> createState() => _BusinessNamePageState();
+}
+
+class _BusinessNamePageState extends State<BusinessNamePage> {
+  late TextEditingController _nameController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.name);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  void _handleNext() {
+    widget.onNameChanged(_nameController.text);
+    widget.onNext();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          SizedBox(height: 40),
+          SizedBox(
+            height: 87,
+            width: 325,
+            child: Text(
+              'Looking to start your own business? Great! What would you like to name it?',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
+              softWrap: true,
+              overflow: TextOverflow.visible,
+              maxLines: 3,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          SizedBox(height: 200),
+          Center(
+            child: SizedBox(
+              width: 314,
+              child: TextField(
+                controller: _nameController,
+                style: TextStyle(fontSize: 16),
+                decoration: InputDecoration(
+                  hintText: 'Enter business name...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(40),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(40),
+                    borderSide: BorderSide(color: Colors.grey),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(40),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                  contentPadding: EdgeInsets.symmetric(
+                    vertical: 20,
+                    horizontal: 24,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: 80),
+          Center(
+            child: SizedBox(
+              width: 237, // Set your desired width
+              height: 74, // Set your desired height
+              child: ElevatedButton(
+                onPressed: _handleNext,
+                child: Text('Continue', style: TextStyle(fontSize: 27)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
