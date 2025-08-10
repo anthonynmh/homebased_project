@@ -28,25 +28,36 @@ class UserProfileService {
       // created_at and profile_photo_url handled by DB defaults
     };
 
-    final res = await _client.from(table).insert(profile);
+    try {
+      final res = await _client
+          .from(table)
+          .insert(profile)
+          .select()
+          .single(); // Throws if > 1 or 0 rows
 
-    if (res.error != null) {
-      print('Insert failed: ${res.error!.message}');
-    } else {
-      print('Profile created');
+      print('Profile created: $res');
+    } on PostgrestException catch (e) {
+      print('Insert failed: ${e.message}');
+    } catch (e) {
+      print('Unexpected error: $e');
     }
   }
 
   /// Get profile by Auth0 sub (unique user ID)
   static Future<UserProfile?> getProfileByAuth0Sub(String auth0Sub) async {
-    final res = await _client
-        .from(table)
-        .select()
-        .eq('auth0_sub', auth0Sub)
-        .maybeSingle();
+    try {
+      final res = await _client
+          .from(table)
+          .select()
+          .eq('auth0_sub', auth0Sub)
+          .maybeSingle();
 
-    if (res == null) return null;
-    return UserProfile.fromMap(res);
+      if (res == null) return null;
+      return UserProfile.fromMap(res);
+    } catch (e) {
+      print('supabase lookup error: $e');
+      return null;
+    }
   }
 
   /// Upload avatar image to Supabase storage and return public URL
