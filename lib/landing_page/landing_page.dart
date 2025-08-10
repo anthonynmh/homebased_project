@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:auth0_flutter/auth0_flutter.dart';
+import 'package:homebased_project/views/widget_tree.dart';
 import 'package:provider/provider.dart';
 import 'package:homebased_project/providers/auth_state.dart';
 import 'package:homebased_project/home_page/home_page.dart';
@@ -86,7 +87,13 @@ class _LandingPageState extends State<LandingPage> {
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 48),
                 ),
-                onPressed: _handleAuth0Login,
+                //onPressed: _handleAuth0Login,
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const WidgetTree()),
+                  );
+                },
               ),
             ],
           ),
