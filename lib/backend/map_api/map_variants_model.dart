@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:homebased_project/backend/map_api/marker_profile_model.dart';
+import 'package:homebased_project/backend/business_profile_api/business_profile_model.dart';
 import 'package:latlong2/latlong.dart';
 import 'map_base_model.dart';
 
@@ -50,10 +50,11 @@ class _SingleMarkerMapState extends State<SingleMarkerMap> {
   }
 }
 
+// A map variant that displays a list of static, interactable markers
 class MultiMarkerMap extends StatelessWidget {
   final LatLng initialCenter;
   final double zoom;
-  final List<MarkerProfile> markerProfiles;
+  final List<BusinessProfile> markerProfiles;
 
   const MultiMarkerMap({
     super.key,
@@ -67,8 +68,9 @@ class MultiMarkerMap extends StatelessWidget {
     return MapBase(
       initialCenter: initialCenter,
       markers: markerProfiles
+          .where((profile) => profile.latitude != null && profile.longitude != null) // Only display profiles with location
           .map((profile) => Marker(
-                point: profile.getLatLng(),
+                point: LatLng(profile.latitude!, profile.longitude!),
                 width: 80,
                 height: 80,
                 child: const Icon(Icons.location_on, color: Colors.blue, size: 30),
