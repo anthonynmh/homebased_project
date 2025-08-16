@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:homebased_project/backend/map_api/map_base_model.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:homebased_project/backend/map_api/map_service.dart';
 import 'package:homebased_project/backend/map_api/location_model.dart';
@@ -26,9 +24,9 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Dynamic Markers Map"),
+        title: const Text("Single Marker Map"),
       ),
-      body: MapBase(initialCenter: _sampleCenter),
+      body: MapService.getSingleMarkerMap(initialCenter: _sampleCenter),
     );
   }
 }

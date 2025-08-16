@@ -1,0 +1,51 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'map_base_model.dart';
+
+// A map that allows the user to place or update a single marker by tapping on the map.
+class SingleMarkerMap extends StatefulWidget {
+  final LatLng initialCenter;
+  final double zoom;
+  final Function(LatLng)? onMarkerChanged; // Callback function for when the marker position changes
+
+  const SingleMarkerMap({
+    super.key,
+    required this.initialCenter,
+    this.zoom = MapBase.defaultZoom,
+    this.onMarkerChanged,
+  });
+
+  @override
+  State<SingleMarkerMap> createState() => _SingleMarkerMapState();
+}
+
+class _SingleMarkerMapState extends State<SingleMarkerMap> {
+  LatLng? _markerPosition;
+
+  @override
+  Widget build(BuildContext context) {
+    return MapBase(
+      initialCenter: widget.initialCenter,
+      initialZoom: widget.zoom,
+      dynamicMarkerPosition: _markerPosition,
+      markers: [
+        Marker(
+          point: _markerPosition == null ? widget.initialCenter : _markerPosition!,
+          width: 80,
+          height: 80,
+          child: const Icon(Icons.location_on, color: Colors.red, size: 40),
+        ),
+      ],
+      onTap: (latlng) {
+        setState(() {
+          _markerPosition = latlng;
+        });
+        if (widget.onMarkerChanged != null) {
+          widget.onMarkerChanged!(latlng);
+        }
+      },
+    );
+  }
+}
+
