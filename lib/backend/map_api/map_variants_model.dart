@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:homebased_project/backend/map_api/marker_profile_model.dart';
 import 'package:latlong2/latlong.dart';
 import 'map_base_model.dart';
 
@@ -49,3 +50,30 @@ class _SingleMarkerMapState extends State<SingleMarkerMap> {
   }
 }
 
+class MultiMarkerMap extends StatelessWidget {
+  final LatLng initialCenter;
+  final double zoom;
+  final List<MarkerProfile> markerProfiles;
+
+  const MultiMarkerMap({
+    super.key,
+    required this.initialCenter,
+    this.zoom = MapBase.defaultZoom,
+    required this.markerProfiles,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return MapBase(
+      initialCenter: initialCenter,
+      markers: markerProfiles
+          .map((profile) => Marker(
+                point: profile.getLatLng(),
+                width: 80,
+                height: 80,
+                child: const Icon(Icons.location_on, color: Colors.blue, size: 30),
+              ))
+          .toList(),
+    );
+  }
+}

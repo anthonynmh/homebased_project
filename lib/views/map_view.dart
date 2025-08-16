@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:homebased_project/backend/map_api/map_service.dart';
-import 'package:homebased_project/backend/map_api/location_model.dart';
+import 'package:homebased_project/backend/map_api/marker_profile_model.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -12,9 +12,9 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   // Sample list of locations that are displayed as markers
-  final List<Location> _locations = [
-    Location(name: "Clementi", latitude: 1.3162, longitude: 103.7649),
-    Location(name: "National University of Singapore", latitude: 1.2976, longitude: 103.7767),
+  final List<MarkerProfile> _locations = [
+    MarkerProfile(name: "Clementi", latitude: 1.3162, longitude: 103.7649),
+    MarkerProfile(name: "National University of Singapore", latitude: 1.2976, longitude: 103.7767),
   ];
 
   // Sample initial center 
@@ -24,9 +24,22 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Single Marker Map"),
+        title: const Text("Multi Marker Map"),
       ),
-      body: MapService.getSingleMarkerMap(initialCenter: _sampleCenter),
+      body: MapService.getMultiMarkerMap(
+        initialCenter: _sampleCenter,
+        markerProfiles: _locations,
+      ),
     );
   }
+  // @override
+  // Widget build(BuildContext context) {
+  //   return Scaffold(
+  //     appBar: AppBar(
+  //       title: const Text("Single Marker Map"),
+  //     ),
+  //     body: MapService.getSingleMarkerMap(initialCenter: _sampleCenter),
+  //   );
+  // }
+  
 }

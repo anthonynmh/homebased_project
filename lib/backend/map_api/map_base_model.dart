@@ -8,7 +8,7 @@ class MapBase extends StatelessWidget {
   final double initialZoom;
   final LatLng? dynamicMarkerPosition;
   final void Function(LatLng)? onTap;
-  static const double defaultZoom = 10.0;
+  static const double defaultZoom = 12.0;
 
   const MapBase({
     super.key,
