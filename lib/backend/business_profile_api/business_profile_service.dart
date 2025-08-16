@@ -14,24 +14,31 @@ class BusinessProfileService {
     final user = _client.auth.currentUser;
     if (user == null) return null;
 
-    return await _client
-        .from(table)
-        .select()
-        .eq('id', user.id)
-        .single()
-        .then((res) {
-          if (res.data == null) {
-            print(
-              'Failed to get business profile: ${res.status} ${res.statusText}',
-            );
-            return null;
-          }
-          return BusinessProfile.fromMap(res.data);
-        })
-        .catchError((error) {
-          print('Error getting profile: $error');
-          return null;
-        });
+    try {
+      final res = await _client
+          .from(table)
+          .select()
+          .eq('id', user.id)
+          .single(); // Returns a Map<String, dynamic>
+
+      // Old API: PostgrestResponse with `data` property
+      // New API: Directly returns Map<String, dynamic>
+      // The following code handles both instances for version safety, with some VScode complaints
+      final Map<String, dynamic>? data = 
+        (res is Map<String, dynamic>) ? res : (res as dynamic).data;
+
+      if (data == null) {
+        final status = (res is Map) ? null : (res as dynamic).status;
+        final statusText = (res is Map) ? null : (res as dynamic).statusText;
+        print('Failed to get business profile: $status $statusText');
+        return null;
+      }
+
+      return BusinessProfile.fromMap(data);
+    } catch (error) {
+      print('Error getting profile: $error');
+      return null;
+    }
   }
 
   static Future<void> upsertProfile(BusinessProfile profile) async {
