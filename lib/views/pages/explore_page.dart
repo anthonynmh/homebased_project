@@ -6,6 +6,6 @@ class ExplorePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(child: MapScreen());
+    return Center(child: MultiMapScreen());
   }
 }

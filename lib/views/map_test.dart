@@ -5,7 +5,8 @@ void main() {
   runApp(
     MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: MapScreen(), 
+      // home: MultiMapScreen(),
+      home: SingleMapScreen(), 
     ),
   );
 }

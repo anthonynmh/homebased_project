@@ -55,12 +55,14 @@ class MultiMarkerMap extends StatelessWidget {
   final LatLng initialCenter;
   final double zoom;
   final List<BusinessProfile> markerProfiles;
+  final Function(BusinessProfile)? onMarkerTapped; // Callback function called when a marker is tapped
 
   const MultiMarkerMap({
     super.key,
     required this.initialCenter,
     this.zoom = MapBase.defaultZoom,
     required this.markerProfiles,
+    this.onMarkerTapped,
   });
 
   @override
@@ -73,7 +75,18 @@ class MultiMarkerMap extends StatelessWidget {
                 point: LatLng(profile.latitude!, profile.longitude!),
                 width: 80,
                 height: 80,
-                child: const Icon(Icons.location_on, color: Colors.blue, size: 30),
+                child: GestureDetector(
+                  onTap: () {
+                    if (onMarkerTapped != null) {
+                      onMarkerTapped!(profile);
+                    }
+                  },
+                  child: const Icon(
+                    Icons.location_on,
+                    color: Colors.blue,
+                    size: 30,
+                  ),
+                ),
               ))
           .toList(),
     );

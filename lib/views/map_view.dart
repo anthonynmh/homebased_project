@@ -3,14 +3,16 @@ import 'package:homebased_project/backend/business_profile_api/business_profile_
 import 'package:latlong2/latlong.dart';
 import 'package:homebased_project/backend/map_api/map_service.dart';
 
-class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
+
+// Test screen for multimarkermap
+class MultiMapScreen extends StatefulWidget {
+  const MultiMapScreen({super.key});
 
   @override
-  State<MapScreen> createState() => _MapScreenState();
+  State<MultiMapScreen> createState() => _MultiMapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _MultiMapScreenState extends State<MultiMapScreen> {
   // Sample list of profiles that are used to showcase the type of inputs the MapService takes
   final List<BusinessProfile> _sampleProfiles = [
     BusinessProfile(
@@ -47,7 +49,13 @@ class _MapScreenState extends State<MapScreen> {
 
   // Sample initial center 
   final LatLng _sampleCenter = LatLng(1.3162, 103.7649);
-
+  
+  // Sample callback function for when a marker is clicked in the map
+  void _sampleCallback(BusinessProfile profile) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(profile.businessName)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,19 +67,33 @@ class _MapScreenState extends State<MapScreen> {
       body: MapService.getMultiMarkerMap(
         initialCenter: _sampleCenter,
         markerProfiles: _sampleProfiles,
+        onMarkerTapped: _sampleCallback,
       ),
     );
-
-  // Test for SingleMarkerMap
-  //  return Scaffold(
-  //     appBar: AppBar(
-  //       title: const Text("Single Marker Map"),
-  //     ),
-  //     body: MapService.getSingleMarkerMap(initialCenter: _sampleCenter),
-  //   );
   }
+}
 
 
+// Test screen for singlemarkermap
+class SingleMapScreen extends StatefulWidget {
+  const SingleMapScreen({super.key});
 
-  
+  @override
+  State<SingleMapScreen> createState() => _SingleMapScreenState();
+}
+
+class _SingleMapScreenState extends State<SingleMapScreen> {
+  // Sample initial center 
+  final LatLng _sampleCenter = LatLng(1.3162, 103.7649);
+
+  @override
+  Widget build(BuildContext context) {
+    // Test for SingleMarkerMap
+   return Scaffold(
+      appBar: AppBar(
+        title: const Text("Single Marker Map"),
+      ),
+      body: MapService.getSingleMarkerMap(initialCenter: _sampleCenter),
+    );
+  }
 }

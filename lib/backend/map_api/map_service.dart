@@ -19,10 +19,12 @@ class MapService {
   static Widget getMultiMarkerMap({
     required LatLng initialCenter,
     required List<BusinessProfile> markerProfiles,
+    void Function(BusinessProfile)? onMarkerTapped,
   }) {
     return MultiMarkerMap(
       initialCenter: initialCenter,
       markerProfiles: markerProfiles,
+      onMarkerTapped: onMarkerTapped,
     );
   }
 }
