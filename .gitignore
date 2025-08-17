@@ -46,3 +46,9 @@ app.*.map.json
 
 # Env 
 .env
+
+# Ignore Xcode user-specific and signing config
+ios/Runner.xcodeproj/project.pbxproj
+ios/Runner.xcodeproj/xcuserdata/
+ios/Runner.xcworkspace/xcuserdata/
+
