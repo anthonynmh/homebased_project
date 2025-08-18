@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import 'package:homebased_project/landing_page/landing_page.dart';
-import 'package:homebased_project/providers/auth_state.dart' as auth_provider;
+import 'package:homebased_project/login_page/login_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,15 +10,9 @@ Future<void> main() async {
   await _loadAndValidateEnv();
   await _initializeSupabase();
 
-  runApp(
-    ChangeNotifierProvider(
-      create: (_) => auth_provider.AuthState(),
-      child: const MyApp(),
-    ),
-  );
+  runApp(const MyApp());
 }
 
-/// Loads .env file and validates required variables
 Future<void> _loadAndValidateEnv() async {
   try {
     await dotenv.load(fileName: ".env");
@@ -28,10 +20,7 @@ Future<void> _loadAndValidateEnv() async {
     throw Exception(".env file not found in the project root.");
   }
 
-  const requiredKeys = [
-    'NEXT_PUBLIC_SUPABASE_URL',
-    'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-  ];
+  const requiredKeys = ['SUPABASE_URL', 'SUPABASE_ANON_KEY'];
 
   for (final key in requiredKeys) {
     if ((dotenv.env[key] ?? '').isEmpty) {
@@ -40,10 +29,9 @@ Future<void> _loadAndValidateEnv() async {
   }
 }
 
-/// Initializes Supabase with env variables
 Future<void> _initializeSupabase() async {
-  final supabaseUrl = dotenv.env['NEXT_PUBLIC_SUPABASE_URL']!;
-  final supabaseAnonKey = dotenv.env['NEXT_PUBLIC_SUPABASE_ANON_KEY']!;
+  final supabaseUrl = dotenv.env['SUPABASE_URL']!;
+  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY']!;
 
   await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
 }
@@ -66,7 +54,7 @@ class MyApp extends StatelessWidget {
           titleLarge: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
         ),
       ),
-      home: const LandingPage(),
+      home: const LoginPage(),
     );
   }
 }
