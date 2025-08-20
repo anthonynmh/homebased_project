@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:homebased_project/models/business_profile.dart';
-import 'package:homebased_project/views/pages/business_address_page.dart';
+import 'package:homebased_project/views/pages/business_description_page.dart';
 import 'package:homebased_project/views/pages/business_images_page.dart';
 import 'package:homebased_project/views/pages/business_name_page.dart';
 import 'package:homebased_project/views/pages/business_product_type_page.dart';
-import 'package:homebased_project/views/pages/profile_page.dart';
 import 'package:homebased_project/views/widget_tree.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -18,7 +17,7 @@ class _BusinessProfileTreeState extends State<BusinessProfileTree> {
   BusinessProfile profile = BusinessProfile(
     name: '',
     productType: '',
-    address: '',
+    description: '',
     imagePaths: null,
   );
   int currentStep = 0;
@@ -41,9 +40,9 @@ class _BusinessProfileTreeState extends State<BusinessProfileTree> {
     });
   }
 
-  void updateAddress(String address) {
+  void updateDescription(String description) {
     setState(() {
-      profile.address = address;
+      profile.description = description;
     });
   }
 
@@ -95,9 +94,9 @@ class _BusinessProfileTreeState extends State<BusinessProfileTree> {
         onProductTypeChanged: updateProductType,
         onNext: nextStep,
       ),
-      BusinessAddressPage(
-        address: profile.address,
-        onAddressChanged: updateAddress,
+      BusinessDescriptionPage(
+        address: profile.description,
+        onAddressChanged: updateDescription,
         onNext: nextStep,
       ),
       BusinessImagesPage(
@@ -113,23 +112,48 @@ class _BusinessProfileTreeState extends State<BusinessProfileTree> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Create Your HBB'),
+        centerTitle: true,
         leading: currentStep > 0
-            ? IconButton(icon: Icon(Icons.arrow_back), onPressed: previousStep)
+            ? Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ElevatedButton(
+                  onPressed: previousStep,
+                  style: ElevatedButton.styleFrom(
+                    shape: CircleBorder(),
+                    padding: EdgeInsets.all(10),
+                    backgroundColor: Colors.white, // button background
+                    elevation: 3, // shadow depth
+                  ),
+                  child: Icon(
+                    Icons.arrow_back,
+                    color: Colors.black,
+                  ), // back arrow icon
+                ),
+              )
             : null,
         actions: [
-          IconButton(
-            icon: Icon(Icons.close),
-            onPressed: () {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => WidgetTree()),
-                (route) => false,
-              );
-            },
+          Padding(
+            padding: const EdgeInsets.all(0),
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => WidgetTree()),
+                  (route) => false,
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                shape: CircleBorder(),
+                padding: EdgeInsets.all(10),
+                backgroundColor: Colors.white,
+                elevation: 3,
+              ),
+              child: Icon(Icons.close, color: Colors.red),
+            ),
           ),
         ],
       ),
-      body: pages[currentStep],
+      body: IndexedStack(index: currentStep, children: pages),
     );
   }
 }

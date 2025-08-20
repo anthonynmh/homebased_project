@@ -3,13 +3,13 @@ import 'dart:convert';
 class BusinessProfile {
   String name;
   String productType;
-  String address;
+  String description;
   List<String>? imagePaths; // list of local file paths or asset paths
 
   BusinessProfile({
     required this.name,
     required this.productType,
-    required this.address,
+    required this.description,
     this.imagePaths,
   });
 
@@ -17,7 +17,7 @@ class BusinessProfile {
     return {
       'name': name,
       'productType': productType,
-      'address': address,
+      'description': description,
       'imagePaths': imagePaths,
     };
   }
@@ -26,7 +26,7 @@ class BusinessProfile {
     return BusinessProfile(
       name: map['name'] ?? '',
       productType: map['productType'] ?? '',
-      address: map['address'] ?? '',
+      description: map['description'] ?? '',
       imagePaths: List<String>.from(map['imagePaths'] ?? []),
     );
   }

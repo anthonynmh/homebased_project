@@ -1,27 +1,34 @@
 import 'package:flutter/material.dart';
 
-class BusinessAddressPage extends StatefulWidget {
+class BusinessDescriptionPage extends StatefulWidget {
   final String address;
   final ValueChanged<String> onAddressChanged;
   final VoidCallback onNext;
 
-  BusinessAddressPage({
+  BusinessDescriptionPage({
     required this.address,
     required this.onAddressChanged,
     required this.onNext,
   });
 
   @override
-  State<BusinessAddressPage> createState() => _BusinessAddressPageState();
+  State<BusinessDescriptionPage> createState() =>
+      _BusinessDescriptionPageState();
 }
 
-class _BusinessAddressPageState extends State<BusinessAddressPage> {
+class _BusinessDescriptionPageState extends State<BusinessDescriptionPage> {
   late TextEditingController _productTypeController;
+  bool _isTyping = false;
 
   @override
   void initState() {
     super.initState();
     _productTypeController = TextEditingController(text: widget.address);
+    _productTypeController.addListener(() {
+      setState(() {
+        _isTyping = _productTypeController.text.trim().isNotEmpty;
+      });
+    });
   }
 
   @override
@@ -46,7 +53,7 @@ class _BusinessAddressPageState extends State<BusinessAddressPage> {
             height: 87,
             width: 325,
             child: Text(
-              'Where will you be doing your business?',
+              'Write a short description of your business',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
               softWrap: true,
               overflow: TextOverflow.visible,
@@ -62,7 +69,7 @@ class _BusinessAddressPageState extends State<BusinessAddressPage> {
                 controller: _productTypeController,
                 style: TextStyle(fontSize: 16),
                 decoration: InputDecoration(
-                  hintText: 'Enter location...',
+                  hintText: 'Enter description...',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(40),
                   ),
@@ -91,7 +98,11 @@ class _BusinessAddressPageState extends State<BusinessAddressPage> {
               height: 74, // Set your desired height
               child: ElevatedButton(
                 onPressed: _handleNext,
-                child: Text('Continue', style: TextStyle(fontSize: 27)),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                child: Text(
+                  _isTyping ? 'Continue' : 'Skip For Now',
+                  style: TextStyle(fontSize: 27, color: Colors.white),
+                ),
               ),
             ),
           ),

@@ -17,11 +17,17 @@ class BusinessNamePage extends StatefulWidget {
 
 class _BusinessNamePageState extends State<BusinessNamePage> {
   late TextEditingController _nameController;
+  bool _isTyping = false;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.name);
+    _nameController.addListener(() {
+      setState(() {
+        _isTyping = _nameController.text.trim().isNotEmpty;
+      });
+    });
   }
 
   @override
@@ -31,8 +37,25 @@ class _BusinessNamePageState extends State<BusinessNamePage> {
   }
 
   void _handleNext() {
-    widget.onNameChanged(_nameController.text);
-    widget.onNext();
+    if (_nameController.text.trim().isEmpty) {
+      // Show alert if empty
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("Missing Business Name"),
+          content: Text("Please enter a business name before continuing."),
+          actions: [
+            TextButton(
+              child: Text("OK"),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      );
+    } else {
+      widget.onNameChanged(_nameController.text.trim());
+      widget.onNext();
+    }
   }
 
   @override
@@ -66,16 +89,6 @@ class _BusinessNamePageState extends State<BusinessNamePage> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(40),
                   ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(40),
-                    borderSide: BorderSide(color: Colors.grey),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(40),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).primaryColor,
-                    ),
-                  ),
                   contentPadding: EdgeInsets.symmetric(
                     vertical: 20,
                     horizontal: 24,
@@ -91,7 +104,13 @@ class _BusinessNamePageState extends State<BusinessNamePage> {
               height: 74, // Set your desired height
               child: ElevatedButton(
                 onPressed: _handleNext,
-                child: Text('Continue', style: TextStyle(fontSize: 27)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _isTyping ? Colors.orange : Colors.grey,
+                ),
+                child: Text(
+                  'Continue',
+                  style: TextStyle(fontSize: 27, color: Colors.white),
+                ),
               ),
             ),
           ),

@@ -44,60 +44,79 @@ class _BusinessImagesPageState extends State<BusinessImagesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Add Business Images')),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          SizedBox(height: 40),
+          const SizedBox(height: 40),
           SizedBox(
             width: 325,
             child: Column(
-              children: [
+              children: const [
                 Text(
                   'Upload images of your business to attract more customers!',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
                   softWrap: true,
-                  overflow: TextOverflow.visible,
-                  maxLines: 3,
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 20),
-                Text(
-                  '(Press the button again to keep adding more images.)',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-                  softWrap: true,
-                  overflow: TextOverflow.visible,
-                  maxLines: 3,
                   textAlign: TextAlign.center,
                 ),
               ],
             ),
           ),
-          SizedBox(height: 200),
-          Center(
-            child: ElevatedButton(
-              onPressed: _pickImage,
-              child: Text('Add image', style: TextStyle(fontSize: 20)),
-            ),
-          ),
-          SizedBox(height: 20),
+          const SizedBox(height: 40),
+
+          /// Grid of images + add button at the end
           Expanded(
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _imagePaths.length,
+            child: GridView.builder(
+              padding: const EdgeInsets.all(16),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3, // 3 items per row
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              itemCount: _imagePaths.length + 1, // +1 for the add button
               itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Image.file(File(_imagePaths[index]), height: 100),
-                );
+                if (index == _imagePaths.length) {
+                  // Last item = "Add Image" button
+                  return GestureDetector(
+                    onTap: _pickImage,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.add_a_photo,
+                        size: 40,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  );
+                } else {
+                  final imagePath = _imagePaths[index];
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.file(File(imagePath), fit: BoxFit.cover),
+                  );
+                }
               },
             ),
           ),
-          SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: _handleNext,
-            child: Text('Continue', style: TextStyle(fontSize: 27)),
+
+          const SizedBox(height: 20),
+          Center(
+            child: SizedBox(
+              width: 237, // Set your desired width
+              height: 74, // Set your desired height
+              child: ElevatedButton(
+                onPressed: _handleNext,
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                child: Text(
+                  _imagePaths.isEmpty ? 'Skip for now' : 'Continue',
+                  style: TextStyle(fontSize: 27, color: Colors.white),
+                ),
+              ),
+            ),
           ),
+          const SizedBox(height: 40),
         ],
       ),
     );

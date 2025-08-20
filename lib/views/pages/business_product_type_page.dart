@@ -17,22 +17,37 @@ class BusinessProductTypePage extends StatefulWidget {
 }
 
 class _BusinessProductTypePageState extends State<BusinessProductTypePage> {
-  late TextEditingController _productTypeController;
+  final List<String> productTypes = ['Food & Beverages', 'Services'];
+
+  late String? _selectedProductType;
 
   @override
   void initState() {
     super.initState();
-    _productTypeController = TextEditingController(text: widget.productType);
-  }
-
-  @override
-  void dispose() {
-    _productTypeController.dispose();
-    super.dispose();
+    _selectedProductType = widget.productType.isNotEmpty
+        ? widget.productType
+        : null;
   }
 
   void _handleNext() {
-    widget.onProductTypeChanged(_productTypeController.text);
+    if (_selectedProductType == null) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('Select a sector'),
+          content: Text('Please choose a product type before continuing.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    widget.onProductTypeChanged(_selectedProductType!);
     widget.onNext();
   }
 
@@ -59,23 +74,23 @@ class _BusinessProductTypePageState extends State<BusinessProductTypePage> {
           Center(
             child: SizedBox(
               width: 314,
-              child: TextField(
-                controller: _productTypeController,
-                style: TextStyle(fontSize: 16),
+              child: DropdownButtonFormField<String>(
+                value: _selectedProductType,
+                hint: Text('Select a product type'),
+                items: productTypes.map((String type) {
+                  return DropdownMenuItem<String>(
+                    value: type,
+                    child: Text(type),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedProductType = newValue;
+                  });
+                },
                 decoration: InputDecoration(
-                  hintText: 'Select sector...',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(40),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(40),
-                    borderSide: BorderSide(color: Colors.grey),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(40),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).primaryColor,
-                    ),
                   ),
                   contentPadding: EdgeInsets.symmetric(
                     vertical: 20,
@@ -92,7 +107,15 @@ class _BusinessProductTypePageState extends State<BusinessProductTypePage> {
               height: 74, // Set your desired height
               child: ElevatedButton(
                 onPressed: _handleNext,
-                child: Text('Continue', style: TextStyle(fontSize: 27)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _selectedProductType == null
+                      ? Colors.grey
+                      : Colors.orange,
+                ),
+                child: Text(
+                  'Continue',
+                  style: TextStyle(fontSize: 27, color: Colors.white),
+                ),
               ),
             ),
           ),

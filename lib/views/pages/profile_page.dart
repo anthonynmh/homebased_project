@@ -192,7 +192,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Column(
                         children: [
                           Container(
-                            height: 95,
                             width: 300,
                             padding: EdgeInsets.all(8.0),
                             decoration: BoxDecoration(
@@ -215,7 +214,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           SizedBox(height: 16),
                           Container(
-                            height: 95,
                             width: 300,
                             padding: EdgeInsets.all(8.0),
                             decoration: BoxDecoration(
@@ -238,7 +236,6 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           SizedBox(height: 20),
                           Container(
-                            height: 95,
                             width: 300,
                             padding: EdgeInsets.all(8.0),
                             decoration: BoxDecoration(
@@ -249,12 +246,12 @@ class _ProfilePageState extends State<ProfilePage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Address',
+                                  'Description',
                                   style: Theme.of(context).textTheme.titleLarge,
                                 ),
                                 Text(
-                                  '${businessProfile?.address ?? ""}',
-                                  style: TextStyle(fontSize: 14),
+                                  '${businessProfile?.description ?? ""}',
+                                  style: TextStyle(fontSize: 24),
                                 ),
                               ],
                             ),
