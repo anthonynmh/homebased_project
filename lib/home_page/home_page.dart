@@ -1,36 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:homebased_project/providers/auth_state.dart';
-import 'package:homebased_project/landing_page/landing_page.dart';
+import 'package:homebased_project/login_page/login_page.dart';
 import 'package:homebased_project/widgets/confirmation_dialog.dart';
+import 'package:homebased_project/backend/auth_api/auth_service.dart';
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _HomePageState extends State<HomePage> {
   int _selectedIndex = 1;
 
   void _logout() async {
-    final authState = Provider.of<AuthState>(context, listen: false);
-
-    try {
-      await authState.auth0
-          ?.webAuthentication(scheme: "demo")
-          .logout(useHTTPS: false); // TODO: set to true for deployment
-    } catch (e) {
-      print('Logout error: $e');
-    }
-
-    authState.clear();
+    await AuthService.signOut();
 
     if (!mounted) return;
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const LandingPage()),
+      MaterialPageRoute(builder: (context) => const LoginPage()),
     );
   }
 
@@ -44,8 +33,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // final credentials = Provider.of<AuthState>(context).credentials;
-
     Widget page;
 
     switch (_selectedIndex) {
