@@ -41,10 +41,18 @@ class CustomFormFieldState extends State<CustomFormField> {
   @override
   void didUpdateWidget(covariant CustomFormField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.type == FieldType.images &&
-        !listEquals(widget.initialImages, oldWidget.initialImages)) {
-      _images = List<String>.from(widget.initialImages ?? []);
-      setState(() {});
+
+    if (widget.type == FieldType.images) {
+      final readOnlyToggled = widget.readOnly != oldWidget.readOnly;
+      final imagesChanged = !listEquals(
+        widget.initialImages,
+        oldWidget.initialImages,
+      );
+
+      if (readOnlyToggled || imagesChanged) {
+        _images = List<String>.from(widget.initialImages ?? []);
+        setState(() {});
+      }
     }
   }
 
@@ -74,6 +82,9 @@ class CustomFormFieldState extends State<CustomFormField> {
             children: [
               Text(widget.label, style: Theme.of(context).textTheme.titleLarge),
               TextFormField(
+                key: ValueKey(
+                  '${widget.label}:${widget.initialValue}:${widget.readOnly}',
+                ),
                 initialValue: widget.initialValue ?? "",
                 readOnly: widget.readOnly,
                 maxLines: widget.maxLines,
@@ -100,6 +111,9 @@ class CustomFormFieldState extends State<CustomFormField> {
             children: [
               Text(widget.label, style: Theme.of(context).textTheme.titleLarge),
               DropdownButtonFormField<String>(
+                key: ValueKey(
+                  '${widget.label}:${widget.initialValue}:${widget.readOnly}',
+                ),
                 value: widget.initialValue,
                 items: ['Food & Beverages', 'Services']
                     .map(

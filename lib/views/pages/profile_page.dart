@@ -18,6 +18,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String? username;
   String? profileImagePath;
   BusinessProfile? businessProfile;
+  BusinessProfile? editingBusinessProfile;
   final _formKey = GlobalKey<FormState>();
   final _imagesKey = GlobalKey<CustomFormFieldState>();
   bool isEditingBusinessProfile = false;
@@ -121,9 +122,11 @@ class _ProfilePageState extends State<ProfilePage> {
                         onPressed: () async {
                           if (_formKey.currentState?.validate() ?? false) {
                             _formKey.currentState?.save();
+                            businessProfile = editingBusinessProfile;
                             await saveBusinessProfile(businessProfile!);
                             setState(() {
                               isEditingBusinessProfile = false;
+                              editingBusinessProfile = null;
                             });
                           }
                         },
@@ -131,7 +134,9 @@ class _ProfilePageState extends State<ProfilePage> {
                       IconButton(
                         icon: Icon(Icons.cancel),
                         onPressed: () {
+                          _formKey.currentState?.reset();
                           setState(() {
+                            editingBusinessProfile = null;
                             isEditingBusinessProfile = false;
                           });
                         },
@@ -142,6 +147,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     icon: Icon(Icons.edit),
                     onPressed: () {
                       setState(() {
+                        editingBusinessProfile = businessProfile?.copyWith();
                         isEditingBusinessProfile = true;
                       });
                     },
@@ -239,27 +245,51 @@ class _ProfilePageState extends State<ProfilePage> {
                           CustomFormField(
                             label: "Business Name",
                             type: FieldType.text,
-                            initialValue: businessProfile?.name,
-                            onSaved: (val) => businessProfile = businessProfile
-                                ?.copyWith(name: val ?? ""),
+                            initialValue:
+                                (isEditingBusinessProfile
+                                        ? editingBusinessProfile
+                                        : businessProfile)
+                                    ?.name,
+                            onSaved: (val) {
+                              if (isEditingBusinessProfile) {
+                                editingBusinessProfile = editingBusinessProfile
+                                    ?.copyWith(name: val ?? "");
+                              }
+                            },
                             readOnly: !isEditingBusinessProfile,
                           ),
                           SizedBox(height: 16),
                           CustomFormField(
                             label: "Product Type",
                             type: FieldType.dropdown,
-                            initialValue: businessProfile?.productType,
-                            onSaved: (val) => businessProfile = businessProfile
-                                ?.copyWith(productType: val ?? ""),
+                            initialValue:
+                                (isEditingBusinessProfile
+                                        ? editingBusinessProfile
+                                        : businessProfile)
+                                    ?.productType,
+                            onSaved: (val) {
+                              if (isEditingBusinessProfile) {
+                                editingBusinessProfile = editingBusinessProfile
+                                    ?.copyWith(productType: val ?? "");
+                              }
+                            },
                             readOnly: !isEditingBusinessProfile,
                           ),
                           SizedBox(height: 16),
                           CustomFormField(
                             label: "Description",
                             type: FieldType.text,
-                            initialValue: businessProfile?.description,
-                            onSaved: (val) => businessProfile = businessProfile
-                                ?.copyWith(description: val ?? ""),
+                            initialValue:
+                                (isEditingBusinessProfile
+                                        ? editingBusinessProfile
+                                        : businessProfile)
+                                    ?.description,
+                            onSaved: (val) {
+                              if (isEditingBusinessProfile) {
+                                editingBusinessProfile = editingBusinessProfile
+                                    ?.copyWith(description: val ?? "");
+                              }
+                            },
                             readOnly: !isEditingBusinessProfile,
                             maxLines: 3,
                           ),
@@ -268,7 +298,9 @@ class _ProfilePageState extends State<ProfilePage> {
                             key: _imagesKey,
                             label: "Photos",
                             type: FieldType.images,
-                            initialImages: businessProfile?.imagePaths,
+                            initialImages: isEditingBusinessProfile
+                                ? editingBusinessProfile?.imagePaths
+                                : businessProfile?.imagePaths,
                             readOnly: !isEditingBusinessProfile,
                           ),
                           SizedBox(height: 20),
