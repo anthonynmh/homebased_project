@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:homebased_project/views/widget_tree.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
@@ -35,7 +36,7 @@ class _LoginPageState extends State<LoginPage> {
         if (session != null) {
           _redirecting = true;
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const HomePage()),
+            MaterialPageRoute(builder: (_) => const WidgetTree()),
           );
         }
       },

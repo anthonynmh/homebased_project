@@ -4,6 +4,8 @@ class BusinessProfile {
   String name;
   String productType;
   String description;
+  double? latitude;
+  double? longitude;
   List<String>? imagePaths; // list of local file paths or asset paths
 
   BusinessProfile({
@@ -11,6 +13,8 @@ class BusinessProfile {
     required this.productType,
     required this.description,
     this.imagePaths,
+    this.latitude,
+    this.longitude,
   });
 
   Map<String, dynamic> toMap() {
@@ -19,6 +23,8 @@ class BusinessProfile {
       'productType': productType,
       'description': description,
       'imagePaths': imagePaths,
+      'latitude': latitude,
+      'longitude': longitude,
     };
   }
 
@@ -28,6 +34,8 @@ class BusinessProfile {
       productType: map['productType'] ?? '',
       description: map['description'] ?? '',
       imagePaths: List<String>.from(map['imagePaths'] ?? []),
+      latitude: map['latitude']?.toDouble(),
+      longitude: map['longitude']?.toDouble(),
     );
   }
 
@@ -35,4 +43,22 @@ class BusinessProfile {
 
   factory BusinessProfile.fromJson(String source) =>
       BusinessProfile.fromMap(json.decode(source));
+
+  BusinessProfile copyWith({
+    String? name,
+    String? productType,
+    String? description,
+    List<String>? imagePaths,
+    double? latitude,
+    double? longitude,
+  }) {
+    return BusinessProfile(
+      name: name ?? this.name,
+      productType: productType ?? this.productType,
+      description: description ?? this.description,
+      imagePaths: imagePaths ?? this.imagePaths,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+    );
+  }
 }

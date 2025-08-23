@@ -61,6 +61,7 @@ class _BusinessProfileTreeState extends State<BusinessProfileTree> {
       // Save profile locally in shared preferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('businessProfile', profile.toJson());
+      if (!mounted) return;
       // Navigate to profile page and reset the stack
       Navigator.pushAndRemoveUntil(
         context,

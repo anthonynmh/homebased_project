@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:homebased_project/models/business_profile.dart';
 import 'package:homebased_project/views/business_profile_tree.dart';
-import 'package:homebased_project/widgets/image_scroller.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:homebased_project/widgets/form_field_widget.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -18,6 +18,9 @@ class _ProfilePageState extends State<ProfilePage> {
   String? username;
   String? profileImagePath;
   BusinessProfile? businessProfile;
+  final _formKey = GlobalKey<FormState>();
+  final _imagesKey = GlobalKey<CustomFormFieldState>();
+  bool isEditingBusinessProfile = false;
 
   @override
   void initState() {
@@ -35,7 +38,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> saveBusinessProfile(BusinessProfile profile) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('businessProfile', profile.toJson());
+    final images = _imagesKey.currentState?.getImages() ?? [];
+    final updatedProfile = profile.copyWith(imagePaths: images);
+    businessProfile = updatedProfile;
+    await prefs.setString('businessProfile', updatedProfile.toJson());
   }
 
   Future<BusinessProfile?> loadBusinessProfile() async {
@@ -103,6 +109,45 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Profile Page'),
+        actions: [
+          if (businessProfile != null)
+            isEditingBusinessProfile
+                ? Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.save),
+                        onPressed: () async {
+                          if (_formKey.currentState?.validate() ?? false) {
+                            _formKey.currentState?.save();
+                            await saveBusinessProfile(businessProfile!);
+                            setState(() {
+                              isEditingBusinessProfile = false;
+                            });
+                          }
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.cancel),
+                        onPressed: () {
+                          setState(() {
+                            isEditingBusinessProfile = false;
+                          });
+                        },
+                      ),
+                    ],
+                  )
+                : IconButton(
+                    icon: Icon(Icons.edit),
+                    onPressed: () {
+                      setState(() {
+                        isEditingBusinessProfile = true;
+                      });
+                    },
+                  ),
+        ],
+      ),
       body: SingleChildScrollView(
         child: Center(
           child: Column(
@@ -187,93 +232,52 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
                     )
-                  : Container(
-                      padding: EdgeInsets.all(16.0),
+                  : Form(
+                      key: _formKey,
                       child: Column(
                         children: [
-                          Container(
-                            width: 300,
-                            padding: EdgeInsets.all(8.0),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Business Name',
-                                  style: Theme.of(context).textTheme.titleLarge,
-                                ),
-                                Text(
-                                  '${businessProfile?.name ?? ""}',
-                                  style: TextStyle(fontSize: 24),
-                                ),
-                              ],
-                            ),
+                          CustomFormField(
+                            label: "Business Name",
+                            type: FieldType.text,
+                            initialValue: businessProfile?.name,
+                            onSaved: (val) => businessProfile = businessProfile
+                                ?.copyWith(name: val ?? ""),
+                            readOnly: !isEditingBusinessProfile,
                           ),
                           SizedBox(height: 16),
-                          Container(
-                            width: 300,
-                            padding: EdgeInsets.all(8.0),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Product Type',
-                                  style: Theme.of(context).textTheme.titleLarge,
-                                ),
-                                Text(
-                                  '${businessProfile?.productType ?? ""}',
-                                  style: TextStyle(fontSize: 24),
-                                ),
-                              ],
-                            ),
+                          CustomFormField(
+                            label: "Product Type",
+                            type: FieldType.dropdown,
+                            initialValue: businessProfile?.productType,
+                            onSaved: (val) => businessProfile = businessProfile
+                                ?.copyWith(productType: val ?? ""),
+                            readOnly: !isEditingBusinessProfile,
+                          ),
+                          SizedBox(height: 16),
+                          CustomFormField(
+                            label: "Description",
+                            type: FieldType.text,
+                            initialValue: businessProfile?.description,
+                            onSaved: (val) => businessProfile = businessProfile
+                                ?.copyWith(description: val ?? ""),
+                            readOnly: !isEditingBusinessProfile,
+                            maxLines: 3,
                           ),
                           SizedBox(height: 20),
-                          Container(
-                            width: 300,
-                            padding: EdgeInsets.all(8.0),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Description',
-                                  style: Theme.of(context).textTheme.titleLarge,
-                                ),
-                                Text(
-                                  '${businessProfile?.description ?? ""}',
-                                  style: TextStyle(fontSize: 24),
-                                ),
-                              ],
-                            ),
+                          CustomFormField(
+                            key: _imagesKey,
+                            label: "Photos",
+                            type: FieldType.images,
+                            initialImages: businessProfile?.imagePaths,
+                            readOnly: !isEditingBusinessProfile,
                           ),
-                          SizedBox(height: 20),
-                          Text(
-                            'Photos',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          ImageScroller(
-                            imagePaths: businessProfile?.imagePaths ?? [],
-                          ),
-                          // Add more fields as needed
                           SizedBox(height: 20),
                           ElevatedButton.icon(
                             onPressed: () async {
                               final prefs =
                                   await SharedPreferences.getInstance();
                               await prefs.remove('businessProfile');
-                              setState(() {
-                                businessProfile = null;
-                              });
+                              setState(() => businessProfile = null);
                             },
                             icon: Icon(Icons.delete),
                             label: Text('Delete Business Profile'),

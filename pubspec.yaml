@@ -22,6 +22,7 @@ dependencies:
   flutter_dotenv: ^5.2.1
   flutter_map: ^8.2.1
   latlong2: ^0.9.1
+  shared_preferences: ^2.5.3
 
 dev_dependencies:
   flutter_test:
@@ -37,4 +38,5 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/
     - .env
