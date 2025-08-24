@@ -1,12 +1,39 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:homebased_project/landing_page/landing_page.dart';
-import 'package:homebased_project/providers/auth_state.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
-  runApp(
-    ChangeNotifierProvider(create: (_) => AuthState(), child: const MyApp()),
-  );
+import 'package:homebased_project/login_page/login_page.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await _loadAndValidateEnv();
+  await _initializeSupabase();
+
+  runApp(const MyApp());
+}
+
+Future<void> _loadAndValidateEnv() async {
+  try {
+    await dotenv.load(fileName: ".env");
+  } on Exception {
+    throw Exception(".env file not found in the project root.");
+  }
+
+  const requiredKeys = ['SUPABASE_URL', 'SUPABASE_ANON_KEY'];
+
+  for (final key in requiredKeys) {
+    if ((dotenv.env[key] ?? '').isEmpty) {
+      throw Exception('Missing environment variable: $key');
+    }
+  }
+}
+
+Future<void> _initializeSupabase() async {
+  final supabaseUrl = dotenv.env['SUPABASE_URL']!;
+  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY']!;
+
+  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
 }
 
 class MyApp extends StatelessWidget {
@@ -16,9 +43,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'homebased App',
+      title: 'Knock Knock',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Color(0xFFC23838)),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFC23838)),
         fontFamily: 'Inter',
         textTheme: const TextTheme(
           bodyLarge: TextStyle(fontSize: 26.65, fontWeight: FontWeight.bold),
@@ -27,7 +54,7 @@ class MyApp extends StatelessWidget {
           titleLarge: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
         ),
       ),
-      home: const LandingPage(),
+      home: const LoginPage(),
     );
   }
 }
