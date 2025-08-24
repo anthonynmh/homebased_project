@@ -13,11 +13,13 @@ class CustomFormField extends StatefulWidget {
   final FormFieldSetter<String>? onSaved;
   final bool readOnly;
   final int maxLines;
+  final bool requiredField;
 
   const CustomFormField({
     super.key,
     required this.label,
     required this.type,
+    required this.requiredField,
     this.initialValue,
     this.initialImages,
     this.onSaved,
@@ -80,7 +82,7 @@ class CustomFormFieldState extends State<CustomFormField> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(widget.label, style: Theme.of(context).textTheme.titleLarge),
+              Text(widget.label),
               TextFormField(
                 key: ValueKey(
                   '${widget.label}:${widget.initialValue}:${widget.readOnly}',
@@ -89,9 +91,13 @@ class CustomFormFieldState extends State<CustomFormField> {
                 readOnly: widget.readOnly,
                 maxLines: widget.maxLines,
                 decoration: const InputDecoration(border: InputBorder.none),
-                validator: (val) => val == null || val.isEmpty
-                    ? "This field cannot be empty"
-                    : null,
+                validator: (val) {
+                  if (widget.requiredField &&
+                      (val == null || val.trim().isEmpty)) {
+                    return "${widget.label} cannot be empty";
+                  }
+                  return null;
+                },
                 onSaved: widget.onSaved,
               ),
             ],
@@ -109,7 +115,7 @@ class CustomFormFieldState extends State<CustomFormField> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(widget.label, style: Theme.of(context).textTheme.titleLarge),
+              Text(widget.label),
               DropdownButtonFormField<String>(
                 key: ValueKey(
                   '${widget.label}:${widget.initialValue}:${widget.readOnly}',
@@ -117,8 +123,13 @@ class CustomFormFieldState extends State<CustomFormField> {
                 value: widget.initialValue,
                 items: ['Food & Beverages', 'Services']
                     .map(
-                      (option) =>
-                          DropdownMenuItem(value: option, child: Text(option)),
+                      (option) => DropdownMenuItem(
+                        value: option,
+                        child: Text(
+                          option,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                      ),
                     )
                     .toList(),
                 onChanged: widget.readOnly

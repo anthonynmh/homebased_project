@@ -79,26 +79,56 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _saveAll() async {
+    // 1) Validate username (always required)
+    final uname = usernameController?.text ?? '';
+    final usernameEmpty = uname.trim().isEmpty;
+
+    // 2) Validate business form only if it exists
+    bool formValid = true;
+    if (businessProfile != null) {
+      formValid = _formKey.currentState?.validate() ?? false;
+    }
+
+    if (usernameEmpty || !formValid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            usernameEmpty
+                ? "Username cannot be empty."
+                : "Please fill in all required fields.",
+          ),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return; // stay in edit mode
+    }
+
+    // 3) Save
+    _formKey.currentState?.save(); // no-op if form doesn't exist
     final prefs = await SharedPreferences.getInstance();
 
-    //save username
-    final newUsername = usernameController?.text.trim() ?? username ?? 'Guest';
+    // username
+    final newUsername = uname.trim();
     await prefs.setString('username', newUsername);
     username = newUsername;
 
-    //save profile image
+    // profile image
     if (tempProfileImagePath != null) {
       await prefs.setString('profileImagePath', tempProfileImagePath!);
       profileImagePath = tempProfileImagePath;
     }
 
-    //save business profile
-    if (_formKey.currentState?.validate() ?? false) {
-      _formKey.currentState?.save();
-      if (editingBusinessProfile != null) {
-        businessProfile = editingBusinessProfile;
-        await saveBusinessProfile(businessProfile!);
-      }
+    // business profile (only if it exists)
+    if (businessProfile != null && editingBusinessProfile != null) {
+      // ensure latest images are included
+      final images = _imagesKey.currentState?.getImages() ?? [];
+      editingBusinessProfile = editingBusinessProfile!.copyWith(
+        imagePaths: images,
+      );
+
+      businessProfile = editingBusinessProfile;
+      await saveBusinessProfile(businessProfile!);
     }
 
     setState(() {
@@ -125,7 +155,6 @@ class _ProfilePageState extends State<ProfilePage> {
           isEditing
               ? Row(
                   children: [
-                    IconButton(icon: Icon(Icons.save), onPressed: _saveAll),
                     IconButton(icon: Icon(Icons.cancel), onPressed: _cancelAll),
                   ],
                 )
@@ -193,9 +222,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
               SizedBox(height: 20),
               if (isEditing)
-                TextFormField(
-                  controller: usernameController,
-                  decoration: InputDecoration(labelText: "Username"),
+                SizedBox(
+                  width: 200,
+                  child: TextFormField(
+                    textAlign: TextAlign.center,
+                    controller: usernameController,
+                  ),
                 )
               else
                 Text(
@@ -243,6 +275,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       CustomFormField(
                         label: "Business Name",
                         type: FieldType.text,
+                        requiredField: true,
                         initialValue:
                             (isEditing
                                     ? editingBusinessProfile
@@ -260,6 +293,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       CustomFormField(
                         label: "Product Type",
                         type: FieldType.dropdown,
+                        requiredField: true,
                         initialValue:
                             (isEditing
                                     ? editingBusinessProfile
@@ -277,6 +311,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       CustomFormField(
                         label: "Description",
                         type: FieldType.text,
+                        requiredField: false,
                         initialValue:
                             (isEditing
                                     ? editingBusinessProfile
@@ -295,6 +330,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       CustomFormField(
                         key: _imagesKey,
                         label: "Photos",
+                        requiredField: false,
                         type: FieldType.images,
                         initialImages: isEditing
                             ? editingBusinessProfile?.imagePaths
@@ -302,20 +338,42 @@ class _ProfilePageState extends State<ProfilePage> {
                         readOnly: !isEditing,
                       ),
                       SizedBox(height: 20),
-                      ElevatedButton.icon(
-                        onPressed: () async {
-                          final prefs = await SharedPreferences.getInstance();
-                          await prefs.remove('businessProfile');
-                          setState(() => businessProfile = null);
-                        },
-                        icon: Icon(Icons.delete),
-                        label: Text('Delete Business Profile'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
+                      if (!isEditing && businessProfile != null)
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.remove('businessProfile');
+                            setState(() => businessProfile = null);
+                          },
+                          icon: Icon(Icons.delete),
+                          label: Text('Delete Business Profile'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                          ),
                         ),
-                      ),
                     ],
+                  ),
+                ),
+              if (isEditing)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 24,
+                  ),
+                  child: SizedBox(
+                    width: 237,
+                    height: 74,
+                    child: ElevatedButton(
+                      onPressed: _saveAll,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                      ),
+                      child: Text(
+                        'Save Changes',
+                        style: TextStyle(fontSize: 27, color: Colors.white),
+                      ),
+                    ),
                   ),
                 ),
             ],
