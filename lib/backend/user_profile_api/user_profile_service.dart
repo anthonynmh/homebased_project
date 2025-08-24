@@ -1,55 +1,30 @@
 import 'dart:io';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:path/path.dart' as path;
-import 'user_profile_model.dart';
 
-final _client = Supabase.instance.client;
+import 'package:homebased_project/backend/supabase_api/supabase_service.dart';
+import 'package:homebased_project/backend/auth_api/auth_service.dart';
+import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
 
 class UserProfileService {
-  static const String table = 'User_Profiles';
-  static const String bucket = 'user-profile-photos';
+  static final String table = dotenv.env['USER_PROFILE_TABLE_PROD'] ?? '';
+  static final String bucket = dotenv.env['USER_PROFILE_BUCKET_PROD'] ?? '';
 
-  /// Insert profile only for new signups (no conflict handling)
-  static Future<void> createProfileFromAuth0({
-    required String auth0Sub,
-    required String email,
-    String name = '',
-  }) async {
-    if (auth0Sub.isEmpty || email.isEmpty) {
-      print('Invalid Auth0 data: cannot create profile');
-      return;
-    }
-
-    final profile = {
-      'auth0_sub': auth0Sub,
-      'email': email,
-      'name': name,
-      // created_at and profile_photo_url handled by DB defaults
-    };
-
-    try {
-      final res = await _client
-          .from(table)
-          .insert(profile)
-          .select()
-          .single(); // Throws if > 1 or 0 rows
-
-      print('Profile created: $res');
-    } on PostgrestException catch (e) {
-      print('Insert failed: ${e.message}');
-    } catch (e) {
-      print('Unexpected error: $e');
-    }
+  static String get _currentUserId {
+    final id = AuthService.currentUserId;
+    if (id == null) throw Exception('No user is currently logged in.');
+    return id;
   }
 
-  /// Get profile by Auth0 sub (unique user ID)
-  static Future<UserProfile?> getProfileByAuth0Sub(String auth0Sub) async {
+  /// Get profile by supabase id (unique user ID)
+  static Future<UserProfile?> getCurrentUserProfile() async {
+    final userId = _currentUserId;
+
     try {
-      final res = await _client
+      final res = await supabase
           .from(table)
           .select()
-          .eq('auth0_sub', auth0Sub)
+          .eq('id', userId)
           .maybeSingle();
 
       if (res == null) return null;
@@ -60,19 +35,90 @@ class UserProfileService {
     }
   }
 
-  /// Upload avatar image to Supabase storage and return public URL
-  static Future<String?> uploadAvatar(File imageFile) async {
-    final ext = path.extension(imageFile.path);
-    final filename = '${const Uuid().v4()}$ext';
-    final filepath = 'public/$filename';
+  static Future<void> insertCurrentUserProfile(UserProfile profile) async {
+    try {
+      await supabase.rpc(
+        'create_profile',
+        params: {'p_id': profile.id, 'p_email': profile.email},
+      );
+
+      print('User profile inserted successfully.');
+    } catch (e) {
+      print('RPC create_profile failed: $e');
+    }
+  }
+
+  static Future<void> updateCurrentUserProfile(UserProfile profile) async {
+    final userId = _currentUserId;
 
     try {
-      final storage = _client.storage;
+      // Build a map of only the fields that are not null
+      final data = <String, dynamic>{};
+      if (profile.username != null) data['username'] = profile.username;
+      if (profile.fullName != null) data['full_name'] = profile.fullName;
+      if (profile.avatarUrl != null) data['avatar_url'] = profile.avatarUrl;
+      if (profile.email != null) data['email'] = profile.email;
+      data['updated_at'] = DateTime.now().toUtc().toIso8601String();
+
+      if (data.isEmpty) return; // nothing to update
+
+      await supabase.from(table).update(data).eq('id', userId);
+    } catch (e, st) {
+      print('Failed to update user profile: $e\n$st');
+      throw Exception('Failed to update profile');
+    }
+  }
+
+  /// Upload avatar image to Supabase storage and stores public URL in table
+  static Future<void> uploadAvatar(File imageFile) async {
+    final userId = _currentUserId;
+
+    final ext = path.extension(imageFile.path);
+    final filename = '$userId$ext'; // unique per user
+    final filepath = 'avatars/$filename'; // subfolder in bucket
+
+    try {
+      final storage = supabase.storage;
+
+      // Remove old avatar if it exists
+      try {
+        await storage.from(bucket).remove([filepath]);
+      } catch (_) {
+        // ignore if none exists
+      }
+
+      // Upload new avatar
       await storage.from(bucket).upload(filepath, imageFile);
 
-      return storage.from(bucket).getPublicUrl(filepath);
-    } catch (e) {
-      print('Upload error: $e');
+      // Get public URL
+      final publicUrl = storage.from(bucket).getPublicUrl(filepath);
+
+      // Update user profile with new avatar_url and updated_at
+      await updateCurrentUserProfile(
+        UserProfile(
+          id: userId, // required
+          avatarUrl: publicUrl, // only updating avatar
+        ),
+      );
+    } catch (e, st) {
+      print('Upload avatar error: $e\n$st');
+    }
+  }
+
+  /// Returns the current user's avatar URL from the profiles table (or null if none exists)
+  static Future<String?> getAvatarUrl() async {
+    final userId = _currentUserId;
+
+    try {
+      final res = await supabase
+          .from(table)
+          .select('avatar_url')
+          .eq('id', userId)
+          .maybeSingle();
+
+      return res?['avatar_url'] as String?;
+    } catch (e, st) {
+      print('Get avatar error: $e\n$st');
       return null;
     }
   }
