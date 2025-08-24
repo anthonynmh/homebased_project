@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:homebased_project/models/business_profile.dart';
 import 'package:homebased_project/views/pages/business_description_page.dart';
 import 'package:homebased_project/views/pages/business_images_page.dart';
+import 'package:homebased_project/views/pages/business_map_page/business_map_page.dart';
 import 'package:homebased_project/views/pages/business_name_page.dart';
 import 'package:homebased_project/views/pages/business_product_type_page.dart';
 import 'package:homebased_project/views/widget_tree.dart';
@@ -100,6 +101,7 @@ class _BusinessProfileTreeState extends State<BusinessProfileTree> {
         onAddressChanged: updateDescription,
         onNext: nextStep,
       ),
+      BusinessMapPage(onNext: nextStep),
       BusinessImagesPage(
         imagePaths: profile.imagePaths,
         onImagesChanged: updateImages,
