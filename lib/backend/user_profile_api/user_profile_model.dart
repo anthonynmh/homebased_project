@@ -1,5 +1,7 @@
+import 'dart:convert';
+
 class UserProfile {
-  final String id;
+  final String? id;
   final String? updatedAt;
   final String? username;
   final String? fullName;
@@ -7,7 +9,7 @@ class UserProfile {
   final String? email;
 
   UserProfile({
-    required this.id,
+    this.id,
     this.updatedAt,
     this.username,
     this.fullName,
@@ -35,5 +37,10 @@ class UserProfile {
       'avatar_url': avatarUrl,
       'email': email,
     };
+  }
+
+  @override
+  String toString() {
+    return const JsonEncoder.withIndent('  ').convert(toMap());
   }
 }
