@@ -4,7 +4,6 @@ import 'package:homebased_project/views/widget_tree.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
-import 'package:homebased_project/home_page/home_page.dart';
 import 'package:homebased_project/signup_page/signup_page.dart';
 import 'package:homebased_project/widgets/snackbar_widget.dart';
 

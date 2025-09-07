@@ -1,6 +1,8 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
+import 'package:homebased_project/backend/auth_api/auth_service.dart';
+import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
+import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
 import 'package:homebased_project/models/business_profile.dart';
 import 'package:homebased_project/views/business_profile_tree.dart';
 import 'package:image_picker/image_picker.dart';
@@ -57,12 +59,49 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _loadProfileData() async {
-    final prefs = await SharedPreferences.getInstance();
+    debugPrint("➡️ Starting _loadProfileData...");
+
+    UserProfile? userProfile = await UserProfileService.getCurrentUserProfile();
+
+    if (userProfile == null) {
+      debugPrint("⚠️ No user profile found. Creating default one...");
+
+      final newProfile = UserProfile(
+        id: AuthService.currentUserId!,
+        email: AuthService.currentUser?.email,
+        username: 'Guest',
+        avatarUrl: null,
+        fullName: null,
+      );
+
+      try {
+        await UserProfileService.insertCurrentUserProfile(newProfile);
+        debugPrint("✅ Inserted default profile for user: ${newProfile.id}");
+        userProfile = newProfile;
+      } catch (e, st) {
+        debugPrint("❌ Failed to insert default profile: $e\n$st");
+        return; // bail out early
+      }
+    } else {
+      debugPrint("✅ Retrieved existing profile for user: ${userProfile.id}");
+      debugPrint(
+        "   Username: ${userProfile.username}, Avatar: ${userProfile.avatarUrl}",
+      );
+    }
+
     setState(() {
-      username = prefs.getString('username') ?? 'Guest';
-      profileImagePath = prefs.getString('profileImagePath');
+      username = userProfile?.username ?? 'Guest';
       usernameController = TextEditingController(text: username);
+
+      // Proper image handling
+      profileImagePath =
+          tempProfileImagePath ??
+          (userProfile?.avatarUrl?.isNotEmpty ?? false
+              ? userProfile!.avatarUrl
+              : null);
     });
+
+    debugPrint("🎯 Finished _loadProfileData. State updated.");
   }
 
   Future<void> _pickProfileImage() async {
@@ -75,15 +114,14 @@ class _ProfilePageState extends State<ProfilePage> {
       setState(() {
         tempProfileImagePath = pickedFile.path;
       });
+      debugPrint("🖼️ Picked new profile image: ${pickedFile.path}");
     }
   }
 
   Future<void> _saveAll() async {
-    // 1) Validate username (always required)
     final uname = usernameController?.text ?? '';
     final usernameEmpty = uname.trim().isEmpty;
 
-    // 2) Validate business form only if it exists
     bool formValid = true;
     if (businessProfile != null) {
       formValid = _formKey.currentState?.validate() ?? false;
@@ -101,27 +139,43 @@ class _ProfilePageState extends State<ProfilePage> {
           duration: const Duration(seconds: 2),
         ),
       );
-      return; // stay in edit mode
+      return;
     }
 
-    // 3) Save
-    _formKey.currentState?.save(); // no-op if form doesn't exist
-    final prefs = await SharedPreferences.getInstance();
-
-    // username
     final newUsername = uname.trim();
-    await prefs.setString('username', newUsername);
-    username = newUsername;
 
-    // profile image
-    if (tempProfileImagePath != null) {
-      await prefs.setString('profileImagePath', tempProfileImagePath!);
-      profileImagePath = tempProfileImagePath;
+    try {
+      debugPrint("✏️ Updating username to $newUsername...");
+      await UserProfileService.updateCurrentUserProfile(
+        UserProfile(id: 'proxy id', username: newUsername),
+      );
+      username = newUsername;
+      debugPrint("✅ Username updated successfully.");
+    } catch (e, st) {
+      debugPrint("❌ Failed to update username: $e\n$st");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Failed to update profile. Please try again."),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
     }
 
-    // business profile (only if it exists)
+    if (tempProfileImagePath != null) {
+      try {
+        debugPrint("🖼️ Uploading avatar...");
+        final file = File(tempProfileImagePath!);
+        await UserProfileService.uploadAvatar(file);
+        profileImagePath = tempProfileImagePath;
+        tempProfileImagePath = null;
+        debugPrint("✅ Avatar uploaded successfully.");
+      } catch (e, st) {
+        debugPrint("❌ Failed to upload avatar: $e\n$st");
+      }
+    }
+
     if (businessProfile != null && editingBusinessProfile != null) {
-      // ensure latest images are included
       final images = _imagesKey.currentState?.getImages() ?? [];
       editingBusinessProfile = editingBusinessProfile!.copyWith(
         imagePaths: images,
@@ -129,13 +183,15 @@ class _ProfilePageState extends State<ProfilePage> {
 
       businessProfile = editingBusinessProfile;
       await saveBusinessProfile(businessProfile!);
+      debugPrint("💾 Business profile saved locally.");
     }
 
     setState(() {
-      tempProfileImagePath = null;
       isEditing = false;
       editingBusinessProfile = null;
     });
+
+    debugPrint("🎯 _saveAll finished, state updated.");
   }
 
   void _cancelAll() {
@@ -145,6 +201,7 @@ class _ProfilePageState extends State<ProfilePage> {
       editingBusinessProfile = null;
       isEditing = false;
     });
+    debugPrint("❌ Edit cancelled, reverted state.");
   }
 
   @override
@@ -153,11 +210,7 @@ class _ProfilePageState extends State<ProfilePage> {
       appBar: AppBar(
         actions: [
           isEditing
-              ? Row(
-                  children: [
-                    IconButton(icon: Icon(Icons.cancel), onPressed: _cancelAll),
-                  ],
-                )
+              ? IconButton(icon: Icon(Icons.cancel), onPressed: _cancelAll)
               : IconButton(
                   icon: Icon(Icons.edit),
                   onPressed: () {
@@ -176,30 +229,19 @@ class _ProfilePageState extends State<ProfilePage> {
       body: SingleChildScrollView(
         child: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              // profile image and username
               Stack(
-                alignment: Alignment
-                    .bottomRight, // place edit button at bottom-right corner of avatar
+                alignment: Alignment.bottomRight,
                 children: [
                   CircleAvatar(
                     radius: 50,
                     backgroundColor: Colors.transparent,
-                    backgroundImage:
-                        (isEditing
-                                ? (tempProfileImagePath ?? profileImagePath)
-                                : profileImagePath) !=
-                            null
-                        ? FileImage(
-                            File(
-                              (isEditing
-                                  ? tempProfileImagePath ?? profileImagePath
-                                  : profileImagePath)!,
-                            ),
-                          )
-                        : const AssetImage('assets/defaultUser.png')
-                              as ImageProvider,
+                    backgroundImage: tempProfileImagePath != null
+                        ? FileImage(File(tempProfileImagePath!))
+                        : (profileImagePath != null &&
+                              profileImagePath!.startsWith('http'))
+                        ? NetworkImage(profileImagePath!) as ImageProvider
+                        : const AssetImage('assets/defaultUser.png'),
                   ),
                   if (isEditing)
                     InkWell(
@@ -207,7 +249,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: Container(
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.red, // background for visibility
+                          color: Colors.red,
                         ),
                         padding: const EdgeInsets.all(6.0),
                         child: const Icon(
@@ -219,8 +261,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                 ],
               ),
-
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               if (isEditing)
                 SizedBox(
                   width: 200,
@@ -231,14 +272,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 )
               else
                 Text(
-                  username ?? "Guest",
+                  username ?? 'Guest',
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
-              SizedBox(height: 20),
-              //if no business profile and not editing, show create button
+              const SizedBox(height: 20),
               if (businessProfile == null && !isEditing)
                 Container(
-                  padding: EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(16.0),
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pushReplacement(
@@ -252,12 +292,12 @@ class _ProfilePageState extends State<ProfilePage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      minimumSize: Size(double.infinity, 187),
+                      minimumSize: const Size(double.infinity, 187),
                     ),
                     child: Column(
                       children: [
                         Image.asset('assets/hammer.png', width: 64, height: 68),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Text(
                           'Create HBB Profile',
                           style: Theme.of(context).textTheme.titleLarge,
@@ -266,7 +306,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                   ),
                 ),
-              //if have business profile or editing, show form
               if (businessProfile != null)
                 Form(
                   key: _formKey,
@@ -276,57 +315,51 @@ class _ProfilePageState extends State<ProfilePage> {
                         label: "Business Name",
                         type: FieldType.text,
                         requiredField: true,
-                        initialValue:
-                            (isEditing
-                                    ? editingBusinessProfile
-                                    : businessProfile)
-                                ?.name,
+                        initialValue: isEditing
+                            ? editingBusinessProfile?.name
+                            : businessProfile?.name,
                         onSaved: (val) {
                           if (isEditing) {
                             editingBusinessProfile = editingBusinessProfile
-                                ?.copyWith(name: val ?? "");
+                                ?.copyWith(name: val ?? '');
                           }
                         },
                         readOnly: !isEditing,
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       CustomFormField(
                         label: "Product Type",
                         type: FieldType.dropdown,
                         requiredField: true,
-                        initialValue:
-                            (isEditing
-                                    ? editingBusinessProfile
-                                    : businessProfile)
-                                ?.productType,
+                        initialValue: isEditing
+                            ? editingBusinessProfile?.productType
+                            : businessProfile?.productType,
                         onSaved: (val) {
                           if (isEditing) {
                             editingBusinessProfile = editingBusinessProfile
-                                ?.copyWith(productType: val ?? "");
+                                ?.copyWith(productType: val ?? '');
                           }
                         },
                         readOnly: !isEditing,
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       CustomFormField(
                         label: "Description",
                         type: FieldType.text,
                         requiredField: false,
-                        initialValue:
-                            (isEditing
-                                    ? editingBusinessProfile
-                                    : businessProfile)
-                                ?.description,
+                        initialValue: isEditing
+                            ? editingBusinessProfile?.description
+                            : businessProfile?.description,
                         onSaved: (val) {
                           if (isEditing) {
                             editingBusinessProfile = editingBusinessProfile
-                                ?.copyWith(description: val ?? "");
+                                ?.copyWith(description: val ?? '');
                           }
                         },
                         readOnly: !isEditing,
                         maxLines: 3,
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       CustomFormField(
                         key: _imagesKey,
                         label: "Photos",
@@ -337,7 +370,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             : businessProfile?.imagePaths,
                         readOnly: !isEditing,
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       if (!isEditing && businessProfile != null)
                         ElevatedButton.icon(
                           onPressed: () async {
@@ -345,8 +378,8 @@ class _ProfilePageState extends State<ProfilePage> {
                             await prefs.remove('businessProfile');
                             setState(() => businessProfile = null);
                           },
-                          icon: Icon(Icons.delete),
-                          label: Text('Delete Business Profile'),
+                          icon: const Icon(Icons.delete),
+                          label: const Text('Delete Business Profile'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red,
                             foregroundColor: Colors.white,
@@ -369,7 +402,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange,
                       ),
-                      child: Text(
+                      child: const Text(
                         'Save Changes',
                         style: TextStyle(fontSize: 27, color: Colors.white),
                       ),

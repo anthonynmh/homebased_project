@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:path/path.dart' as path;
 
@@ -50,6 +51,7 @@ class UserProfileService {
 
   static Future<void> updateCurrentUserProfile(UserProfile profile) async {
     final userId = _currentUserId;
+    print('Updating profile for userId: $userId');
 
     try {
       // Build a map of only the fields that are not null
@@ -59,6 +61,10 @@ class UserProfileService {
       if (profile.avatarUrl != null) data['avatar_url'] = profile.avatarUrl;
       if (profile.email != null) data['email'] = profile.email;
       data['updated_at'] = DateTime.now().toUtc().toIso8601String();
+
+      debugPrint("🛠 updateCurrentUserProfile called");
+      debugPrint("   _currentUserId = $userId");
+      debugPrint("   updating data = $data");
 
       if (data.isEmpty) return; // nothing to update
 
@@ -75,7 +81,7 @@ class UserProfileService {
 
     final ext = path.extension(imageFile.path);
     final filename = '$userId$ext'; // unique per user
-    final filepath = 'avatars/$filename'; // subfolder in bucket
+    final filepath = filename; // subfolder in bucket
 
     try {
       final storage = supabase.storage;
