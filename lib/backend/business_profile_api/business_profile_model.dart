@@ -9,6 +9,7 @@ class BusinessProfile {
   final double? latitude;
   final double? longitude;
   final String? logoUrl;
+  final List<String>? photoUrls;
 
   BusinessProfile({
     this.id,
@@ -19,6 +20,7 @@ class BusinessProfile {
     this.latitude,
     this.longitude,
     this.logoUrl,
+    this.photoUrls,
   });
 
   factory BusinessProfile.fromMap(Map<String, dynamic> map) {
@@ -31,6 +33,7 @@ class BusinessProfile {
       latitude: map['latitude'] as double?,
       longitude: map['longitude'] as double?,
       logoUrl: map['logo_url'] as String?,
+      photoUrls: map['photo_urls'] as List<String>,
     );
   }
 
@@ -44,6 +47,7 @@ class BusinessProfile {
       'longitude': longitude,
       'latitude': latitude,
       'logo_url': logoUrl,
+      'photo_urls': photoUrls,
     };
   }
 
