@@ -89,16 +89,19 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     }
 
-    setState(() {
-      username = userProfile?.username ?? 'Guest';
-      usernameController = TextEditingController(text: username);
+    // 🔑 Get signed URL
+    String? signedUrl;
+    if (userProfile?.avatarUrl != null) {
+      signedUrl = await UserProfileService.getAvatarUrl();
+    }
 
-      // Proper image handling
-      profileImagePath =
-          tempProfileImagePath ??
-          (userProfile?.avatarUrl?.isNotEmpty ?? false
-              ? userProfile!.avatarUrl
-              : null);
+    if (!mounted) return;
+    setState(() {
+      username = userProfile?.username?.isNotEmpty == true
+          ? userProfile!.username
+          : 'Guest';
+      usernameController = TextEditingController(text: username);
+      profileImagePath = tempProfileImagePath ?? signedUrl;
     });
 
     debugPrint("🎯 Finished _loadProfileData. State updated.");
@@ -146,9 +149,11 @@ class _ProfilePageState extends State<ProfilePage> {
 
     try {
       debugPrint("✏️ Updating username to $newUsername...");
-      await UserProfileService.updateCurrentUserProfile(
-        UserProfile(id: 'proxy id', username: newUsername),
-      );
+      if (newUsername.isNotEmpty) {
+        await UserProfileService.updateCurrentUserProfile(
+          UserProfile(id: AuthService.currentUserId!, username: newUsername),
+        );
+      }
       username = newUsername;
       debugPrint("✅ Username updated successfully.");
     } catch (e, st) {
@@ -167,9 +172,16 @@ class _ProfilePageState extends State<ProfilePage> {
         debugPrint("🖼️ Uploading avatar...");
         final file = File(tempProfileImagePath!);
         await UserProfileService.uploadAvatar(file);
-        profileImagePath = tempProfileImagePath;
-        tempProfileImagePath = null;
-        debugPrint("✅ Avatar uploaded successfully.");
+
+        // Get new signed URL right after upload
+        final newSignedUrl = await UserProfileService.getAvatarUrl();
+
+        setState(() {
+          profileImagePath = newSignedUrl;
+          tempProfileImagePath = null; // clear preview
+        });
+
+        debugPrint("✅ Avatar uploaded and refreshed successfully.");
       } catch (e, st) {
         debugPrint("❌ Failed to upload avatar: $e\n$st");
       }
@@ -217,7 +229,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     setState(() {
                       editingBusinessProfile = businessProfile?.copyWith();
                       isEditing = true;
-                      tempProfileImagePath = profileImagePath;
+                      tempProfileImagePath = null;
                       usernameController = TextEditingController(
                         text: username ?? 'Guest',
                       );
@@ -240,7 +252,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ? FileImage(File(tempProfileImagePath!))
                         : (profileImagePath != null &&
                               profileImagePath!.startsWith('http'))
-                        ? NetworkImage(profileImagePath!) as ImageProvider
+                        ? NetworkImage(profileImagePath!)
                         : const AssetImage('assets/defaultUser.png'),
                   ),
                   if (isEditing)
