@@ -1,83 +1,226 @@
 import 'dart:io';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:path/path.dart' as path;
-import 'business_profile_model.dart';
 
-final _client = Supabase.instance.client;
+import 'package:homebased_project/backend/supabase_api/supabase_service.dart';
+import 'package:homebased_project/backend/auth_api/auth_service.dart';
+import 'package:homebased_project/backend/business_profile_api/business_profile_model.dart';
 
 class BusinessProfileService {
-  static const String table = 'business_profiles';
-  static const String bucket = 'business-photos';
+  static final String table = dotenv.env['BUSINESS_PROFILE_TABLE_PROD'] ?? '';
+  static final String bucket = dotenv.env['BUSINESS_PROFILE_BUCKET_PROD'] ?? '';
 
-  static Future<BusinessProfile?> getProfile() async {
-    final user = _client.auth.currentUser;
-    if (user == null) return null;
+  static String get _currentUserId {
+    final id = AuthService.currentUserId;
+    if (id == null) throw Exception('No user is currently logged in.');
+    return id;
+  }
 
+  /// Get current user's business profile by ID
+  static Future<BusinessProfile?> getCurrentBusinessProfile() async {
+    final userId = _currentUserId;
     try {
-      final res = await _client
+      final res = await supabase
           .from(table)
           .select()
-          .eq('id', user.id)
-          .single(); // Returns a Map<String, dynamic>
+          .eq('id', userId)
+          .maybeSingle();
 
-      // Old API: PostgrestResponse with `data` property
-      // New API: Directly returns Map<String, dynamic>
-      // The following code handles both instances for version safety, with some VScode complaints
-      final Map<String, dynamic>? data = 
-        (res is Map<String, dynamic>) ? res : (res as dynamic).data;
-
-      if (data == null) {
-        final status = (res is Map) ? null : (res as dynamic).status;
-        final statusText = (res is Map) ? null : (res as dynamic).statusText;
-        print('Failed to get business profile: $status $statusText');
-        return null;
-      }
-
-      return BusinessProfile.fromMap(data);
-    } catch (error) {
-      print('Error getting profile: $error');
+      if (res == null) return null;
+      return BusinessProfile.fromMap(res);
+    } catch (e) {
+      print('Error fetching current business profile: $e');
       return null;
     }
   }
 
-  static Future<void> upsertProfile(BusinessProfile profile) async {
-    await _client
-        .from(table)
-        .upsert(profile.toMap())
-        .then((res) {
-          if (res.data == null) {
-            print(
-              'Failed to upsert business profile: ${res.status} ${res.statusText}',
-            );
-          } else {
-            print('Business profile upserted successfully');
-          }
-        })
-        .catchError((error) {
-          print('Error upserting profile: $error');
-        });
+  /// Get all business profiles (useful for listings / marketplace view)
+  static Future<List<BusinessProfile>> getAllBusinessProfiles() async {
+    try {
+      final res = await supabase.from(table).select();
+
+      return (res as List)
+          .map((item) => BusinessProfile.fromMap(item))
+          .toList();
+    } catch (e) {
+      print('Error fetching all business profiles: $e');
+      return [];
+    }
   }
 
-  static Future<String?> uploadLogo(File imageFile) async {
-    final ext = path.extension(imageFile.path);
-    final filename = '${const Uuid().v4()}$ext';
-    final filepath = 'public/$filename';
+  /// Update current business profile (only non-null fields will be updated)
+  static Future<void> updateCurrentBusinessProfile(
+    BusinessProfile profile,
+  ) async {
+    final userId = _currentUserId;
 
     try {
-      final response = await _client.storage
-          .from(bucket)
-          .upload(filepath, imageFile);
+      final data = <String, dynamic>{};
+      if (profile.businessName != null) {
+        data['business_name'] = profile.businessName;
+      }
+      if (profile.description != null) {
+        data['description'] = profile.description;
+      }
+      if (profile.sector != null) data['sector'] = profile.sector;
+      if (profile.latitude != null) data['latitude'] = profile.latitude;
+      if (profile.longitude != null) data['longitude'] = profile.longitude;
+      if (profile.logoUrl != null) data['logo_url'] = profile.logoUrl;
+      data['updated_at'] = DateTime.now().toUtc().toIso8601String();
 
-      if (response.isEmpty) {
-        print('Logo upload failed. No path returned.');
-        return null;
+      if (data.isEmpty) return;
+
+      await supabase.from(table).update(data).eq('id', userId);
+      print('Business profile updated successfully.');
+    } catch (e, st) {
+      print('Failed to update business profile: $e\n$st');
+      throw Exception('Failed to update business profile');
+    }
+  }
+
+  /// Upload business logo to Supabase storage and store only file path in table
+  static Future<void> uploadBusinessLogo(File imageFile) async {
+    final userId = _currentUserId;
+    final ext = path.extension(imageFile.path);
+    final filename = 'logo$ext'; // always the same file name for overwrite
+    final filepath = '$userId/logo/$filename';
+
+    try {
+      final storage = supabase.storage;
+
+      // Remove old logo if exists
+      try {
+        await storage.from(bucket).remove([filepath]);
+      } catch (_) {}
+
+      await storage.from(bucket).upload(filepath, imageFile);
+
+      // Update DB with only the file path
+      await updateCurrentBusinessProfile(
+        BusinessProfile(id: userId, logoUrl: filepath),
+      );
+
+      print('Business logo uploaded and path stored: $filepath');
+    } catch (e, st) {
+      print('Upload business logo error: $e\n$st');
+    }
+  }
+
+  /// Upload one or more business photos to Supabase storage and store file paths in table
+  static Future<void> uploadBusinessPhotos(List<File> imageFiles) async {
+    final userId = _currentUserId;
+    final storage = supabase.storage;
+
+    final List<String> uploadedPaths = [];
+
+    try {
+      for (final imageFile in imageFiles) {
+        final ext = path.extension(imageFile.path);
+        final basename = path.basenameWithoutExtension(imageFile.path);
+        final filename =
+            '${basename}_${DateTime.now().millisecondsSinceEpoch}$ext'; // avoid collisions
+        final filepath = '$userId/business_photos/$filename';
+
+        await storage.from(bucket).upload(filepath, imageFile);
+        uploadedPaths.add(filepath);
       }
 
-      return _client.storage.from(bucket).getPublicUrl(filepath);
-    } catch (e) {
-      print('Upload error: $e');
+      // Fetch existing photos
+      final existingRes = await supabase
+          .from(table)
+          .select('business_photos')
+          .eq('id', userId)
+          .maybeSingle();
+
+      List<String> existingPaths = [];
+      if (existingRes != null && existingRes['business_photos'] != null) {
+        existingPaths = List<String>.from(
+          existingRes['business_photos'] as List<dynamic>,
+        );
+      }
+
+      // Merge new + existing
+      final updatedPaths = [...existingPaths, ...uploadedPaths];
+
+      // Update DB with all photo paths
+      await supabase
+          .from(table)
+          .update({'business_photos': updatedPaths})
+          .eq('id', userId);
+
+      print('Business photos uploaded: $uploadedPaths');
+    } catch (e, st) {
+      print('Upload business photos error: $e\n$st');
+    }
+  }
+
+  /// Get signed URLs for all business photos
+  static Future<List<String>> getCurrentBusinessPhotosUrls() async {
+    final userId = _currentUserId;
+
+    try {
+      final res = await supabase
+          .from(table)
+          .select('business_photos')
+          .eq('id', userId)
+          .maybeSingle();
+
+      final List<dynamic>? paths = res?['business_photos'] as List<dynamic>?;
+      if (paths == null || paths.isEmpty) return [];
+
+      final List<String> signedUrls = [];
+      for (final filepath in paths) {
+        final url = await supabase.storage
+            .from(bucket)
+            .createSignedUrl(filepath, 60);
+        signedUrls.add(url);
+      }
+
+      return signedUrls;
+    } catch (e, st) {
+      print('Get business photos signed URLs error: $e\n$st');
+      return [];
+    }
+  }
+
+  /// Returns a signed URL to the business logo (valid for 60 seconds)
+  static Future<String?> getCurrentBusinessLogoUrl() async {
+    final userId = _currentUserId;
+
+    try {
+      final res = await supabase
+          .from(table)
+          .select('logo_url')
+          .eq('id', userId)
+          .maybeSingle();
+
+      final filepath = res?['logo_url'] as String?;
+      if (filepath == null) return null;
+
+      final signedUrl = await supabase.storage
+          .from(bucket)
+          .createSignedUrl(filepath, 60);
+
+      return signedUrl;
+    } catch (e, st) {
+      print('Get business logo signed URL error: $e\n$st');
       return null;
+    }
+  }
+
+  /// Example: Search business profiles by sector
+  static Future<List<BusinessProfile>> searchBusinessProfilesBySector(
+    String sector,
+  ) async {
+    try {
+      final res = await supabase.from(table).select().eq('sector', sector);
+
+      return (res as List)
+          .map((item) => BusinessProfile.fromMap(item))
+          .toList();
+    } catch (e) {
+      print('Error searching business profiles by sector: $e');
+      return [];
     }
   }
 }
