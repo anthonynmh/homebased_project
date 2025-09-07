@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:path/path.dart' as path;
 
@@ -51,7 +50,6 @@ class UserProfileService {
 
   static Future<void> updateCurrentUserProfile(UserProfile profile) async {
     final userId = _currentUserId;
-    print('Updating profile for userId: $userId');
 
     try {
       // Build a map of only the fields that are not null
@@ -62,10 +60,6 @@ class UserProfileService {
       if (profile.email != null) data['email'] = profile.email;
       data['updated_at'] = DateTime.now().toUtc().toIso8601String();
 
-      debugPrint("🛠 updateCurrentUserProfile called");
-      debugPrint("   _currentUserId = $userId");
-      debugPrint("   updating data = $data");
-
       if (data.isEmpty) return; // nothing to update
 
       await supabase.from(table).update(data).eq('id', userId);
@@ -75,13 +69,13 @@ class UserProfileService {
     }
   }
 
-  /// Upload avatar image to Supabase storage and stores public URL in table
+  /// Upload avatar image to Supabase storage and store only the file path in table
   static Future<void> uploadAvatar(File imageFile) async {
     final userId = _currentUserId;
 
     final ext = path.extension(imageFile.path);
     final filename = '$userId$ext'; // unique per user
-    final filepath = filename; // subfolder in bucket
+    final filepath = filename;
 
     try {
       final storage = supabase.storage;
@@ -93,25 +87,20 @@ class UserProfileService {
         // ignore if none exists
       }
 
-      // Upload new avatar
       await storage.from(bucket).upload(filepath, imageFile);
 
-      // Get public URL
-      final publicUrl = storage.from(bucket).getPublicUrl(filepath);
-
-      // Update user profile with new avatar_url and updated_at
+      // Store only the file path (not public URL)
       await updateCurrentUserProfile(
-        UserProfile(
-          id: userId, // required
-          avatarUrl: publicUrl, // only updating avatar
-        ),
+        UserProfile(id: userId, avatarUrl: filepath),
       );
+
+      print('Avatar uploaded and path stored: $filepath');
     } catch (e, st) {
       print('Upload avatar error: $e\n$st');
     }
   }
 
-  /// Returns the current user's avatar URL from the profiles table (or null if none exists)
+  /// Returns a signed URL to the current user's avatar (or null if none exists).
   static Future<String?> getAvatarUrl() async {
     final userId = _currentUserId;
 
@@ -122,9 +111,17 @@ class UserProfileService {
           .eq('id', userId)
           .maybeSingle();
 
-      return res?['avatar_url'] as String?;
+      final path = res?['avatar_url'] as String?;
+      if (path == null) return null;
+
+      // Generate signed URL valid for 60 seconds
+      final signedUrl = await supabase.storage
+          .from(bucket)
+          .createSignedUrl(path, 60);
+
+      return signedUrl;
     } catch (e, st) {
-      print('Get avatar error: $e\n$st');
+      print('Get avatar signed URL error: $e\n$st');
       return null;
     }
   }
