@@ -17,6 +17,25 @@ await AuthService.signInWithEmailPassword(
 
 ---
 
+## Default Supabase Instance
+
+This service will call the global Supabse instance in `/supabase_service_api/supabase_service.dart`.
+
+To override this instance (e.g., for testing), you may call the `setClient()` method.
+
+### Example
+
+```Dart
+setUp(() {
+  final mockSupabaseInstance = SupabaseClient('testUrl', 'testKey');
+  AuthService.setClient(mockSupabaseInstance);
+});
+
+tearDown(() {
+  AuthService.resetClient(); // reset to global, if necessary
+});
+```
+
 ## Available Methods
 
 ### 1. signInWithEmailPassword
