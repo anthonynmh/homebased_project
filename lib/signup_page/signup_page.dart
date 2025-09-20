@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
@@ -41,7 +40,6 @@ class _SignupPageState extends State<SignupPage> {
         final profile = UserProfile(id: res.user!.id, email: res.user!.email);
         await UserProfileService.insertCurrentUserProfile(profile);
 
-        // Navigate to login page
         if (!mounted) return;
         Navigator.of(
           context,
@@ -58,41 +56,192 @@ class _SignupPageState extends State<SignupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign Up')),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
-        child: ListView(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Column(
           children: [
-            const Text('Create a new account', style: TextStyle(fontSize: 16)),
-            const SizedBox(height: 18),
-            TextFormField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-              keyboardType: TextInputType.emailAddress,
+            const SizedBox(height: 40),
+
+            // Home icon (from assets)
+            Image.asset(
+              'assets/ion_home.png',
+              width: 60,
+              height: 60,
+              color: const Color(0xFFFF7949),
             ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'Password'),
-              obscureText: true,
-            ),
-            const SizedBox(height: 18),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _signUp,
-              child: Text(_isLoading ? 'Signing up...' : 'Sign Up'),
-            ),
-            const SizedBox(height: 18),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const LoginPage()),
-                );
-              },
-              child: const Text("Already have an account? Back to Login"),
+            const SizedBox(height: 20),
+
+            // Orange container with roof shape
+            Expanded(
+              child: ClipPath(
+                clipper: RoofClipper(),
+                child: Container(
+                  width: double.infinity,
+                  color: const Color(0xFFFF7949),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          top: constraints.maxHeight * 0.15, // align after roof
+                          left: 24,
+                          right: 24,
+                          bottom: 32,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Text(
+                              "New Account",
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Email field
+                            _buildInputField(
+                              label: "Email",
+                              controller: _emailController,
+                              obscure: false,
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Password field
+                            _buildInputField(
+                              label: "Password",
+                              controller: _passwordController,
+                              obscure: true,
+                            ),
+                            const SizedBox(height: 28),
+
+                            // Sign Up button
+                            ElevatedButton(
+                              onPressed: _isLoading ? null : _signUp,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 80,
+                                  vertical: 14,
+                                ),
+                                elevation: 3,
+                              ),
+                              child: Text(
+                                _isLoading ? "Signing up..." : "Sign Up",
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFFFF7949),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+
+                            // Back to login
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                    builder: (_) => const LoginPage(),
+                                  ),
+                                );
+                              },
+                              child: const Text(
+                                "Already have an account? Back to Login",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
             ),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildInputField({
+    required TextEditingController controller,
+    required String label,
+    required bool obscure,
+  }) {
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 24,
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(37.27), // same as login
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.25),
+                spreadRadius: 2,
+                blurRadius: 5,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: TextField(
+            controller: controller,
+            obscureText: obscure,
+            style: Theme.of(context).textTheme.bodyMedium,
+            decoration: InputDecoration(
+              border: InputBorder.none, // same as login page
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// Custom clipper for roof shape
+class RoofClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    // Start from bottom left
+    path.lineTo(0, size.height * 0.15);
+
+    // Left diagonal up
+    path.lineTo(size.width / 2, 0);
+
+    // Right diagonal down
+    path.lineTo(size.width, size.height * 0.15);
+
+    // Down to bottom right
+    path.lineTo(size.width, size.height);
+
+    // Back to bottom left
+    path.lineTo(0, size.height);
+
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
