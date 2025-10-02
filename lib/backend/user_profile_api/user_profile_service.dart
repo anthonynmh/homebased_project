@@ -1,27 +1,35 @@
 import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:path/path.dart' as path;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:homebased_project/backend/supabase_api/supabase_service.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
 
+/// Expose user profile related operations
+final userProfileService = UserProfileService();
+
 class UserProfileService {
+  final SupabaseClient _supabase;
+
   static final String table = dotenv.env['USER_PROFILE_TABLE_PROD'] ?? '';
   static final String bucket = dotenv.env['USER_PROFILE_BUCKET_PROD'] ?? '';
 
-  static String get _currentUserId {
+  UserProfileService({SupabaseClient? client})
+    : _supabase = client ?? Supabase.instance.client;
+
+  String get _currentUserId {
     final id = authService.currentUserId;
     if (id == null) throw Exception('No user is currently logged in.');
     return id;
   }
 
   /// Get profile by supabase id (unique user ID)
-  static Future<UserProfile?> getCurrentUserProfile() async {
+  Future<UserProfile?> getCurrentUserProfile() async {
     final userId = _currentUserId;
 
     try {
-      final res = await supabase
+      final res = await _supabase
           .from(table)
           .select()
           .eq('id', userId)
@@ -35,9 +43,9 @@ class UserProfileService {
     }
   }
 
-  static Future<void> insertCurrentUserProfile(UserProfile profile) async {
+  Future<void> insertCurrentUserProfile(UserProfile profile) async {
     try {
-      await supabase.rpc(
+      await _supabase.rpc(
         'create_profile',
         params: {'p_id': profile.id, 'p_email': profile.email},
       );
@@ -48,7 +56,7 @@ class UserProfileService {
     }
   }
 
-  static Future<void> updateCurrentUserProfile(UserProfile profile) async {
+  Future<void> updateCurrentUserProfile(UserProfile profile) async {
     final userId = _currentUserId;
 
     try {
@@ -62,7 +70,7 @@ class UserProfileService {
 
       if (data.isEmpty) return; // nothing to update
 
-      await supabase.from(table).update(data).eq('id', userId);
+      await _supabase.from(table).update(data).eq('id', userId);
     } catch (e, st) {
       print('Failed to update user profile: $e\n$st');
       throw Exception('Failed to update profile');
@@ -70,7 +78,7 @@ class UserProfileService {
   }
 
   /// Upload avatar image to Supabase storage and store only the file path in table
-  static Future<void> uploadAvatar(File imageFile) async {
+  Future<void> uploadAvatar(File imageFile) async {
     final userId = _currentUserId;
 
     final ext = path.extension(imageFile.path);
@@ -78,7 +86,7 @@ class UserProfileService {
     final filepath = filename;
 
     try {
-      final storage = supabase.storage;
+      final storage = _supabase.storage;
 
       // Remove old avatar if it exists
       try {
@@ -101,11 +109,11 @@ class UserProfileService {
   }
 
   /// Returns a signed URL to the current user's avatar (or null if none exists).
-  static Future<String?> getAvatarUrl() async {
+  Future<String?> getAvatarUrl() async {
     final userId = _currentUserId;
 
     try {
-      final res = await supabase
+      final res = await _supabase
           .from(table)
           .select('avatar_url')
           .eq('id', userId)
@@ -115,7 +123,7 @@ class UserProfileService {
       if (path == null) return null;
 
       // Generate signed URL valid for 60 seconds
-      final signedUrl = await supabase.storage
+      final signedUrl = await _supabase.storage
           .from(bucket)
           .createSignedUrl(path, 60);
 
