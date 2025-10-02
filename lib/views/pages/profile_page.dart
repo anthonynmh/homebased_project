@@ -67,8 +67,8 @@ class _ProfilePageState extends State<ProfilePage> {
       debugPrint("⚠️ No user profile found. Creating default one...");
 
       final newProfile = UserProfile(
-        id: AuthService.currentUserId!,
-        email: AuthService.currentUser?.email,
+        id: authService.currentUserId!,
+        email: authService.currentUser?.email,
         username: 'Guest',
         avatarUrl: null,
         fullName: null,
@@ -151,7 +151,7 @@ class _ProfilePageState extends State<ProfilePage> {
       debugPrint("✏️ Updating username to $newUsername...");
       if (newUsername.isNotEmpty) {
         await UserProfileService.updateCurrentUserProfile(
-          UserProfile(id: AuthService.currentUserId!, username: newUsername),
+          UserProfile(id: authService.currentUserId!, username: newUsername),
         );
       }
       username = newUsername;

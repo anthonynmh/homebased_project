@@ -11,7 +11,7 @@ class UserProfileService {
   static final String bucket = dotenv.env['USER_PROFILE_BUCKET_PROD'] ?? '';
 
   static String get _currentUserId {
-    final id = AuthService.currentUserId;
+    final id = authService.currentUserId;
     if (id == null) throw Exception('No user is currently logged in.');
     return id;
   }

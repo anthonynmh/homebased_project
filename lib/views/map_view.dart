@@ -3,7 +3,6 @@ import 'package:homebased_project/backend/business_profile_api/business_profile_
 import 'package:latlong2/latlong.dart';
 import 'package:homebased_project/backend/map_api/map_service.dart';
 
-
 // Test screen for multimarkermap
 class MultiMapScreen extends StatefulWidget {
   const MultiMapScreen({super.key});
@@ -47,23 +46,21 @@ class _MultiMapScreenState extends State<MultiMapScreen> {
     ),
   ];
 
-  // Sample initial center 
+  // Sample initial center
   final LatLng _sampleCenter = LatLng(1.3162, 103.7649);
-  
+
   // Sample callback function for when a marker is clicked in the map
   void _sampleCallback(BusinessProfile profile) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(profile.businessName)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(profile.businessName ?? 'No name')));
   }
 
   @override
   Widget build(BuildContext context) {
     // Test for MultiMarkerMap
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Multi Marker Map"),
-      ),
+      appBar: AppBar(title: const Text("Multi Marker Map")),
       body: MapService.getMultiMarkerMap(
         initialCenter: _sampleCenter,
         markerProfiles: _sampleProfiles,
@@ -72,7 +69,6 @@ class _MultiMapScreenState extends State<MultiMapScreen> {
     );
   }
 }
-
 
 // Test screen for singlemarkermap
 class SingleMapScreen extends StatefulWidget {
@@ -83,16 +79,14 @@ class SingleMapScreen extends StatefulWidget {
 }
 
 class _SingleMapScreenState extends State<SingleMapScreen> {
-  // Sample initial center 
+  // Sample initial center
   final LatLng _sampleCenter = LatLng(1.3162, 103.7649);
 
   @override
   Widget build(BuildContext context) {
     // Test for SingleMarkerMap
-   return Scaffold(
-      appBar: AppBar(
-        title: const Text("Single Marker Map"),
-      ),
+    return Scaffold(
+      appBar: AppBar(title: const Text("Single Marker Map")),
       body: MapService.getSingleMarkerMap(initialCenter: _sampleCenter),
     );
   }

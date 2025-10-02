@@ -17,7 +17,7 @@ class WidgetTree extends StatefulWidget {
 
 class _WidgetTreeState extends State<WidgetTree> {
   void _logout() async {
-    await AuthService.signOut();
+    await authService.signOut();
 
     if (!mounted) return;
     Navigator.pushReplacement(
