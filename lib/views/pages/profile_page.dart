@@ -61,7 +61,9 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadProfileData() async {
     debugPrint("➡️ Starting _loadProfileData...");
 
-    UserProfile? userProfile = await UserProfileService.getCurrentUserProfile();
+    UserProfile? userProfile = await userProfileService.getCurrentUserProfile(
+      authService.currentUserId!,
+    );
 
     if (userProfile == null) {
       debugPrint("⚠️ No user profile found. Creating default one...");
@@ -75,7 +77,7 @@ class _ProfilePageState extends State<ProfilePage> {
       );
 
       try {
-        await UserProfileService.insertCurrentUserProfile(newProfile);
+        await userProfileService.insertCurrentUserProfile(newProfile);
         debugPrint("✅ Inserted default profile for user: ${newProfile.id}");
         userProfile = newProfile;
       } catch (e, st) {
@@ -91,8 +93,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
     // 🔑 Get signed URL
     String? signedUrl;
-    if (userProfile?.avatarUrl != null) {
-      signedUrl = await UserProfileService.getAvatarUrl();
+    if (userProfile.avatarUrl != null) {
+      signedUrl = await userProfileService.getAvatarUrl(
+        authService.currentUserId!,
+      );
     }
 
     if (!mounted) return;
@@ -150,7 +154,7 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       debugPrint("✏️ Updating username to $newUsername...");
       if (newUsername.isNotEmpty) {
-        await UserProfileService.updateCurrentUserProfile(
+        await userProfileService.updateCurrentUserProfile(
           UserProfile(id: authService.currentUserId!, username: newUsername),
         );
       }
@@ -171,10 +175,12 @@ class _ProfilePageState extends State<ProfilePage> {
       try {
         debugPrint("🖼️ Uploading avatar...");
         final file = File(tempProfileImagePath!);
-        await UserProfileService.uploadAvatar(file);
+        await userProfileService.uploadAvatar(file, authService.currentUserId!);
 
         // Get new signed URL right after upload
-        final newSignedUrl = await UserProfileService.getAvatarUrl();
+        final newSignedUrl = await userProfileService.getAvatarUrl(
+          authService.currentUserId!,
+        );
 
         setState(() {
           profileImagePath = newSignedUrl;

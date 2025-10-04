@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 class UserProfile {
-  final String? id;
+  final String id;
   final String? updatedAt;
   final String? username;
   final String? fullName;
@@ -9,7 +9,7 @@ class UserProfile {
   final String? email;
 
   UserProfile({
-    this.id,
+    required this.id,
     this.updatedAt,
     this.username,
     this.fullName,
