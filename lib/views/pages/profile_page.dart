@@ -61,7 +61,9 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadProfileData() async {
     debugPrint("➡️ Starting _loadProfileData...");
 
-    UserProfile? userProfile = await userProfileService.getCurrentUserProfile();
+    UserProfile? userProfile = await userProfileService.getCurrentUserProfile(
+      authService.currentUserId!,
+    );
 
     if (userProfile == null) {
       debugPrint("⚠️ No user profile found. Creating default one...");
@@ -91,8 +93,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
     // 🔑 Get signed URL
     String? signedUrl;
-    if (userProfile?.avatarUrl != null) {
-      signedUrl = await userProfileService.getAvatarUrl();
+    if (userProfile.avatarUrl != null) {
+      signedUrl = await userProfileService.getAvatarUrl(
+        authService.currentUserId!,
+      );
     }
 
     if (!mounted) return;
@@ -171,10 +175,12 @@ class _ProfilePageState extends State<ProfilePage> {
       try {
         debugPrint("🖼️ Uploading avatar...");
         final file = File(tempProfileImagePath!);
-        await userProfileService.uploadAvatar(file);
+        await userProfileService.uploadAvatar(file, authService.currentUserId!);
 
         // Get new signed URL right after upload
-        final newSignedUrl = await userProfileService.getAvatarUrl();
+        final newSignedUrl = await userProfileService.getAvatarUrl(
+          authService.currentUserId!,
+        );
 
         setState(() {
           profileImagePath = newSignedUrl;
