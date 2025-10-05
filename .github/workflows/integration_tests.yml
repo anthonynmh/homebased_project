@@ -28,5 +28,10 @@ jobs:
           echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .env
           echo "SUPABASE_SECRET_KEY=${{ secrets.SUPABASE_SECRET_KEY }}" >> .env
 
+      - name: Disable all device targets
+        run: |
+          flutter config --no-enable-linux-desktop
+          flutter config --no-enable-web
+
       - name: 🧪 Run integration tests
         run: flutter test integration_test/auth_service_test.dart --coverage
