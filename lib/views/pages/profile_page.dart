@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
-import 'package:homebased_project/models/business_profile.dart';
+import 'package:homebased_project/backend/business_profile_api/business_profile_model.dart';
+import 'package:homebased_project/backend/business_profile_api/business_profile_service.dart';
 import 'package:homebased_project/views/business_profile_tree.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:homebased_project/widgets/form_field_widget.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -37,25 +37,39 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _loadBusinessProfile() async {
-    final profile = await loadBusinessProfile();
-    setState(() {
-      businessProfile = profile;
-    });
+    final profile = await BusinessProfileService.getCurrentBusinessProfile();
+
+    if (profile != null) {
+      // ✅ Get fresh signed URLs for the stored photo paths
+      final signedPhotoUrls =
+          await BusinessProfileService.getCurrentBusinessPhotosUrls();
+
+      // Replace the photoUrls with signed ones
+      final refreshedProfile = profile.copyWith(photoUrls: signedPhotoUrls);
+
+      if (!mounted) return;
+      setState(() {
+        businessProfile = refreshedProfile;
+      });
+    }
   }
 
   Future<void> saveBusinessProfile(BusinessProfile profile) async {
-    final prefs = await SharedPreferences.getInstance();
-    final images = _imagesKey.currentState?.getImages() ?? [];
-    final updatedProfile = profile.copyWith(imagePaths: images);
-    businessProfile = updatedProfile;
-    await prefs.setString('businessProfile', updatedProfile.toJson());
-  }
-
-  Future<BusinessProfile?> loadBusinessProfile() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? profileJson = prefs.getString('businessProfile');
-    if (profileJson == null) return null;
-    return BusinessProfile.fromJson(profileJson);
+    try {
+      await BusinessProfileService.updateCurrentBusinessProfile(profile);
+      setState(() {
+        businessProfile = profile;
+      });
+      debugPrint("✅ Business profile updated on backend.");
+    } catch (e) {
+      debugPrint("❌ Failed to save business profile: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Failed to save business profile."),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Future<void> _loadProfileData() async {
@@ -197,14 +211,25 @@ class _ProfilePageState extends State<ProfilePage> {
     }
 
     if (businessProfile != null && editingBusinessProfile != null) {
-      final images = _imagesKey.currentState?.getImages() ?? [];
-      editingBusinessProfile = editingBusinessProfile!.copyWith(
-        imagePaths: images,
+      // Upload new photos if any
+      final newImages = _imagesKey.currentState?.getImages() ?? [];
+      if (newImages.isNotEmpty) {
+        await BusinessProfileService.uploadBusinessPhotos(
+          newImages.map((path) => File(path)).toList(),
+        );
+      }
+
+      // Refresh signed photo URLs
+      final signedPhotoUrls =
+          await BusinessProfileService.getCurrentBusinessPhotosUrls();
+
+      final updatedProfile = editingBusinessProfile!.copyWith(
+        photoUrls: signedPhotoUrls,
       );
 
-      businessProfile = editingBusinessProfile;
-      await saveBusinessProfile(businessProfile!);
-      debugPrint("💾 Business profile saved locally.");
+      await saveBusinessProfile(updatedProfile);
+
+      debugPrint("💾 Business profile saved to backend with photos.");
     }
 
     setState(() {
@@ -337,12 +362,12 @@ class _ProfilePageState extends State<ProfilePage> {
                         type: FieldType.text,
                         requiredField: true,
                         initialValue: isEditing
-                            ? editingBusinessProfile?.name
-                            : businessProfile?.name,
+                            ? editingBusinessProfile?.businessName
+                            : businessProfile?.businessName,
                         onSaved: (val) {
                           if (isEditing) {
                             editingBusinessProfile = editingBusinessProfile
-                                ?.copyWith(name: val ?? '');
+                                ?.copyWith(businessName: val ?? '');
                           }
                         },
                         readOnly: !isEditing,
@@ -353,12 +378,12 @@ class _ProfilePageState extends State<ProfilePage> {
                         type: FieldType.dropdown,
                         requiredField: true,
                         initialValue: isEditing
-                            ? editingBusinessProfile?.productType
-                            : businessProfile?.productType,
+                            ? editingBusinessProfile?.sector
+                            : businessProfile?.sector,
                         onSaved: (val) {
                           if (isEditing) {
                             editingBusinessProfile = editingBusinessProfile
-                                ?.copyWith(productType: val ?? '');
+                                ?.copyWith(sector: val ?? '');
                           }
                         },
                         readOnly: !isEditing,
@@ -387,16 +412,14 @@ class _ProfilePageState extends State<ProfilePage> {
                         requiredField: false,
                         type: FieldType.images,
                         initialImages: isEditing
-                            ? editingBusinessProfile?.imagePaths
-                            : businessProfile?.imagePaths,
+                            ? editingBusinessProfile?.photoUrls
+                            : businessProfile?.photoUrls,
                         readOnly: !isEditing,
                       ),
                       const SizedBox(height: 20),
                       if (!isEditing && businessProfile != null)
                         ElevatedButton.icon(
                           onPressed: () async {
-                            final prefs = await SharedPreferences.getInstance();
-                            await prefs.remove('businessProfile');
                             setState(() => businessProfile = null);
                           },
                           icon: const Icon(Icons.delete),
