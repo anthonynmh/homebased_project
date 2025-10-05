@@ -24,7 +24,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    _authStateSubscription = AuthService.onAuthStateChange.listen(
+    _authStateSubscription = authService.onAuthStateChange.listen(
       (data) {
         if (_redirecting) return;
         final session = data.session;
@@ -56,7 +56,7 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> signInWithEmail() async {
     setState(() => _isLoading = true);
     try {
-      final res = await AuthService.signInWithEmailPassword(
+      final res = await authService.signInWithEmailPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );

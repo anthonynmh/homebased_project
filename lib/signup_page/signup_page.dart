@@ -28,7 +28,7 @@ class _SignupPageState extends State<SignupPage> {
     setState(() => _isLoading = true);
 
     try {
-      final res = await AuthService.signUpWithEmailPassword(
+      final res = await authService.signUpWithEmailPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
@@ -38,7 +38,7 @@ class _SignupPageState extends State<SignupPage> {
 
         // Insert user profile
         final profile = UserProfile(id: res.user!.id, email: res.user!.email);
-        await UserProfileService.insertCurrentUserProfile(profile);
+        await userProfileService.insertCurrentUserProfile(profile);
 
         if (!mounted) return;
         Navigator.of(

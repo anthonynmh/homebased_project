@@ -20,7 +20,7 @@ Get profile by supabase id (unique user ID).
 
 #### Arguments
 
-- None
+- String: userId
 
 #### Returns
 
@@ -52,23 +52,36 @@ Updates the current user profile.
 
 ### 4. uploadAvatar
 
-Upload avatar image to Supabase storage and stores public URL in table
+Upload avatar image to Supabase storage and stores filepath in profiles table
 
 #### Arguments
 
 - imageFile: File
+- String: userId
 
 #### Returns
 
 - None
 
-### 5. getAvatarUrl
+### 5. deleteAvatar
+
+Delete avatar image from Supabase storage and removes filepath in profiles table
+
+#### Arguments
+
+- String: userId
+
+#### Returns
+
+- None
+
+### 6. getAvatarUrl
 
 Returns the current user's avatar URL from the profiles table (or null if none exists)
 
 #### Arguments
 
-- None
+- String: userId
 
 #### Returns
 

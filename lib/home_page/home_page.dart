@@ -14,7 +14,7 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 1;
 
   void _logout() async {
-    await AuthService.signOut();
+    await authService.signOut();
 
     if (!mounted) return;
     Navigator.pushReplacement(
