@@ -53,11 +53,7 @@ class _MultiMapScreenState extends State<MultiMapScreen> {
   void _sampleCallback(BusinessProfile profile) {
     ScaffoldMessenger.of(
       context,
-<<<<<<< HEAD
-    ).showSnackBar(SnackBar(content: Text(profile.businessName ?? 'No name')));
-=======
     ).showSnackBar(SnackBar(content: Text(profile.businessName!)));
->>>>>>> f47f3b0 ([refactor] change from local preference)
   }
 
   @override
