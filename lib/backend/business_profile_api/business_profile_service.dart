@@ -147,14 +147,14 @@ class BusinessProfileService {
       // Fetch existing photos
       final existingRes = await _supabase
           .from(table)
-          .select('business_photos')
+          .select('photo_urls')
           .eq('id', userId)
           .maybeSingle();
 
       List<String> existingPaths = [];
-      if (existingRes != null && existingRes['business_photos'] != null) {
+      if (existingRes != null && existingRes['photo_urls'] != null) {
         existingPaths = List<String>.from(
-          existingRes['business_photos'] as List<dynamic>,
+          existingRes['photo_urls'] as List<dynamic>,
         );
       }
 
@@ -164,7 +164,7 @@ class BusinessProfileService {
       // Update DB with all photo paths
       await _supabase
           .from(table)
-          .update({'business_photos': updatedPaths})
+          .update({'photo_urls': updatedPaths})
           .eq('id', userId);
 
       print('Business photos uploaded: $uploadedPaths');
@@ -178,11 +178,11 @@ class BusinessProfileService {
     try {
       final res = await _supabase
           .from(table)
-          .select('business_photos')
+          .select('photo_urls')
           .eq('id', userId)
           .maybeSingle();
 
-      final List<dynamic>? paths = res?['business_photos'] as List<dynamic>?;
+      final List<dynamic>? paths = res?['photo_urls'] as List<dynamic>?;
       if (paths == null || paths.isEmpty) return [];
 
       final List<String> signedUrls = [];
