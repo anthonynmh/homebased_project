@@ -27,9 +27,9 @@ class BusinessProfile {
     return BusinessProfile(
       id: map['id'] as String,
       updatedAt: map['updated_at'] as String?,
-      businessName: map['business_name'] as String,
-      description: map['description'] as String,
-      sector: map['sector'] as String,
+      businessName: map['business_name'] as String?,
+      description: map['description'] as String?,
+      sector: map['sector'] as String?,
       latitude: map['latitude'] as double?,
       longitude: map['longitude'] as double?,
       logoUrl: map['logo_url'] as String?,

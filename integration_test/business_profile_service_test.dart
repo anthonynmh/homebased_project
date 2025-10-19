@@ -200,7 +200,7 @@ void main() {
     });
   });
 
-/*
+
   group('BusinessProfileService RLS enforcement tests', () {
     setUpAll(() async {
       // Sign up two users
@@ -209,18 +209,45 @@ void main() {
       final emailB = 'bizB_$timestamp@example.com';
       const password = 'strongpassword123';
 
+      // --- Insert user profile for user A ---
       final signUpA = await authService.signUpWithEmailPassword(
         email: emailA,
         password: password,
       );
       userA = signUpA.user;
+
+      final profileA = UserProfile(
+        id: authService.currentUserId!,
+        email: userA!.email,
+        username: 'UserA',
+        fullName: 'Userious Abraham',
+      );
+
+      await userProfileService.insertCurrentUserProfile(
+        profileA,
+        isTest: true,
+      );
+
       await authService.signOut();
 
+      // --- Insert user profile for user B ---
       final signUpB = await authService.signUpWithEmailPassword(
         email: emailB,
         password: password,
       );
       userB = signUpB.user;
+
+      final profileB = UserProfile(
+        id: authService.currentUserId!,
+        email: userB!.email,
+        username: 'UserB',
+        fullName: 'Userarnimous Brexit',
+      );
+
+      await userProfileService.insertCurrentUserProfile(
+        profileB,
+        isTest: true,
+      );
       await authService.signOut();
 
       // Insert profiles
@@ -253,9 +280,20 @@ void main() {
         } catch (e) {
           print('⚠️ Failed to delete business profile row: $e');
         }
+
+        try {
+          await adminClient.from(userTableName).delete().eq('id', user.id);
+          print('✅ Deleted user profile row for ${user.id}');
+        } catch (e) {
+          print('⚠️ Failed to delete profile row for ${user.id}: $e');
+        }
+        
         try {
           await adminClient.auth.admin.deleteUser(user.id);
-        } catch (_) {}
+          print('✅ Deleted auth user ${user.email}');
+        } catch (e) {
+          print('⚠️ Failed to delete auth user ${user.email}: $e');
+        }
       }
     });
 
@@ -335,5 +373,5 @@ void main() {
       await authService.signOut();
     });
   });
-*/
+
 }
