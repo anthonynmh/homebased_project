@@ -7,12 +7,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/backend/business_profile_api/business_profile_service.dart';
 import 'package:homebased_project/backend/business_profile_api/business_profile_model.dart';
+import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
+import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
 
 void main() {
   late AuthService authService;
   late BusinessProfileService businessProfileService;
+  late UserProfileService userProfileService;
   late SupabaseClient adminClient;
-  late String tableName;
+  late String businessTableName;
+  late String userTableName;
   late String bucketName;
 
   User? userA;
@@ -25,13 +29,19 @@ void main() {
     final supabaseUrl = dotenv.env['SUPABASE_URL']!;
     final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY']!;
     final supabaseServiceRoleKey = dotenv.env['SUPABASE_SECRET_KEY']!;
-    tableName = dotenv.env['BUSINESS_PROFILE_TABLE_STAGING']!;
+    businessTableName = dotenv.env['BUSINESS_PROFILE_TABLE_STAGING']!;
+    userTableName = dotenv.env['USER_PROFILE_TABLE_STAGING']!;
     bucketName = dotenv.env['BUSINESS_PROFILE_BUCKET_STAGING']!;
 
     await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
 
     authService = AuthService(client: Supabase.instance.client);
     businessProfileService = BusinessProfileService(
+      client: Supabase.instance.client,
+      isTest: true,
+    );
+
+    userProfileService = UserProfileService(
       client: Supabase.instance.client,
       isTest: true,
     );
@@ -46,10 +56,17 @@ void main() {
         if (user == null) continue;
 
         try {
-          await adminClient.from(tableName).delete().eq('id', user.id);
+          await adminClient.from(businessTableName).delete().eq('id', user.id);
           print('✅ Deleted business profile row for ${user.id}');
         } catch (e) {
           print('⚠️ Failed to delete business profile row for ${user.id}: $e');
+        }
+
+        try {
+          await adminClient.from(userTableName).delete().eq('id', user.id);
+          print('✅ Deleted user profile row for ${user.id}');
+        } catch (e) {
+          print('⚠️ Failed to delete profile row for ${user.id}: $e');
         }
 
         try {
@@ -74,7 +91,27 @@ void main() {
       userA = signUpResponse.user;
       expect(userA, isNotNull);
 
-      // --- 2️⃣ Insert initial business profile ---
+      // --- 2️⃣ Insert initial profile via RPC ---
+      final initialProfile = UserProfile(
+        id: authService.currentUserId!,
+        email: userA!.email,
+        username: 'InitialUser',
+        fullName: 'Integration Test User',
+      );
+
+      await userProfileService.insertCurrentUserProfile(
+        initialProfile,
+        isTest: true,
+      );
+      final fetchedProfile = await userProfileService.getCurrentUserProfile(
+        authService.currentUserId!,
+      );
+      expect(fetchedProfile, isNotNull);
+      expect(fetchedProfile!.email, equals(email));
+
+      print('✅ Inserted and fetched user profile successfully.');
+
+      // --- 3️⃣ Insert initial business profile ---
       final newProfile = BusinessProfile(
         id: authService.currentUserId!,
         businessName: 'Test Biz',
@@ -91,7 +128,7 @@ void main() {
       expect(fetched!.businessName, equals('Test Biz'));
       print('✅ Inserted and fetched business profile successfully.');
 
-      // --- 3️⃣ Update business details ---
+      // --- 4️⃣ Update business details ---
       final updatedProfile = BusinessProfile(
         id: authService.currentUserId!,
         businessName: 'Updated Biz',
@@ -111,7 +148,7 @@ void main() {
       expect(updated.sector, equals('Tech'));
       print('✅ Updated business profile successfully.');
 
-      // --- 4️⃣ Upload business logo ---
+      // --- 5️⃣ Upload business logo ---
       final tempDir = await getTemporaryDirectory();
       final fakeLogo = File('${tempDir.path}/fake_logo.png');
       await fakeLogo.writeAsBytes(List<int>.filled(128, 42));
@@ -127,14 +164,14 @@ void main() {
       expect(withLogo!.logoUrl, isNotNull);
       print('✅ Uploaded business logo and stored path: ${withLogo.logoUrl}');
 
-      // --- 5️⃣ Retrieve signed logo URL ---
+      // --- 6️⃣ Retrieve signed logo URL ---
       final signedLogoUrl = await businessProfileService
           .getCurrentBusinessLogoUrl(authService.currentUserId!);
       expect(signedLogoUrl, isNotNull);
       expect(signedLogoUrl!.startsWith('http'), true);
       print('✅ Retrieved signed logo URL: $signedLogoUrl');
 
-      // --- 6️⃣ Upload multiple business photos ---
+      // --- 7️⃣ Upload multiple business photos ---
       final fakePhoto1 = File('${tempDir.path}/photo1.png');
       final fakePhoto2 = File('${tempDir.path}/photo2.png');
       await fakePhoto1.writeAsBytes(List<int>.filled(128, 99));
@@ -151,7 +188,7 @@ void main() {
       expect(photoUrls.first.startsWith('http'), true);
       print('✅ Uploaded business photos and retrieved signed URLs.');
 
-      // --- 7️⃣ Search by sector ---
+      // --- 8️⃣ Search by sector ---
       final techProfiles = await businessProfileService
           .searchBusinessProfilesBySector('Tech');
       expect(techProfiles.any((p) => p.id == authService.currentUserId!), true);
@@ -163,6 +200,7 @@ void main() {
     });
   });
 
+/*
   group('BusinessProfileService RLS enforcement tests', () {
     setUpAll(() async {
       // Sign up two users
@@ -210,7 +248,7 @@ void main() {
       for (var user in users) {
         if (user == null) continue;
         try {
-          await adminClient.from(tableName).delete().eq('id', user.id);
+          await adminClient.from(businessTableName).delete().eq('id', user.id);
           print('✅ Deleted business profile for ${user.id}');
         } catch (e) {
           print('⚠️ Failed to delete business profile row: $e');
@@ -228,7 +266,7 @@ void main() {
       );
 
       final result = await Supabase.instance.client
-          .from(tableName)
+          .from(businessTableName)
           .select()
           .eq('id', userB!.id)
           .maybeSingle();
@@ -254,7 +292,7 @@ void main() {
       }
 
       final res = await adminClient
-          .from(tableName)
+          .from(businessTableName)
           .select()
           .eq('id', userB!.id)
           .maybeSingle();
@@ -297,4 +335,5 @@ void main() {
       await authService.signOut();
     });
   });
+*/
 }

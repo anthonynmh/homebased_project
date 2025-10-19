@@ -33,7 +33,7 @@ class BusinessProfile {
       latitude: map['latitude'] as double?,
       longitude: map['longitude'] as double?,
       logoUrl: map['logo_url'] as String?,
-      photoUrls: map['photo_urls'] as List<String>,
+      photoUrls: map['photo_urls'] as List<String>?,
     );
   }
 
