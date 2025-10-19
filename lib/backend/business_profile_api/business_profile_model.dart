@@ -9,7 +9,7 @@ class BusinessProfile {
   final double? latitude;
   final double? longitude;
   final String? logoUrl;
-  final List<String>? photoUrls;
+  final List<dynamic>? photoUrls;
 
   BusinessProfile({
     this.id,
@@ -27,13 +27,13 @@ class BusinessProfile {
     return BusinessProfile(
       id: map['id'] as String,
       updatedAt: map['updated_at'] as String?,
-      businessName: map['business_name'] as String,
-      description: map['description'] as String,
-      sector: map['sector'] as String,
+      businessName: map['business_name'] as String?,
+      description: map['description'] as String?,
+      sector: map['sector'] as String?,
       latitude: map['latitude'] as double?,
       longitude: map['longitude'] as double?,
       logoUrl: map['logo_url'] as String?,
-      photoUrls: map['photo_urls'] as List<String>,
+      photoUrls: map['photo_urls'] as List<dynamic>?,
     );
   }
 
