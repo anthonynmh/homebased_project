@@ -7,9 +7,6 @@
     fi
     export PATH="$PATH:$HOME/flutter/bin"
 
-    # Confirm Flutter works
-    flutter --version
-
     # Get packages & build
     flutter pub get
 
