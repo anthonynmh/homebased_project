@@ -1,16 +1,16 @@
 [build]
   publish = "build/web"
-  command = "flutter build web --release"
+  command = """
+    # Install Flutter if missing
+    if [ ! -d "$HOME/flutter" ]; then
+      git clone https://github.com/flutter/flutter.git --branch stable $HOME/flutter
+    fi
+    export PATH="$PATH:$HOME/flutter/bin"
 
-[build.environment]
-  FLUTTER_VERSION = "3.24.0"
+    # Confirm Flutter works
+    flutter --version
 
-[build.lifecycle]
-  onBuild = """
-  # Install Flutter manually
-  git clone https://github.com/flutter/flutter.git --branch $FLUTTER_VERSION
-  export PATH="$PATH:`pwd`/flutter/bin"
-  flutter doctor
-  flutter pub get
-  flutter build web --release
+    # Get packages & build
+    flutter pub get
+    flutter build web --release
   """
