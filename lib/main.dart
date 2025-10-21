@@ -14,11 +14,18 @@ Future<void> main() async {
 }
 
 Future<void> _loadAndValidateEnv() async {
-  try {
-    // Try loading from .env (works locally)
-    await dotenv.load(fileName: ".env");
-  } catch (_) {
-    // Ignore missing file in production — Netlify injects vars via environment
+  const isProd = bool.fromEnvironment('dart.vm.product');
+
+  if (!isProd) {
+    // ✅ Local dev only
+    try {
+      await dotenv.load(fileName: ".env");
+      debugPrint("Loaded local .env file");
+    } on Exception {
+      debugPrint(".env file not found locally — skipping.");
+    }
+  } else {
+    debugPrint("Production mode — skipping .env load.");
   }
 
   const requiredKeys = ['SUPABASE_URL', 'SUPABASE_ANON_KEY'];
