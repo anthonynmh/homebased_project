@@ -8,34 +8,56 @@ import 'package:homebased_project/backend/user_profile_api/user_profile_model.da
 /// Expose user profile related operations
 final userProfileService = UserProfileService();
 
+const table = bool.hasEnvironment('USER_PROFILE_TABLE_PROD')
+    ? String.fromEnvironment('USER_PROFILE_TABLE_PROD')
+    : '';
+const bucket = bool.hasEnvironment('USER_PROFILE_BUCKET_PROD')
+    ? String.fromEnvironment('USER_PROFILE_BUCKET_PROD')
+    : '';
+
 class UserProfileService {
   final SupabaseClient _supabase;
   final bool isTest;
 
-  /// Table and bucket names depend on environment
-  late final String table;
-  late final String bucket;
-
   UserProfileService({SupabaseClient? client, this.isTest = false})
-    : _supabase = client ?? Supabase.instance.client {
-    if (isTest) {
-      // Use staging table and bucket
-      table =
-          dotenv.env['USER_PROFILE_TABLE_STAGING'] ??
-          const String.fromEnvironment('USER_PROFILE_TABLE_STAGING');
-      bucket =
-          dotenv.env['USER_PROFILE_BUCKET_STAGING'] ??
-          const String.fromEnvironment('USER_PROFILE_BUCKET_STAGING');
-    } else {
-      // Use production table and bucket
-      table =
-          dotenv.env['USER_PROFILE_TABLE_PROD'] ??
-          const String.fromEnvironment('USER_PROFILE_TABLE_PROD');
-      bucket =
-          dotenv.env['USER_PROFILE_BUCKET_PROD'] ??
-          const String.fromEnvironment('USER_PROFILE_BUCKET_PROD');
-    }
-  }
+    : _supabase = client ?? Supabase.instance.client;
+
+  /// Table and bucket names depend on environment
+  // late const String table;
+  // late final String bucket;
+
+  // UserProfileService({SupabaseClient? client, this.isTest = false})
+  //   : _supabase = client ?? Supabase.instance.client {
+  //   if (isTest) {
+  //     // Use staging table and bucket
+  //     const table = bool.hasEnvironment('USER_PROFILE_TABLE_STAGING')
+  //         ? String.fromEnvironment('USER_PROFILE_TABLE_STAGING')
+  //         : '';
+  //     const bucket = bool.hasEnvironment('USER_PROFILE_BUCKET_STAGING')
+  //         ? String.fromEnvironment('USER_PROFILE_BUCKET_STAGING')
+  //         : '';
+
+  //     if (table.isEmpty || bucket.isEmpty) {
+  //       throw Exception(
+  //         'User profile table or bucket is not set in environment.',
+  //       );
+  //     }
+  //   } else {
+  //     // Use production table and bucket
+  //     const table = bool.hasEnvironment('USER_PROFILE_TABLE_PROD')
+  //         ? String.fromEnvironment('USER_PROFILE_TABLE_PROD')
+  //         : '';
+  //     const bucket = bool.hasEnvironment('USER_PROFILE_BUCKET_PROD')
+  //         ? String.fromEnvironment('USER_PROFILE_BUCKET_PROD')
+  //         : '';
+
+  //     if (table.isEmpty || bucket.isEmpty) {
+  //       throw Exception(
+  //         'User profile table or bucket is not set in environment.',
+  //       );
+  //     }
+  //   }
+  // }
 
   /// Get profile by supabase id (unique user ID)
   Future<UserProfile?> getCurrentUserProfile(String userId) async {
