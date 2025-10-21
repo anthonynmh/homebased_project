@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:path/path.dart' as path;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -8,31 +7,19 @@ import 'package:homebased_project/backend/business_profile_api/business_profile_
 /// Expose business profile related operations
 final userProfileService = BusinessProfileService();
 
+const table = bool.hasEnvironment('BUSINESS_PROFILE_TABLE_PROD')
+    ? String.fromEnvironment('BUSINESS_PROFILE_TABLE_PROD')
+    : '';
+const bucket = bool.hasEnvironment('BUSINESS_PROFILE_BUCKET_PROD')
+    ? String.fromEnvironment('BUSINESS_PROFILE_BUCKET_PROD')
+    : '';
+
 class BusinessProfileService {
   final SupabaseClient _supabase;
   final bool isTest;
 
-  late final String table;
-  late final String bucket;
-
   BusinessProfileService({SupabaseClient? client, this.isTest = false})
-    : _supabase = client ?? Supabase.instance.client {
-    if (isTest) {
-      table =
-          dotenv.env['BUSINESS_PROFILE_TABLE_STAGING'] ??
-          const String.fromEnvironment('BUSINESS_PROFILE_TABLE_STAGING');
-      bucket =
-          dotenv.env['BUSINESS_PROFILE_BUCKET_STAGING'] ??
-          const String.fromEnvironment('BUSINESS_PROFILE_BUCKET_STAGING');
-    } else {
-      table =
-          dotenv.env['BUSINESS_PROFILE_TABLE_PROD'] ??
-          const String.fromEnvironment('BUSINESS_PROFILE_TABLE_PROD');
-      bucket =
-          dotenv.env['BUSINESS_PROFILE_BUCKET_PROD'] ??
-          const String.fromEnvironment('BUSINESS_PROFILE_BUCKET_PROD');
-    }
-  }
+    : _supabase = client ?? Supabase.instance.client;
 
   /// Insert a new business profile (only id and email are required)
   Future<void> insertCurrentBusinessProfile(BusinessProfile profile) {

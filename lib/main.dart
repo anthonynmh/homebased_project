@@ -27,25 +27,19 @@ Future<void> _loadAndValidateEnv() async {
   } else {
     debugPrint("Production mode — skipping .env load.");
   }
-
-  const requiredKeys = ['SUPABASE_URL', 'SUPABASE_ANON_KEY'];
-
-  for (final key in requiredKeys) {
-    final value =
-        dotenv.env[key] ?? String.fromEnvironment(key, defaultValue: '');
-    if (value.isEmpty) {
-      throw Exception('Missing environment variable: $key');
-    }
-  }
 }
 
 Future<void> _initializeSupabase() async {
-  final supabaseUrl =
-      dotenv.env['SUPABASE_URL'] ??
-      const String.fromEnvironment('SUPABASE_URL');
-  final supabaseAnonKey =
-      dotenv.env['SUPABASE_ANON_KEY'] ??
-      const String.fromEnvironment('SUPABASE_ANON_KEY');
+  const supabaseUrl = bool.hasEnvironment('SUPABASE_URL')
+      ? String.fromEnvironment('SUPABASE_URL')
+      : '';
+  const supabaseAnonKey = bool.hasEnvironment('SUPABASE_ANON_KEY')
+      ? String.fromEnvironment('SUPABASE_ANON_KEY')
+      : '';
+
+  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+    throw Exception('Supabase URL or Anon Key is not set in environment.');
+  }
 
   await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
 }
