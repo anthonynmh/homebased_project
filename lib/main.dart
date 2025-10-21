@@ -14,24 +14,38 @@ Future<void> main() async {
 }
 
 Future<void> _loadAndValidateEnv() async {
-  try {
-    await dotenv.load(fileName: ".env");
-  } on Exception {
-    throw Exception(".env file not found in the project root.");
+  const isProd = bool.fromEnvironment('dart.vm.product');
+
+  if (!isProd) {
+    // ✅ Local dev only
+    try {
+      await dotenv.load(fileName: ".env");
+      debugPrint("Loaded local .env file");
+    } on Exception {
+      debugPrint(".env file not found locally — skipping.");
+    }
+  } else {
+    debugPrint("Production mode — skipping .env load.");
   }
 
   const requiredKeys = ['SUPABASE_URL', 'SUPABASE_ANON_KEY'];
 
   for (final key in requiredKeys) {
-    if ((dotenv.env[key] ?? '').isEmpty) {
+    final value =
+        dotenv.env[key] ?? String.fromEnvironment(key, defaultValue: '');
+    if (value.isEmpty) {
       throw Exception('Missing environment variable: $key');
     }
   }
 }
 
 Future<void> _initializeSupabase() async {
-  final supabaseUrl = dotenv.env['SUPABASE_URL']!;
-  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY']!;
+  final supabaseUrl =
+      dotenv.env['SUPABASE_URL'] ??
+      const String.fromEnvironment('SUPABASE_URL');
+  final supabaseAnonKey =
+      dotenv.env['SUPABASE_ANON_KEY'] ??
+      const String.fromEnvironment('SUPABASE_ANON_KEY');
 
   await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
 }

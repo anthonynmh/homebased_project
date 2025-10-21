@@ -20,12 +20,20 @@ class UserProfileService {
     : _supabase = client ?? Supabase.instance.client {
     if (isTest) {
       // Use staging table and bucket
-      table = dotenv.env['USER_PROFILE_TABLE_STAGING'] ?? '';
-      bucket = dotenv.env['USER_PROFILE_BUCKET_STAGING'] ?? '';
+      table =
+          dotenv.env['USER_PROFILE_TABLE_STAGING'] ??
+          const String.fromEnvironment('USER_PROFILE_TABLE_STAGING');
+      bucket =
+          dotenv.env['USER_PROFILE_BUCKET_STAGING'] ??
+          const String.fromEnvironment('USER_PROFILE_BUCKET_STAGING');
     } else {
       // Use production table and bucket
-      table = dotenv.env['USER_PROFILE_TABLE_PROD'] ?? '';
-      bucket = dotenv.env['USER_PROFILE_BUCKET_PROD'] ?? '';
+      table =
+          dotenv.env['USER_PROFILE_TABLE_PROD'] ??
+          const String.fromEnvironment('USER_PROFILE_TABLE_PROD');
+      bucket =
+          dotenv.env['USER_PROFILE_BUCKET_PROD'] ??
+          const String.fromEnvironment('USER_PROFILE_BUCKET_PROD');
     }
   }
 
