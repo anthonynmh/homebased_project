@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:path/path.dart' as path;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -21,28 +20,6 @@ class BusinessProfileService {
 
   BusinessProfileService({SupabaseClient? client, this.isTest = false})
     : _supabase = client ?? Supabase.instance.client;
-
-  // late final String table;
-  // late final String bucket;
-
-  // BusinessProfileService({SupabaseClient? client, this.isTest = false})
-  //   : _supabase = client ?? Supabase.instance.client {
-  //   if (isTest) {
-  //     table =
-  //         dotenv.env['BUSINESS_PROFILE_TABLE_STAGING'] ??
-  //         const String.fromEnvironment('BUSINESS_PROFILE_TABLE_STAGING');
-  //     bucket =
-  //         dotenv.env['BUSINESS_PROFILE_BUCKET_STAGING'] ??
-  //         const String.fromEnvironment('BUSINESS_PROFILE_BUCKET_STAGING');
-  //   } else {
-  //     table =
-  //         dotenv.env['BUSINESS_PROFILE_TABLE_PROD'] ??
-  //         const String.fromEnvironment('BUSINESS_PROFILE_TABLE_PROD');
-  //     bucket =
-  //         dotenv.env['BUSINESS_PROFILE_BUCKET_PROD'] ??
-  //         const String.fromEnvironment('BUSINESS_PROFILE_BUCKET_PROD');
-  //   }
-  // }
 
   /// Insert a new business profile (only id and email are required)
   Future<void> insertCurrentBusinessProfile(BusinessProfile profile) {

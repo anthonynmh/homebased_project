@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:path/path.dart' as path;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -21,43 +20,6 @@ class UserProfileService {
 
   UserProfileService({SupabaseClient? client, this.isTest = false})
     : _supabase = client ?? Supabase.instance.client;
-
-  /// Table and bucket names depend on environment
-  // late const String table;
-  // late final String bucket;
-
-  // UserProfileService({SupabaseClient? client, this.isTest = false})
-  //   : _supabase = client ?? Supabase.instance.client {
-  //   if (isTest) {
-  //     // Use staging table and bucket
-  //     const table = bool.hasEnvironment('USER_PROFILE_TABLE_STAGING')
-  //         ? String.fromEnvironment('USER_PROFILE_TABLE_STAGING')
-  //         : '';
-  //     const bucket = bool.hasEnvironment('USER_PROFILE_BUCKET_STAGING')
-  //         ? String.fromEnvironment('USER_PROFILE_BUCKET_STAGING')
-  //         : '';
-
-  //     if (table.isEmpty || bucket.isEmpty) {
-  //       throw Exception(
-  //         'User profile table or bucket is not set in environment.',
-  //       );
-  //     }
-  //   } else {
-  //     // Use production table and bucket
-  //     const table = bool.hasEnvironment('USER_PROFILE_TABLE_PROD')
-  //         ? String.fromEnvironment('USER_PROFILE_TABLE_PROD')
-  //         : '';
-  //     const bucket = bool.hasEnvironment('USER_PROFILE_BUCKET_PROD')
-  //         ? String.fromEnvironment('USER_PROFILE_BUCKET_PROD')
-  //         : '';
-
-  //     if (table.isEmpty || bucket.isEmpty) {
-  //       throw Exception(
-  //         'User profile table or bucket is not set in environment.',
-  //       );
-  //     }
-  //   }
-  // }
 
   /// Get profile by supabase id (unique user ID)
   Future<UserProfile?> getCurrentUserProfile(String userId) async {
