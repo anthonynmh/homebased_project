@@ -12,6 +12,10 @@
 
     # Get packages & build
     flutter pub get
+
+    # Add placeholder for .env file
+    [ -f .env ] || touch .env
+
     flutter build web --release --verbose \
       --dart-define=SUPABASE_URL=$SUPABASE_URL \
       --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
