@@ -12,5 +12,11 @@
 
     # Get packages & build
     flutter pub get
-    flutter build web --release
+    flutter build web --release --verbose \
+      --dart-define=SUPABASE_URL=$SUPABASE_URL \
+      --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
+      --dart-define=USER_PROFILE_TABLE_PROD=$USER_PROFILE_TABLE_PROD \
+      --dart-define=USER_PROFILE_BUCKET_PROD=$USER_PROFILE_BUCKET_PROD \
+      --dart-define=BUSINESS_PROFILE_TABLE_PROD=$BUSINESS_PROFILE_TABLE_PROD \
+      --dart-define=BUSINESS_PROFILE_BUCKET_PROD=$BUSINESS_PROFILE_BUCKET_PROD
   """
