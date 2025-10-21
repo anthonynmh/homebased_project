@@ -15,23 +15,30 @@ Future<void> main() async {
 
 Future<void> _loadAndValidateEnv() async {
   try {
+    // Try loading from .env (works locally)
     await dotenv.load(fileName: ".env");
-  } on Exception {
-    throw Exception(".env file not found in the project root.");
+  } catch (_) {
+    // Ignore missing file in production — Netlify injects vars via environment
   }
 
   const requiredKeys = ['SUPABASE_URL', 'SUPABASE_ANON_KEY'];
 
   for (final key in requiredKeys) {
-    if ((dotenv.env[key] ?? '').isEmpty) {
+    final value =
+        dotenv.env[key] ?? String.fromEnvironment(key, defaultValue: '');
+    if (value.isEmpty) {
       throw Exception('Missing environment variable: $key');
     }
   }
 }
 
 Future<void> _initializeSupabase() async {
-  final supabaseUrl = dotenv.env['SUPABASE_URL']!;
-  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY']!;
+  final supabaseUrl =
+      dotenv.env['SUPABASE_URL'] ??
+      const String.fromEnvironment('SUPABASE_URL');
+  final supabaseAnonKey =
+      dotenv.env['SUPABASE_ANON_KEY'] ??
+      const String.fromEnvironment('SUPABASE_ANON_KEY');
 
   await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
 }
