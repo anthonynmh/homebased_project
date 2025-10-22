@@ -1,4 +1,7 @@
 [build]
+  # Ignore deploys for non-deployment changes
+  ignore = "git diff --quiet HEAD^ HEAD -- documentation/ README.md .github/ netlify.toml integration_tests/"
+
   publish = "build/web"
   command = """
     # Install Flutter if missing
@@ -21,6 +24,3 @@
       --dart-define=BUSINESS_PROFILE_TABLE_PROD=$BUSINESS_PROFILE_TABLE_PROD \
       --dart-define=BUSINESS_PROFILE_BUCKET_PROD=$BUSINESS_PROFILE_BUCKET_PROD
   """
-
-  # Ignore deploys for non-deployment changes
-  ignore = "git diff --quiet HEAD^ HEAD -- documentation/ README.md .github/ netlify.toml integration_tests/"
