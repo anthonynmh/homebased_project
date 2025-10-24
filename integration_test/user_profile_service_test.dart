@@ -139,188 +139,175 @@ void main() {
     });
   });
 
-  // group('RLS enforcement tests', () {
-  //   setUpAll(() async {
-  //     // Sign up two test users
-  //     // final timestamp = DateTime.now().millisecondsSinceEpoch;
+  group('RLS enforcement tests', () {
+    setUpAll(() async {
+      // Insert initial profiles for user A
+      final signInResponseA = await authService.signInWithEmailPassword(
+        email: emailA,
+        password: passwordA,
+      );
+      userA = signInResponseA.user;
+      expect(userA, isNotNull);
 
-  //     // final signUpA = await authService.signUpWithEmailPassword(
-  //     //   email: emailA,
-  //     //   password: passwordA,
-  //     // );
-  //     // userA = signUpA.user;
-  //     // await authService.signOut();
+      await userProfileService.insertCurrentUserProfile(
+        UserProfile(id: userA!.id, email: userA!.email, username: 'UserA'),
+        isTest: true,
+      );
+      await authService.signOut();
 
-  //     // final signUpB = await authService.signUpWithEmailPassword(
-  //     //   email: emailB,
-  //     //   password: passwordB,
-  //     // );
-  //     // userB = signUpB.user;
-  //     // await authService.signOut();
+      // Insert initial profiles for user B
+      final signInResponseB = await authService.signInWithEmailPassword(
+        email: emailB,
+        password: passwordB,
+      );
+      userB = signInResponseB.user;
+      expect(userB, isNotNull);
 
-  //     // Insert initial profiles for both users
-  //     await authService.signInWithEmailPassword(
-  //       email: emailA,
-  //       password: passwordA,
-  //     );
-  //     await userProfileService.insertCurrentUserProfile(
-  //       UserProfile(id: userA!.id, email: userA!.email, username: 'UserA'),
-  //       isTest: true,
-  //     );
-  //     await authService.signOut();
+      await authService.signInWithEmailPassword(
+        email: emailB,
+        password: passwordB,
+      );
+      await userProfileService.insertCurrentUserProfile(
+        UserProfile(id: userB!.id, email: userB!.email, username: 'UserB'),
+        isTest: true,
+      );
+      await authService.signOut();
+    });
 
-  //     await authService.signInWithEmailPassword(
-  //       email: emailB,
-  //       password: passwordB,
-  //     );
-  //     await userProfileService.insertCurrentUserProfile(
-  //       UserProfile(id: userB!.id, email: userB!.email, username: 'UserB'),
-  //       isTest: true,
-  //     );
-  //     await authService.signOut();
-  //   });
+    tearDownAll(() async {
+      final users = [userA, userB];
+      for (var user in users) {
+        if (user == null) continue;
 
-  //   tearDownAll(() async {
-  //     final users = [userA, userB];
-  //     for (var user in users) {
-  //       if (user == null) continue;
+        try {
+          await adminClient.from(tableName).delete().eq('id', user.id);
+          print('✅ Deleted profile row for ${user.id}');
+        } catch (e) {
+          print('⚠️ Failed to delete profile row for ${user.id}: $e');
+        }
+      }
+    });
 
-  //       try {
-  //         await adminClient.from(tableName).delete().eq('id', user.id);
-  //         print('✅ Deleted profile row for ${user.id}');
-  //       } catch (e) {
-  //         print('⚠️ Failed to delete profile row for ${user.id}: $e');
-  //       }
+    testWidgets('User A cannot read User B profile', (tester) async {
+      await authService.signInWithEmailPassword(
+        email: emailA,
+        password: passwordA,
+      );
 
-  //       // try {
-  //       //   await adminClient.auth.admin.deleteUser(user.id);
-  //       //   print('✅ Deleted auth user ${user.email}');
-  //       // } catch (e) {
-  //       //   print('⚠️ Failed to delete auth user ${user.email}: $e');
-  //       // }
-  //     }
-  //   });
+      final result = await Supabase.instance.client
+          .from(tableName)
+          .select()
+          .eq('id', userB!.id)
+          .maybeSingle();
 
-  //   testWidgets('User A cannot read User B profile', (tester) async {
-  //     await authService.signInWithEmailPassword(
-  //       email: emailA,
-  //       password: passwordA,
-  //     );
+      expect(result, isNull);
+      await authService.signOut();
+    });
 
-  //     final result = await Supabase.instance.client
-  //         .from(tableName)
-  //         .select()
-  //         .eq('id', userB!.id)
-  //         .maybeSingle();
+    testWidgets('User A cannot update User B profile', (tester) async {
+      await authService.signInWithEmailPassword(
+        email: emailA,
+        password: passwordA,
+      );
 
-  //     expect(result, isNull);
-  //     await authService.signOut();
-  //   });
+      try {
+        await userProfileService.updateCurrentUserProfile(
+          UserProfile(id: userB!.id, username: 'HackedByA'),
+        );
+      } catch (e) {
+        print('Caught expected error: $e');
+      }
 
-  //   testWidgets('User A cannot update User B profile', (tester) async {
-  //     await authService.signInWithEmailPassword(
-  //       email: emailA,
-  //       password: passwordA,
-  //     );
+      final res = await adminClient
+          .from(tableName)
+          .select()
+          .eq('id', userB!.id)
+          .maybeSingle();
 
-  //     try {
-  //       await userProfileService.updateCurrentUserProfile(
-  //         UserProfile(id: userB!.id, username: 'HackedByA'),
-  //       );
-  //     } catch (e) {
-  //       print('Caught expected error: $e');
-  //     }
+      if (res != null) {
+        final profileB = UserProfile.fromMap(res);
+        expect(profileB.username, isNot('HackedByA'));
+      }
 
-  //     final res = await adminClient
-  //         .from(tableName)
-  //         .select()
-  //         .eq('id', userB!.id)
-  //         .maybeSingle();
+      await authService.signOut();
+    });
 
-  //     if (res != null) {
-  //       final profileB = UserProfile.fromMap(res);
-  //       expect(profileB.username, isNot('HackedByA'));
-  //     }
+    testWidgets('User A cannot delete User B profile', (tester) async {
+      await authService.signInWithEmailPassword(
+        email: emailA,
+        password: passwordA,
+      );
 
-  //     await authService.signOut();
-  //   });
+      try {
+        await Supabase.instance.client
+            .from(tableName)
+            .delete()
+            .eq('id', userB!.id);
+        final res = await adminClient
+            .from(tableName)
+            .select()
+            .eq('id', userB!.id)
+            .maybeSingle();
+        expect(res, isNotNull);
+      } catch (e) {
+        print('Caught unexpected error: $e');
+      }
 
-  //   testWidgets('User A cannot delete User B profile', (tester) async {
-  //     await authService.signInWithEmailPassword(
-  //       email: emailA,
-  //       password: passwordA,
-  //     );
+      await authService.signOut();
+    });
 
-  //     try {
-  //       await Supabase.instance.client
-  //           .from(tableName)
-  //           .delete()
-  //           .eq('id', userB!.id);
-  //       final res = await adminClient
-  //           .from(tableName)
-  //           .select()
-  //           .eq('id', userB!.id)
-  //           .maybeSingle();
-  //       expect(res, isNotNull);
-  //     } catch (e) {
-  //       print('Caught unexpected error: $e');
-  //     }
+    testWidgets('User A cannot upload to User B storage folder', (
+      tester,
+    ) async {
+      await authService.signInWithEmailPassword(
+        email: emailA,
+        password: passwordA,
+      );
 
-  //     await authService.signOut();
-  //   });
+      final tempDir = await getTemporaryDirectory();
+      final fakeFile = File('${tempDir.path}/hack.png');
+      await fakeFile.writeAsBytes(List<int>.filled(256, 42));
 
-  //   testWidgets('User A cannot upload to User B storage folder', (
-  //     tester,
-  //   ) async {
-  //     await authService.signInWithEmailPassword(
-  //       email: emailA,
-  //       password: passwordA,
-  //     );
+      final storage = Supabase.instance.client.storage.from('avatars-staging');
+      final path = '${userB!.id}/hack.png';
 
-  //     final tempDir = await getTemporaryDirectory();
-  //     final fakeFile = File('${tempDir.path}/hack.png');
-  //     await fakeFile.writeAsBytes(List<int>.filled(256, 42));
+      try {
+        await storage.upload(path, fakeFile);
+      } catch (e) {
+        print('Caught expected error: $e');
+        expect(
+          (e as StorageException).message,
+          contains("new row violates row-level security policy"),
+        );
+      }
 
-  //     final storage = Supabase.instance.client.storage.from('avatars-staging');
-  //     final path = '${userB!.id}/hack.png';
+      final res = await adminClient.storage
+          .from('avatars-staging')
+          .list(path: userB!.id);
 
-  //     try {
-  //       await storage.upload(path, fakeFile);
-  //     } catch (e) {
-  //       print('Caught expected error: $e');
-  //       expect(
-  //         (e as StorageException).message,
-  //         contains("new row violates row-level security policy"),
-  //       );
-  //     }
+      expect(res, isEmpty);
 
-  //     final res = await adminClient.storage
-  //         .from('avatars-staging')
-  //         .list(path: userB!.id);
+      await authService.signOut();
+    });
 
-  //     expect(res, isEmpty);
+    //   testWidgets('User A cannot read User B storage files', (tester) async {
+    //     await authService.signInWithEmailPassword(
+    //       email: userA!.email!,
+    //       password: 'strongpassword123',
+    //     );
 
-  //     await authService.signOut();
-  //   });
+    //     final storage = Supabase.instance.client.storage.from('avatars-staging');
+    //     final path = userB!.id;
 
-  //   //   testWidgets('User A cannot read User B storage files', (tester) async {
-  //   //     await authService.signInWithEmailPassword(
-  //   //       email: userA!.email!,
-  //   //       password: 'strongpassword123',
-  //   //     );
+    //     try {
+    //       await storage.createSignedUrl(path, 60);
+    //       fail('User A should not be able to read User B storage file');
+    //     } catch (e) {
+    //       print('Caught expected error: $e');
+    //       expect(e.toString(), contains('Unauthorized'));
+    //     }
 
-  //   //     final storage = Supabase.instance.client.storage.from('avatars-staging');
-  //   //     final path = userB!.id;
-
-  //   //     try {
-  //   //       await storage.createSignedUrl(path, 60);
-  //   //       fail('User A should not be able to read User B storage file');
-  //   //     } catch (e) {
-  //   //       print('Caught expected error: $e');
-  //   //       expect(e.toString(), contains('Unauthorized'));
-  //   //     }
-
-  //   //     await authService.signOut();
-  //   //   });
-  // });
+    //     await authService.signOut();
+    //   });
+  });
 }
