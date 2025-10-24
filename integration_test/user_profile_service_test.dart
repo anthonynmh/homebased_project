@@ -54,21 +54,11 @@ void main() {
         } catch (e) {
           print('⚠️ Failed to delete profile row for ${user.id}: $e');
         }
-
-        // try {
-        //   await adminClient.auth.admin.deleteUser(user.id);
-        //   print('✅ Deleted auth user ${user.email}');
-        // } catch (e) {
-        //   print('⚠️ Failed to delete auth user ${user.email}: $e');
-        // }
       }
     });
 
     testWidgets('UserProfileService end-to-end integration', (tester) async {
-      // --- 1️⃣ Sign up a new test user ---
-      // final email =
-      //     'profile_test_${DateTime.now().millisecondsSinceEpoch}@example.com';
-
+      // --- 1️⃣ Sign in to a test user ---
       final signInResponse = await authService.signInWithEmailPassword(
         email: emailA,
         password: passwordA,
