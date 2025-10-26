@@ -1,6 +1,14 @@
 [build]
   # Ignore deploys for non-deployment changes
-  ignore = "git diff --quiet HEAD^ HEAD -- documentation/ README.md .github/ netlify.toml integration_tests/"
+  ignore = """
+    git diff --quiet HEAD^ HEAD -- \
+      documentation/ \
+      README.md \
+      .github/ \
+      netlify.toml \
+      integration_test/ \
+      local_deployment/
+  """
 
   publish = "build/web"
   command = """
