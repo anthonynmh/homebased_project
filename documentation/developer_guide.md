@@ -24,30 +24,28 @@ We are using **Netlify** for hosting the web application. On the free tier, ther
 
 Hence, do test the deployment locally first **before creating/pushing to the PR**. New updates to PRs automatically trigger a deployment preview via CICD (which is a good thing), and we need to ensure that we conserve our resources in the free tier.
 
+Build scripts are contained within `homebased_project/local_deployment`.
+
 ### Steps
 
-#### 1. Running the build command
+#### 1. Build the application
 
-The following build command defines the environment variables for static build releases.
-
-```yaml
-flutter build web --release \
-      --dart-define=SUPABASE_URL=https://xvjvlscxsqbbtmhyiydp.supabase.co \
-      --dart-define=SUPABASE_ANON_KEY=sb_publishable_g9-Hk52T8aMDL5ye-PLDng_zY9jwcEv \
-      --dart-define=USER_PROFILE_TABLE_PROD=profiles \
-      --dart-define=USER_PROFILE_BUCKET_PROD=avatars \
-      --dart-define=BUSINESS_PROFILE_TABLE_PROD=business-profiles \
-      --dart-define=BUSINESS_PROFILE_BUCKET_PROD=business-photos
-```
-
-#### 2. Serving on localhost
-
-Prerequisite: make sure that you are within `build/web` directory. 
-
-Run the following command to serve the build on localhost port 8000.
+Run the build script to build the application for static release.
 
 ```bash
-python3 -m http.server 8000  
+bash local_deployment/build_local.sh
+```
+
+#### 2. Deploy the application
+
+Run the deploy script.
+
+```bash
+bash local_deployment/deploy_local.sh
 ```
 
 You may view the local deployment at `http://localhost:8000`.
+
+#### 3. Stopping the local server
+
+You may interrupt to terminate the local server using `ctrl` + `c`.
