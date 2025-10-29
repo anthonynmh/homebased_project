@@ -8,8 +8,16 @@ import 'package:homebased_project/backend/user_profile_api/user_profile_model.da
 /// Expose user profile related operations
 final userProfileService = UserProfileService();
 
-final tableProd = dotenv.env['USER_PROFILE_TABLE_PROD'] ?? '';
-final bucketProd = dotenv.env['USER_PROFILE_BUCKET_PROD'] ?? '';
+String getEnvVariable(String key) { 
+  return Platform.environment.containsKey(key)
+      ? Platform.environment[key] ?? ''
+      : (dotenv.isInitialized && dotenv.env.containsKey(key)
+          ? dotenv.env[key] ?? ''
+          : '');
+}
+
+final tableProd = getEnvVariable('USER_PROFILE_TABLE_PROD');
+final bucketProd = getEnvVariable('USER_PROFILE_BUCKET_PROD');
 // const table = bool.hasEnvironment('USER_PROFILE_TABLE_PROD')
 //     ? String.fromEnvironment('USER_PROFILE_TABLE_PROD')
 //     : '';
@@ -17,8 +25,8 @@ final bucketProd = dotenv.env['USER_PROFILE_BUCKET_PROD'] ?? '';
 //     ? String.fromEnvironment('USER_PROFILE_BUCKET_PROD')
 //     : '';
 
-final tableStaging = dotenv.env['USER_PROFILE_TABLE_STAGING'] ?? '';
-final bucketStaging = dotenv.env['USER_PROFILE_BUCKET_STAGING'] ?? '';
+final tableStaging = getEnvVariable('USER_PROFILE_TABLE_STAGING');
+final bucketStaging = getEnvVariable('USER_PROFILE_BUCKET_STAGING');
 // const tableStaging = bool.hasEnvironment('USER_PROFILE_TABLE_STAGING')
 //     ? String.fromEnvironment('USER_PROFILE_TABLE_STAGING')
 //     : '';
