@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:path/path.dart' as path;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:homebased_project/backend/business_profile_api/business_profile_model.dart';
@@ -7,19 +8,39 @@ import 'package:homebased_project/backend/business_profile_api/business_profile_
 /// Expose business profile related operations
 final userProfileService = BusinessProfileService();
 
-const table = bool.hasEnvironment('BUSINESS_PROFILE_TABLE_PROD')
-    ? String.fromEnvironment('BUSINESS_PROFILE_TABLE_PROD')
-    : '';
-const bucket = bool.hasEnvironment('BUSINESS_PROFILE_BUCKET_PROD')
-    ? String.fromEnvironment('BUSINESS_PROFILE_BUCKET_PROD')
-    : '';
+String getEnvVariable(String key) { 
+  return Platform.environment.containsKey(key)
+      ? Platform.environment[key] ?? ''
+      : (dotenv.isInitialized && dotenv.env.containsKey(key)
+          ? dotenv.env[key] ?? ''
+          : '');
+}
+
+final tableProd = getEnvVariable('BUSINESS_PROFILE_TABLE_PROD');
+final bucketProd = getEnvVariable('BUSINESS_PROFILE_BUCKET_PROD');
+
+final tableStaging = getEnvVariable('BUSINESS_PROFILE_TABLE_STAGING');
+final bucketStaging = getEnvVariable('BUSINESS_PROFILE_BUCKET_STAGING');
+
+// const table = bool.hasEnvironment('BUSINESS_PROFILE_TABLE_PROD')
+//     ? String.fromEnvironment('BUSINESS_PROFILE_TABLE_PROD')
+//     : '';
+// const bucket = bool.hasEnvironment('BUSINESS_PROFILE_BUCKET_PROD')
+//     ? String.fromEnvironment('BUSINESS_PROFILE_BUCKET_PROD')
+//     : '';
 
 class BusinessProfileService {
   final SupabaseClient _supabase;
   final bool isTest;
+  late final table;
+  late final bucket;
+
 
   BusinessProfileService({SupabaseClient? client, this.isTest = false})
-    : _supabase = client ?? Supabase.instance.client;
+    : _supabase = client ?? Supabase.instance.client {
+      table = isTest ? tableStaging : tableProd;
+      bucket = isTest ? bucketStaging : bucketProd;
+    }
 
   /// Insert a new business profile (only id and email are required)
   Future<void> insertCurrentBusinessProfile(BusinessProfile profile) {

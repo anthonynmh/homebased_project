@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
+import 'login_details.dart';
 
 void main() {
   late AuthService authService;
@@ -16,11 +17,6 @@ void main() {
 
   User? userA;
   User? userB;
-
-  final emailA = 'testusera@gmail.com';
-  const passwordA = 'whatsyourfavoritenusbus';
-  final emailB = 'testuserb@gmail.com';
-  const passwordB = 'yeehawbanjonoises';
 
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
@@ -60,11 +56,10 @@ void main() {
     testWidgets('UserProfileService end-to-end integration', (tester) async {
       // --- 1️⃣ Sign in to a test user ---
       final signInResponse = await authService.signInWithEmailPassword(
-        email: emailA,
-        password: passwordA,
+        email: TestUserConstants.emailA,
+        password: TestUserConstants.passwordA,
       );
 
-      // print("Session: ${Supabase.instance.client.auth.currentSession!.accessToken}");
       userA = signInResponse.user;
       expect(userA, isNotNull);
 
@@ -84,7 +79,7 @@ void main() {
         authService.currentUserId!,
       );
       expect(fetchedProfile, isNotNull);
-      expect(fetchedProfile!.email, equals(emailA));
+      expect(fetchedProfile!.email, equals(TestUserConstants.emailA));
 
       print('✅ Inserted and fetched user profile successfully.');
 
@@ -143,8 +138,8 @@ void main() {
     setUpAll(() async {
       // Insert initial profiles for user A
       final signInResponseA = await authService.signInWithEmailPassword(
-        email: emailA,
-        password: passwordA,
+        email: TestUserConstants.emailA,
+        password: TestUserConstants.passwordA,
       );
       userA = signInResponseA.user;
       expect(userA, isNotNull);
@@ -157,15 +152,15 @@ void main() {
 
       // Insert initial profiles for user B
       final signInResponseB = await authService.signInWithEmailPassword(
-        email: emailB,
-        password: passwordB,
+        email: TestUserConstants.emailB,
+        password: TestUserConstants.passwordB,
       );
       userB = signInResponseB.user;
       expect(userB, isNotNull);
 
       await authService.signInWithEmailPassword(
-        email: emailB,
-        password: passwordB,
+        email: TestUserConstants.emailB,
+        password: TestUserConstants.passwordB,
       );
       await userProfileService.insertCurrentUserProfile(
         UserProfile(id: userB!.id, email: userB!.email, username: 'UserB'),
@@ -190,8 +185,8 @@ void main() {
 
     testWidgets('User A cannot read User B profile', (tester) async {
       await authService.signInWithEmailPassword(
-        email: emailA,
-        password: passwordA,
+        email: TestUserConstants.emailA,
+        password: TestUserConstants.passwordA,
       );
 
       final result = await Supabase.instance.client
@@ -206,8 +201,8 @@ void main() {
 
     testWidgets('User A cannot update User B profile', (tester) async {
       await authService.signInWithEmailPassword(
-        email: emailA,
-        password: passwordA,
+        email: TestUserConstants.emailA,
+        password: TestUserConstants.passwordA,
       );
 
       try {
@@ -234,8 +229,8 @@ void main() {
 
     testWidgets('User A cannot delete User B profile', (tester) async {
       await authService.signInWithEmailPassword(
-        email: emailA,
-        password: passwordA,
+        email: TestUserConstants.emailA,
+        password: TestUserConstants.passwordA,
       );
 
       try {
@@ -260,8 +255,8 @@ void main() {
       tester,
     ) async {
       await authService.signInWithEmailPassword(
-        email: emailA,
-        password: passwordA,
+        email: TestUserConstants.emailA,
+        password: TestUserConstants.passwordA,
       );
 
       final tempDir = await getTemporaryDirectory();
@@ -289,25 +284,5 @@ void main() {
 
       await authService.signOut();
     });
-
-    //   testWidgets('User A cannot read User B storage files', (tester) async {
-    //     await authService.signInWithEmailPassword(
-    //       email: userA!.email!,
-    //       password: 'strongpassword123',
-    //     );
-
-    //     final storage = Supabase.instance.client.storage.from('avatars-staging');
-    //     final path = userB!.id;
-
-    //     try {
-    //       await storage.createSignedUrl(path, 60);
-    //       fail('User A should not be able to read User B storage file');
-    //     } catch (e) {
-    //       print('Caught expected error: $e');
-    //       expect(e.toString(), contains('Unauthorized'));
-    //     }
-
-    //     await authService.signOut();
-    //   });
   });
 }
