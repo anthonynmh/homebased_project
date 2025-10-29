@@ -18,34 +18,25 @@ String getEnvVariable(String key) {
 
 final tableProd = getEnvVariable('USER_PROFILE_TABLE_PROD');
 final bucketProd = getEnvVariable('USER_PROFILE_BUCKET_PROD');
-// const table = bool.hasEnvironment('USER_PROFILE_TABLE_PROD')
-//     ? String.fromEnvironment('USER_PROFILE_TABLE_PROD')
-//     : '';
-// const bucket = bool.hasEnvironment('USER_PROFILE_BUCKET_PROD')
-//     ? String.fromEnvironment('USER_PROFILE_BUCKET_PROD')
-//     : '';
 
 final tableStaging = getEnvVariable('USER_PROFILE_TABLE_STAGING');
 final bucketStaging = getEnvVariable('USER_PROFILE_BUCKET_STAGING');
-// const tableStaging = bool.hasEnvironment('USER_PROFILE_TABLE_STAGING')
-//     ? String.fromEnvironment('USER_PROFILE_TABLE_STAGING')
-//     : '';
-// const bucketStaging = bool.hasEnvironment('USER_PROFILE_BUCKET_STAGING')
-//     ? String.fromEnvironment('USER_PROFILE_BUCKET_STAGING')
-//     : '';
 
 class UserProfileService {
   final SupabaseClient _supabase;
   final bool isTest;
+  late final table;
+  late final bucket;
 
   UserProfileService({SupabaseClient? client, this.isTest = false})
-    : _supabase = client ?? Supabase.instance.client;
+    : _supabase = client ?? Supabase.instance.client {
+      table = isTest ? tableStaging : tableProd;
+      bucket = isTest ? bucketStaging : bucketProd;
+    }
 
   /// Get profile by supabase id (unique user ID)
   Future<UserProfile?> getCurrentUserProfile(String userId) async {
     try {
-      final table = isTest ? tableStaging : tableProd;
-
       final res = await _supabase
         .from(table)
         .select()
@@ -118,7 +109,6 @@ class UserProfileService {
     final ext = path.extension(imageFile.path);
     final filename = 'avatar$ext'; // unique per user
     final filepath = '$userId/$filename';
-    final bucket = isTest ? bucketStaging : bucketProd;
 
     try {
       final storage = _supabase.storage;
@@ -148,7 +138,7 @@ class UserProfileService {
     try {
       final profile = await getCurrentUserProfile(userId);
       final avatarPath = profile?.avatarUrl;
-      final bucket = isTest ? bucketStaging : bucketProd;
+
       if (avatarPath == null) return; // no avatar to delete
 
       final storage = _supabase.storage;
@@ -167,8 +157,6 @@ class UserProfileService {
 
   /// Returns a signed URL to the current user's avatar (or null if none exists).
   Future<String?> getAvatarUrl(String userId) async {
-    final table = isTest ? tableStaging : tableProd;
-    final bucket = isTest ? bucketStaging : bucketProd;
     try {
       final res = await _supabase
           .from(table)
