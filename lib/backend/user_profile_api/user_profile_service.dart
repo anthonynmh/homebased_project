@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:path/path.dart' as path;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -7,29 +8,41 @@ import 'package:homebased_project/backend/user_profile_api/user_profile_model.da
 /// Expose user profile related operations
 final userProfileService = UserProfileService();
 
-const table = bool.hasEnvironment('USER_PROFILE_TABLE_PROD')
-    ? String.fromEnvironment('USER_PROFILE_TABLE_PROD')
-    : '';
-const bucket = bool.hasEnvironment('USER_PROFILE_BUCKET_PROD')
-    ? String.fromEnvironment('USER_PROFILE_BUCKET_PROD')
-    : '';
+String getEnvVariable(String key) { 
+  return Platform.environment.containsKey(key)
+      ? Platform.environment[key] ?? ''
+      : (dotenv.isInitialized && dotenv.env.containsKey(key)
+          ? dotenv.env[key] ?? ''
+          : '');
+}
+
+final tableProd = getEnvVariable('USER_PROFILE_TABLE_PROD');
+final bucketProd = getEnvVariable('USER_PROFILE_BUCKET_PROD');
+
+final tableStaging = getEnvVariable('USER_PROFILE_TABLE_STAGING');
+final bucketStaging = getEnvVariable('USER_PROFILE_BUCKET_STAGING');
 
 class UserProfileService {
   final SupabaseClient _supabase;
   final bool isTest;
+  late final table;
+  late final bucket;
 
   UserProfileService({SupabaseClient? client, this.isTest = false})
-    : _supabase = client ?? Supabase.instance.client;
+    : _supabase = client ?? Supabase.instance.client {
+      table = isTest ? tableStaging : tableProd;
+      bucket = isTest ? bucketStaging : bucketProd;
+    }
 
   /// Get profile by supabase id (unique user ID)
   Future<UserProfile?> getCurrentUserProfile(String userId) async {
     try {
       final res = await _supabase
-          .from(table)
-          .select()
-          .eq('id', userId)
-          .maybeSingle();
-
+        .from(table)
+        .select()
+        .eq('id', userId)
+        .maybeSingle();
+      
       if (res == null) return null;
       return UserProfile.fromMap(res);
     } catch (e) {
@@ -73,6 +86,7 @@ class UserProfileService {
 
       if (data.isEmpty) return; // nothing to update
 
+      final table = isTest ? tableStaging : tableProd;
       final res = await _supabase
           .from(table)
           .update(data)
@@ -124,6 +138,7 @@ class UserProfileService {
     try {
       final profile = await getCurrentUserProfile(userId);
       final avatarPath = profile?.avatarUrl;
+
       if (avatarPath == null) return; // no avatar to delete
 
       final storage = _supabase.storage;

@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
+import 'login_details.dart';
 
 void main() {
   late AuthService authService;
@@ -49,27 +50,17 @@ void main() {
         } catch (e) {
           print('⚠️ Failed to delete profile row for ${user.id}: $e');
         }
-
-        try {
-          await adminClient.auth.admin.deleteUser(user.id);
-          print('✅ Deleted auth user ${user.email}');
-        } catch (e) {
-          print('⚠️ Failed to delete auth user ${user.email}: $e');
-        }
       }
     });
 
     testWidgets('UserProfileService end-to-end integration', (tester) async {
-      // --- 1️⃣ Sign up a new test user ---
-      final email =
-          'profile_test_${DateTime.now().millisecondsSinceEpoch}@example.com';
-      const password = 'strongpassword123';
-
-      final signUpResponse = await authService.signUpWithEmailPassword(
-        email: email,
-        password: password,
+      // --- 1️⃣ Sign in to a test user ---
+      final signInResponse = await authService.signInWithEmailPassword(
+        email: TestUserConstants.emailA,
+        password: TestUserConstants.passwordA,
       );
-      userA = signUpResponse.user;
+
+      userA = signInResponse.user;
       expect(userA, isNotNull);
 
       // --- 2️⃣ Insert initial profile via RPC ---
@@ -88,7 +79,7 @@ void main() {
         authService.currentUserId!,
       );
       expect(fetchedProfile, isNotNull);
-      expect(fetchedProfile!.email, equals(email));
+      expect(fetchedProfile!.email, equals(TestUserConstants.emailA));
 
       print('✅ Inserted and fetched user profile successfully.');
 
@@ -145,40 +136,31 @@ void main() {
 
   group('RLS enforcement tests', () {
     setUpAll(() async {
-      // Sign up two test users
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final emailA = 'userA_$timestamp@example.com';
-      final emailB = 'userB_$timestamp@example.com';
-      const password = 'strongpassword123';
-
-      final signUpA = await authService.signUpWithEmailPassword(
-        email: emailA,
-        password: password,
+      // Insert initial profiles for user A
+      final signInResponseA = await authService.signInWithEmailPassword(
+        email: TestUserConstants.emailA,
+        password: TestUserConstants.passwordA,
       );
-      userA = signUpA.user;
-      await authService.signOut();
+      userA = signInResponseA.user;
+      expect(userA, isNotNull);
 
-      final signUpB = await authService.signUpWithEmailPassword(
-        email: emailB,
-        password: password,
-      );
-      userB = signUpB.user;
-      await authService.signOut();
-
-      // Insert initial profiles for both users
-      await authService.signInWithEmailPassword(
-        email: emailA,
-        password: password,
-      );
       await userProfileService.insertCurrentUserProfile(
         UserProfile(id: userA!.id, email: userA!.email, username: 'UserA'),
         isTest: true,
       );
       await authService.signOut();
 
+      // Insert initial profiles for user B
+      final signInResponseB = await authService.signInWithEmailPassword(
+        email: TestUserConstants.emailB,
+        password: TestUserConstants.passwordB,
+      );
+      userB = signInResponseB.user;
+      expect(userB, isNotNull);
+
       await authService.signInWithEmailPassword(
-        email: emailB,
-        password: password,
+        email: TestUserConstants.emailB,
+        password: TestUserConstants.passwordB,
       );
       await userProfileService.insertCurrentUserProfile(
         UserProfile(id: userB!.id, email: userB!.email, username: 'UserB'),
@@ -198,20 +180,13 @@ void main() {
         } catch (e) {
           print('⚠️ Failed to delete profile row for ${user.id}: $e');
         }
-
-        try {
-          await adminClient.auth.admin.deleteUser(user.id);
-          print('✅ Deleted auth user ${user.email}');
-        } catch (e) {
-          print('⚠️ Failed to delete auth user ${user.email}: $e');
-        }
       }
     });
 
     testWidgets('User A cannot read User B profile', (tester) async {
       await authService.signInWithEmailPassword(
-        email: userA!.email!,
-        password: 'strongpassword123',
+        email: TestUserConstants.emailA,
+        password: TestUserConstants.passwordA,
       );
 
       final result = await Supabase.instance.client
@@ -226,8 +201,8 @@ void main() {
 
     testWidgets('User A cannot update User B profile', (tester) async {
       await authService.signInWithEmailPassword(
-        email: userA!.email!,
-        password: 'strongpassword123',
+        email: TestUserConstants.emailA,
+        password: TestUserConstants.passwordA,
       );
 
       try {
@@ -254,8 +229,8 @@ void main() {
 
     testWidgets('User A cannot delete User B profile', (tester) async {
       await authService.signInWithEmailPassword(
-        email: userA!.email!,
-        password: 'strongpassword123',
+        email: TestUserConstants.emailA,
+        password: TestUserConstants.passwordA,
       );
 
       try {
@@ -280,8 +255,8 @@ void main() {
       tester,
     ) async {
       await authService.signInWithEmailPassword(
-        email: userA!.email!,
-        password: 'strongpassword123',
+        email: TestUserConstants.emailA,
+        password: TestUserConstants.passwordA,
       );
 
       final tempDir = await getTemporaryDirectory();
@@ -309,25 +284,5 @@ void main() {
 
       await authService.signOut();
     });
-
-    //   testWidgets('User A cannot read User B storage files', (tester) async {
-    //     await authService.signInWithEmailPassword(
-    //       email: userA!.email!,
-    //       password: 'strongpassword123',
-    //     );
-
-    //     final storage = Supabase.instance.client.storage.from('avatars-staging');
-    //     final path = userB!.id;
-
-    //     try {
-    //       await storage.createSignedUrl(path, 60);
-    //       fail('User A should not be able to read User B storage file');
-    //     } catch (e) {
-    //       print('Caught expected error: $e');
-    //       expect(e.toString(), contains('Unauthorized'));
-    //     }
-
-    //     await authService.signOut();
-    //   });
   });
 }
