@@ -8,31 +8,24 @@ import 'package:homebased_project/backend/user_profile_api/user_profile_model.da
 /// Expose user profile related operations
 final userProfileService = UserProfileService();
 
-String getEnvVariable(String key) { 
-  return Platform.environment.containsKey(key)
-      ? Platform.environment[key] ?? ''
-      : (dotenv.isInitialized && dotenv.env.containsKey(key)
-          ? dotenv.env[key] ?? ''
-          : '');
-}
+const PROD_TABLE = bool.hasEnvironment('USER_PROFILE_TABLE_PROD')
+    ? String.fromEnvironment('USER_PROFILE_TABLE_PROD')
+    : '';
+const PROD_BUCKET = bool.hasEnvironment('USER_PROFILE_BUCKET_PROD')
+    ? String.fromEnvironment('USER_PROFILE_BUCKET_PROD')
+    : '';
 
-final tableProd = getEnvVariable('USER_PROFILE_TABLE_PROD');
-final bucketProd = getEnvVariable('USER_PROFILE_BUCKET_PROD');
+const isTestEnv = bool.fromEnvironment('TEST_ENV');
 
-final tableStaging = getEnvVariable('USER_PROFILE_TABLE_STAGING');
-final bucketStaging = getEnvVariable('USER_PROFILE_BUCKET_STAGING');
+final table = isTestEnv ? (dotenv.env["USER_PROFILE_TABLE_STAGING"] ?? '') : PROD_TABLE;
+final bucket = isTestEnv ? (dotenv.env["USER_PROFILE_BUCKET_STAGING"] ?? '') : PROD_BUCKET;
 
 class UserProfileService {
   final SupabaseClient _supabase;
   final bool isTest;
-  late final table;
-  late final bucket;
 
   UserProfileService({SupabaseClient? client, this.isTest = false})
-    : _supabase = client ?? Supabase.instance.client {
-      table = isTest ? tableStaging : tableProd;
-      bucket = isTest ? bucketStaging : bucketProd;
-    }
+    : _supabase = client ?? Supabase.instance.client;
 
   /// Get profile by supabase id (unique user ID)
   Future<UserProfile?> getCurrentUserProfile(String userId) async {
@@ -85,8 +78,7 @@ class UserProfileService {
       data['updated_at'] = DateTime.now().toUtc().toIso8601String();
 
       if (data.isEmpty) return; // nothing to update
-
-      final table = isTest ? tableStaging : tableProd;
+      
       final res = await _supabase
           .from(table)
           .update(data)
