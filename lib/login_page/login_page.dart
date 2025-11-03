@@ -72,6 +72,22 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> signInWithGoogle() async {
+    setState(() => _isLoading = true);
+    try {
+      final res = await authService.signInWithGoogle();
+      if (!res) {
+        // handled by auth listener
+      }
+    } on AuthException catch (error) {
+      context.showSnackBar(error.message, isError: true);
+    } catch (_) {
+      context.showSnackBar('Unexpected error occurred', isError: true);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -193,6 +209,25 @@ class _LoginPageState extends State<LoginPage> {
                 child: Text(
                   'Login',
                   style: const TextStyle(fontSize: 16, color: Colors.white),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: _isLoading ? null : signInWithGoogle,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _isLoading
+                      ? Colors.grey[600]
+                      : const Color.fromARGB(255, 186, 179, 177),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 100,
+                    vertical: 14,
+                  ),
+                ),
+                child: Text(
+                  'Login with Google',
+                  style: const TextStyle(fontSize: 16, color: Colors.black),
                 ),
               ),
               const SizedBox(height: 16),
