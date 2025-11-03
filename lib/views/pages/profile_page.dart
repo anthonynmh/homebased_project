@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
@@ -20,6 +19,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String? username;
   String? profileImagePath;
   String? tempProfileImagePath;
+  XFile? tempProfileImage;
   TextEditingController? usernameController;
 
   BusinessProfile? businessProfile;
@@ -119,6 +119,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
     if (pickedFile != null) {
       setState(() {
+        tempProfileImage = pickedFile;
         tempProfileImagePath = pickedFile.path;
       });
       debugPrint("🖼️ Picked new profile image: ${pickedFile.path}");
@@ -174,8 +175,10 @@ class _ProfilePageState extends State<ProfilePage> {
     if (tempProfileImagePath != null) {
       try {
         debugPrint("🖼️ Uploading avatar...");
-        final file = File(tempProfileImagePath!);
-        await userProfileService.uploadAvatar(file, authService.currentUserId!);
+        await userProfileService.uploadAvatar(
+          tempProfileImage!,
+          authService.currentUserId!,
+        );
 
         // Get new signed URL right after upload
         final newSignedUrl = await userProfileService.getAvatarUrl(
@@ -255,7 +258,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     radius: 50,
                     backgroundColor: Colors.transparent,
                     backgroundImage: tempProfileImagePath != null
-                        ? FileImage(File(tempProfileImagePath!))
+                        ? NetworkImage(tempProfileImagePath!)
                         : (profileImagePath != null &&
                               profileImagePath!.startsWith('http'))
                         ? NetworkImage(profileImagePath!)

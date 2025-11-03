@@ -8,7 +8,6 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await _loadAndValidateEnv();
-  await _initializeSupabase();
 
   runApp(const MyApp());
 }
@@ -21,15 +20,28 @@ Future<void> _loadAndValidateEnv() async {
     try {
       await dotenv.load(fileName: ".env");
       debugPrint("Loaded local .env file");
+      await _initializeSupabaseFromDotEnv();
     } on Exception {
       debugPrint(".env file not found locally — skipping.");
     }
   } else {
     debugPrint("Production mode — skipping .env load.");
+    await _initializeSupabaseFromDartDefine();
   }
 }
 
-Future<void> _initializeSupabase() async {
+Future<void> _initializeSupabaseFromDotEnv() async {
+  final supabaseUrl = dotenv.env['SUPABASE_URL'];
+  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'];
+
+  if (supabaseUrl == null || supabaseAnonKey == null) {
+    throw Exception('Supabase URL or Anon Key is not set in .env file.');
+  }
+
+  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+}
+
+Future<void> _initializeSupabaseFromDartDefine() async {
   const supabaseUrl = bool.hasEnvironment('SUPABASE_URL')
       ? String.fromEnvironment('SUPABASE_URL')
       : '';
