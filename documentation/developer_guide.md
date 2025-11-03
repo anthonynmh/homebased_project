@@ -49,3 +49,29 @@ You may view the local deployment at `http://localhost:8000`.
 #### 3. Stopping the local server
 
 You may interrupt to terminate the local server using `ctrl` + `c`.
+
+## Integration Testing
+
+### Web
+
+Flutter's `integration_test` package does not run out-of-the-box for web applications. Read the official [documentation](https://docs.flutter.dev/testing/integration-tests#test-in-a-web-browser) to understand the workaround for web testing.
+
+#### Steps
+
+1. Install `chromedriver`.
+``` bash
+npx @puppeteer/browsers install chromedriver@stable
+```
+
+2. Launch `chromedriver`.
+``` bash
+chromedriver --port=4444
+```
+
+3. From the project root, run this command:
+``` bash
+flutter drive \
+  --driver=test_driver/integration_test.dart \
+  --target=integration_test/ \
+  -d chrome
+```

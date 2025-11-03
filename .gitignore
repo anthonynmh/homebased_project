@@ -57,3 +57,6 @@ coverage/
 
 # Ignore test user files
 integration_test/login_details.dart
+
+# chromedriver
+chromedriver/
