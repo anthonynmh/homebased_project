@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'package:path/path.dart' as path;
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -8,24 +8,36 @@ import 'package:homebased_project/backend/business_profile_api/business_profile_
 /// Expose business profile related operations
 final userProfileService = BusinessProfileService();
 
-const PROD_TABLE = bool.hasEnvironment('BUSINESS_PROFILE_TABLE_PROD')
-    ? String.fromEnvironment('BUSINESS_PROFILE_TABLE_PROD')
-    : '';
-const PROD_BUCKET = bool.hasEnvironment('BUSINESS_PROFILE_BUCKET_PROD')
-    ? String.fromEnvironment('BUSINESS_PROFILE_BUCKET_PROD')
-    : '';
-
-const isTestEnv = bool.fromEnvironment('TEST_ENV');
-
-final table = isTestEnv ? (dotenv.env["BUSINESS_PROFILE_TABLE_STAGING"] ?? '') : PROD_TABLE;
-final bucket = isTestEnv ? (dotenv.env["BUSINESS_PROFILE_BUCKET_STAGING"] ?? '') : PROD_BUCKET;
-
 class BusinessProfileService {
   final SupabaseClient _supabase;
   final bool isTest;
+  final String table;
+  final String bucket;
 
   BusinessProfileService({SupabaseClient? client, this.isTest = false})
-    : _supabase = client ?? Supabase.instance.client;
+    : _supabase = client ?? Supabase.instance.client,
+      table = _resolveTable(isTest),
+      bucket = _resolveBucket(isTest);
+
+  static String _resolveTable(bool isTest) {
+    if (isTest) {
+      return dotenv.env["BUSINESS_PROFILE_TABLE_STAGING"] ?? '';
+    }
+    const prodTable = String.fromEnvironment('BUSINESS_PROFILE_TABLE_PROD');
+    return prodTable.isNotEmpty
+        ? prodTable
+        : dotenv.env["BUSINESS_PROFILE_TABLE_PROD"] ?? '';
+  }
+
+  static String _resolveBucket(bool isTest) {
+    if (isTest) {
+      return dotenv.env["BUSINESS_PROFILE_BUCKET_STAGING"] ?? '';
+    }
+    const prodBucket = String.fromEnvironment('BUSINESS_PROFILE_BUCKET_PROD');
+    return prodBucket.isNotEmpty
+        ? prodBucket
+        : dotenv.env["BUSINESS_PROFILE_BUCKET_PROD"] ?? '';
+  }
 
   /// Insert a new business profile (only id and email are required)
   Future<void> insertCurrentBusinessProfile(BusinessProfile profile) {
@@ -98,20 +110,21 @@ class BusinessProfileService {
   }
 
   /// Upload business logo to Supabase storage and store only file path in table
-  Future<void> uploadBusinessLogo(File imageFile, String userId) async {
-    final ext = path.extension(imageFile.path);
+  Future<void> uploadBusinessLogo(XFile imageFile, String userId) async {
+    final ext = path.extension(imageFile.name);
     final filename = 'logo$ext'; // always the same file name for overwrite
     final filepath = '$userId/logo/$filename';
 
     try {
       final storage = _supabase.storage;
+      final bytes = await imageFile.readAsBytes();
 
       // Remove old logo if exists
       try {
         await storage.from(bucket).remove([filepath]);
       } catch (_) {}
 
-      await storage.from(bucket).upload(filepath, imageFile);
+      await storage.from(bucket).uploadBinary(filepath, bytes);
 
       // Update DB with only the file path
       await updateCurrentBusinessProfile(
@@ -127,7 +140,7 @@ class BusinessProfileService {
 
   /// Upload one or more business photos to Supabase storage and store file paths in table
   Future<void> uploadBusinessPhotos(
-    List<File> imageFiles,
+    List<XFile> imageFiles,
     String userId,
   ) async {
     final storage = _supabase.storage;
@@ -135,13 +148,14 @@ class BusinessProfileService {
 
     try {
       for (final imageFile in imageFiles) {
-        final ext = path.extension(imageFile.path);
-        final basename = path.basenameWithoutExtension(imageFile.path);
+        final ext = path.extension(imageFile.name);
+        final basename = path.basenameWithoutExtension(imageFile.name);
         final filename =
             '${basename}_${DateTime.now().millisecondsSinceEpoch}$ext'; // avoid collisions
         final filepath = '$userId/business_photos/$filename';
+        var bytes = await imageFile.readAsBytes();
 
-        await storage.from(bucket).upload(filepath, imageFile);
+        await storage.from(bucket).uploadBinary(filepath, bytes);
         uploadedPaths.add(filepath);
       }
 

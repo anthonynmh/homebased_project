@@ -1,6 +1,5 @@
-import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:path/path.dart' as path;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
@@ -8,24 +7,36 @@ import 'package:homebased_project/backend/user_profile_api/user_profile_model.da
 /// Expose user profile related operations
 final userProfileService = UserProfileService();
 
-const PROD_TABLE = bool.hasEnvironment('USER_PROFILE_TABLE_PROD')
-    ? String.fromEnvironment('USER_PROFILE_TABLE_PROD')
-    : '';
-const PROD_BUCKET = bool.hasEnvironment('USER_PROFILE_BUCKET_PROD')
-    ? String.fromEnvironment('USER_PROFILE_BUCKET_PROD')
-    : '';
-
-const isTestEnv = bool.fromEnvironment('TEST_ENV');
-
-final table = isTestEnv ? (dotenv.env["USER_PROFILE_TABLE_STAGING"] ?? '') : PROD_TABLE;
-final bucket = isTestEnv ? (dotenv.env["USER_PROFILE_BUCKET_STAGING"] ?? '') : PROD_BUCKET;
-
 class UserProfileService {
   final SupabaseClient _supabase;
   final bool isTest;
+  final String table;
+  final String bucket;
 
   UserProfileService({SupabaseClient? client, this.isTest = false})
-    : _supabase = client ?? Supabase.instance.client;
+    : _supabase = client ?? Supabase.instance.client,
+      table = _resolveTable(isTest),
+      bucket = _resolveBucket(isTest);
+
+  static String _resolveTable(bool isTest) {
+    if (isTest) {
+      return dotenv.env["USER_PROFILE_TABLE_STAGING"] ?? '';
+    }
+    const prodTable = String.fromEnvironment('USER_PROFILE_TABLE_PROD');
+    return prodTable.isNotEmpty
+        ? prodTable
+        : dotenv.env["USER_PROFILE_TABLE_PROD"] ?? '';
+  }
+
+  static String _resolveBucket(bool isTest) {
+    if (isTest) {
+      return dotenv.env["USER_PROFILE_BUCKET_STAGING"] ?? '';
+    }
+    const prodBucket = String.fromEnvironment('USER_PROFILE_BUCKET_PROD');
+    return prodBucket.isNotEmpty
+        ? prodBucket
+        : dotenv.env["USER_PROFILE_BUCKET_PROD"] ?? '';
+  }
 
   /// Get profile by supabase id (unique user ID)
   Future<UserProfile?> getCurrentUserProfile(String userId) async {
@@ -97,24 +108,20 @@ class UserProfileService {
   }
 
   /// Upload avatar image to Supabase storage and store only the file path in table
-  Future<void> uploadAvatar(File imageFile, String userId) async {
-    final ext = path.extension(imageFile.path);
-    final filename = 'avatar$ext'; // unique per user
+  Future<void> uploadAvatar(XFile imageFile, String userId) async {
+    final filename = 'avatar';
     final filepath = '$userId/$filename';
 
     try {
       final storage = _supabase.storage;
+      final bytes = await imageFile.readAsBytes();
 
       // Remove old avatar if it exists
       try {
         await storage.from(bucket).remove([filepath]);
-      } catch (_) {
-        // ignore if none exists
-      }
+      } catch (_) {}
 
-      await storage.from(bucket).upload(filepath, imageFile);
-
-      // Store only the file path (not public URL)
+      await storage.from(bucket).uploadBinary(filepath, bytes);
       await updateCurrentUserProfile(
         UserProfile(id: userId, avatarUrl: filepath),
       );
