@@ -8,30 +8,50 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await _loadAndValidateEnv();
-  await _initializeSupabase();
 
   runApp(const MyApp());
 }
 
 Future<void> _loadAndValidateEnv() async {
-  try {
-    await dotenv.load(fileName: ".env");
-  } on Exception {
-    throw Exception(".env file not found in the project root.");
-  }
+  const isProd = bool.fromEnvironment('dart.vm.product');
 
-  const requiredKeys = ['SUPABASE_URL', 'SUPABASE_ANON_KEY'];
-
-  for (final key in requiredKeys) {
-    if ((dotenv.env[key] ?? '').isEmpty) {
-      throw Exception('Missing environment variable: $key');
+  if (!isProd) {
+    // ✅ Local dev only
+    try {
+      await dotenv.load(fileName: ".env");
+      debugPrint("Loaded local .env file");
+      await _initializeSupabaseFromDotEnv();
+    } on Exception {
+      debugPrint(".env file not found locally — skipping.");
     }
+  } else {
+    debugPrint("Production mode — skipping .env load.");
+    await _initializeSupabaseFromDartDefine();
   }
 }
 
-Future<void> _initializeSupabase() async {
-  final supabaseUrl = dotenv.env['SUPABASE_URL']!;
-  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY']!;
+Future<void> _initializeSupabaseFromDotEnv() async {
+  final supabaseUrl = dotenv.env['SUPABASE_URL'];
+  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'];
+
+  if (supabaseUrl == null || supabaseAnonKey == null) {
+    throw Exception('Supabase URL or Anon Key is not set in .env file.');
+  }
+
+  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+}
+
+Future<void> _initializeSupabaseFromDartDefine() async {
+  const supabaseUrl = bool.hasEnvironment('SUPABASE_URL')
+      ? String.fromEnvironment('SUPABASE_URL')
+      : '';
+  const supabaseAnonKey = bool.hasEnvironment('SUPABASE_ANON_KEY')
+      ? String.fromEnvironment('SUPABASE_ANON_KEY')
+      : '';
+
+  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+    throw Exception('Supabase URL or Anon Key is not set in environment.');
+  }
 
   await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
 }

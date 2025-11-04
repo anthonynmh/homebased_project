@@ -18,8 +18,34 @@ Afterwhich you may follow this tutorial on a quick Flutter crash course. It also
 
 See [here](https://codelabs.developers.google.com/codelabs/flutter-codelab-first#0)
 
-## Architecture
+## Local Deployment Testing
 
-Model-View-Controller is the architecture used for the homebased app.
+We are using **Netlify** for hosting the web application. On the free tier, there is a 300 minute limit for total build time. Testing the application production build via Netlify is not a viable approach.
 
-...
+Hence, do test the deployment locally first **before creating/pushing to the PR**. New updates to PRs automatically trigger a deployment preview via CICD (which is a good thing), and we need to ensure that we conserve our resources in the free tier.
+
+Build scripts are contained within `homebased_project/local_deployment`.
+
+### Steps
+
+#### 1. Build the application
+
+Run the build script to build the application for static release.
+
+```bash
+bash local_deployment/build_local.sh
+```
+
+#### 2. Deploy the application
+
+Run the deploy script.
+
+```bash
+bash local_deployment/deploy_local.sh
+```
+
+You may view the local deployment at `http://localhost:8000`.
+
+#### 3. Stopping the local server
+
+You may interrupt to terminate the local server using `ctrl` + `c`.

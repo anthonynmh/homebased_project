@@ -1,0 +1,28 @@
+[build]
+  # Ignore deploys for non-deployment changes
+  ignore = """
+    git diff --quiet HEAD^ HEAD -- lib/ pubspec.yaml
+  """
+
+  publish = "build/web"
+  command = """
+    # Install Flutter if missing
+    if [ ! -d "$HOME/flutter" ]; then
+      git clone https://github.com/flutter/flutter.git --branch stable $HOME/flutter
+    fi
+    export PATH="$PATH:$HOME/flutter/bin"
+
+    # Get packages & build
+    flutter pub get
+
+    # Add placeholder for .env file
+    [ -f .env ] || touch .env
+
+    flutter build web --release \
+      --dart-define=SUPABASE_URL=$SUPABASE_URL \
+      --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
+      --dart-define=USER_PROFILE_TABLE_PROD=$USER_PROFILE_TABLE_PROD \
+      --dart-define=USER_PROFILE_BUCKET_PROD=$USER_PROFILE_BUCKET_PROD \
+      --dart-define=BUSINESS_PROFILE_TABLE_PROD=$BUSINESS_PROFILE_TABLE_PROD \
+      --dart-define=BUSINESS_PROFILE_BUCKET_PROD=$BUSINESS_PROFILE_BUCKET_PROD
+  """

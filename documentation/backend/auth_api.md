@@ -75,3 +75,15 @@ This method logs out a user.
 #### Returns
 
 - None
+
+### 2. signInWithGoogle
+
+This method logs in a user via Google.
+
+#### Arguments
+
+- None
+
+#### Returns
+
+- success: Boolean
