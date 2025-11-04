@@ -30,11 +30,13 @@ class _LoginPageState extends State<LoginPage> {
         final session = data.session;
         if (session != null) {
           _redirecting = true;
+          if (!mounted) return;
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const WidgetTree()),
           );
         }
       },
+
       onError: (error) {
         if (error is AuthException) {
           context.showSnackBar(error.message, isError: true);

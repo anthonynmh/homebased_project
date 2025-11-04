@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:homebased_project/backend/map_api/map_service.dart';
-import 'package:homebased_project/models/business_profile.dart';
+import 'package:homebased_project/backend/business_profile_api/business_profile_model.dart';
 import 'package:homebased_project/views/pages/business_map_page/utils/lcoation_permission.dart';
 import 'package:latlong2/latlong.dart';
 

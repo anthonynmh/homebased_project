@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:homebased_project/backend/business_profile_api/business_profile_model.dart';
+import 'package:homebased_project/views/pages/business_page_customer_pov.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:homebased_project/backend/map_api/map_service.dart';
 
@@ -12,6 +13,7 @@ class MultiMapScreen extends StatefulWidget {
 }
 
 class _MultiMapScreenState extends State<MultiMapScreen> {
+  BusinessProfile? _selectedProfile;
   // Sample list of profiles that are used to showcase the type of inputs the MapService takes
   final List<BusinessProfile> _sampleProfiles = [
     BusinessProfile(
@@ -49,22 +51,137 @@ class _MultiMapScreenState extends State<MultiMapScreen> {
   // Sample initial center
   final LatLng _sampleCenter = LatLng(1.3162, 103.7649);
 
-  // Sample callback function for when a marker is clicked in the map
-  void _sampleCallback(BusinessProfile profile) {
-    ScaffoldMessenger.of(
+  void _onMarkerTapped(BusinessProfile profile) {
+    setState(() {
+      _selectedProfile = profile;
+    });
+  }
+
+  void _goToBusinessProfile(BusinessProfile profile) {
+    // Navigate to the business profile page
+    Navigator.push(
       context,
-    ).showSnackBar(SnackBar(content: Text(profile.businessName!)));
+      MaterialPageRoute(
+        builder: (context) => BusinessCustomerPage(businessProfile: profile),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Test for MultiMarkerMap
     return Scaffold(
-      appBar: AppBar(title: const Text("Multi Marker Map")),
-      body: MapService.getMultiMarkerMap(
-        initialCenter: _sampleCenter,
-        markerProfiles: _sampleProfiles,
-        onMarkerTapped: _sampleCallback,
+      appBar: AppBar(title: const Text("Find businesses near you!")),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final screenHeight = constraints.maxHeight;
+
+          return Stack(
+            children: [
+              // Base map
+              MapService.getMultiMarkerMap(
+                initialCenter: _sampleCenter,
+                markerProfiles: _sampleProfiles,
+                onMarkerTapped: _onMarkerTapped,
+              ),
+
+              // Dimmed overlay that captures taps outside the card
+              if (_selectedProfile != null)
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedProfile = null;
+                      });
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    //not too dark
+                    child: Container(color: Colors.black.withAlpha(50)),
+                  ),
+                ),
+
+              // Centered info card
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                top: _selectedProfile != null
+                    ? screenHeight / 2 -
+                          140 // adjust vertical position
+                    : screenHeight,
+                left: 20,
+                right: 20,
+                child: _selectedProfile != null
+                    ? GestureDetector(
+                        onTap: () {}, // absorb taps on the card itself
+                        child: Card(
+                          elevation: 8,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Container(
+                            height: 347,
+                            width: 323, // adjust card height
+                            padding: const EdgeInsets.all(16),
+                            child: Stack(
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Logo takes top half
+                                    SizedBox(
+                                      height: 226.42, // adjust logo height
+                                      width: double.infinity,
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: Image.asset(
+                                          _selectedProfile!.logoUrl ??
+                                              'assets/defaultUser.png',
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    // Business name below logo
+                                    Text(
+                                      _selectedProfile!.businessName ??
+                                          'Unnamed',
+                                      style: const TextStyle(
+                                        fontSize: 25,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                // Circular button at bottom-right
+                                Positioned(
+                                  bottom: 12,
+                                  right: 12,
+                                  child: RawMaterialButton(
+                                    onPressed: () =>
+                                        _goToBusinessProfile(_selectedProfile!),
+                                    fillColor:
+                                        Colors.orange, // circular button color
+                                    shape:
+                                        const CircleBorder(), // makes it a perfect circle
+                                    constraints: const BoxConstraints(
+                                      minWidth: 39,
+                                      minHeight: 39,
+                                    ),
+                                    child: const Icon(
+                                      Icons.arrow_forward,
+                                      color: Colors.white, // arrow color
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
