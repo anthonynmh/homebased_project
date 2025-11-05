@@ -38,7 +38,7 @@ class AuthService {
 
       if (profile != null) {
         throw Exception(
-          'User with this email already exists. Do check your email for a confirmation link.',
+          'User with this email already exists, or email is unverified.',
         );
       }
 
