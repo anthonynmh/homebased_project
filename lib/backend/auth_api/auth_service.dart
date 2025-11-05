@@ -1,7 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-// import 'package:google_sign_in/google_sign_in.dart';
+
 import 'package:flutter/foundation.dart';
+
 import 'package:homebased_project/backend/supabase_api/supabase_service.dart';
+import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
 
 /// Expose a single AuthService instance that uses the global supabase
 final authService = AuthService();
@@ -29,13 +31,25 @@ class AuthService {
     required String password,
   }) async {
     try {
+      // Check if user already exists
+      final profile = await userProfileService.getCurrentUserProfileByEmail(
+        email,
+      );
+
+      if (profile != null) {
+        throw Exception(
+          'User with this email already exists. Do check your email for a confirmation link.',
+        );
+      }
+
+      // Proceed with signup
       final response = await _supabase.auth.signUp(
         email: email,
         password: password,
       );
+
       return response;
-    } catch (e, st) {
-      print('Supabase sign up error: $e\n$st');
+    } catch (e) {
       throw Exception('Failed to sign up user: $e');
     }
   }
@@ -44,9 +58,13 @@ class AuthService {
   Future<bool> signInWithGoogle() async {
     return await supabase.auth.signInWithOAuth(
       OAuthProvider.google,
-      redirectTo: kIsWeb ? 'http://localhost:8000/' : 'my.scheme://my-host', // Latter option for mobile callbacks via deeplinking, won't be an issue for web deployment
-      authScreenLaunchMode:
-          kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication, // Launch the auth screen in a new webview on mobile.
+      redirectTo: kIsWeb
+          ? 'http://localhost:8000/'
+          : 'my.scheme://my-host', // Latter option for mobile callbacks via deeplinking, won't be an issue for web deployment
+      authScreenLaunchMode: kIsWeb
+          ? LaunchMode.platformDefault
+          : LaunchMode
+                .externalApplication, // Launch the auth screen in a new webview on mobile.
     );
   }
 
