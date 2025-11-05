@@ -55,6 +55,23 @@ class UserProfileService {
     }
   }
 
+  /// Get profile by email address
+  Future<UserProfile?> getCurrentUserProfileByEmail(String email) async {
+    try {
+      final res = await _supabase
+          .from(table)
+          .select()
+          .eq('email', email)
+          .maybeSingle();
+
+      if (res == null) return null;
+      return UserProfile.fromMap(res);
+    } catch (e) {
+      print('supabase lookup error: $e');
+      return null;
+    }
+  }
+
   Future<void> insertCurrentUserProfile(
     UserProfile profile, {
     bool isTest = false,

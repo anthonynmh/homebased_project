@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/data/notifiers.dart';
-import 'package:homebased_project/login_page/login_page.dart';
+import 'package:homebased_project/mvp2/auth_page.dart';
 import 'package:homebased_project/views/pages/explore_page.dart';
 import 'package:homebased_project/views/pages/profile_page.dart';
 import 'package:homebased_project/widgets/navbar_widget.dart';
@@ -22,7 +22,7 @@ class _WidgetTreeState extends State<WidgetTree> {
     if (!mounted) return;
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const LoginPage()),
+      MaterialPageRoute(builder: (context) => const AuthPage()),
     );
   }
 

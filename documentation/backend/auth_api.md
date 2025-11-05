@@ -53,7 +53,11 @@ This method authenticates (logs in) a user using email and password.
 
 ### 2. signUpWithEmailPassword
 
-This method creates (signs up) a new user profile using email and password.
+This method creates (signs up) a new user profile using email and password. 
+
+Throws an error on two scenarios:
+1. User already signed up successfully, and has verified their email.
+2. User signed up previously, but haven't verified their email.
 
 #### Arguments
 

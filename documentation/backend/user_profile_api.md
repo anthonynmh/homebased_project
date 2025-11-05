@@ -26,6 +26,18 @@ Get profile by supabase id (unique user ID).
 
 - UserProfile
 
+### getCurrentUserProfileByEmail
+
+Get profile by email.
+
+#### Arguments
+
+- String: email
+
+#### Returns
+
+- UserProfile
+
 ### 2. insertCurrentUserProfile
 
 Inserts the current user profile.
