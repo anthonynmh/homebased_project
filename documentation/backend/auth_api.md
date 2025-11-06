@@ -91,3 +91,29 @@ This method logs in a user via Google.
 #### Returns
 
 - success: Boolean
+
+### sendPasswordResetEmail
+
+This method requests for a confirmation email to reset password.
+
+#### Arguments
+
+- email: String
+
+#### Returns
+
+- None
+
+### updatePassword
+
+This method updates the password of a user, specified by confirmation url. 
+
+Email is **not** required. Clicking on the confirmation email link authenticates the user on the **same browser session**. 
+
+#### Arguments
+
+- newPassword: String
+
+#### Returns
+
+- None
