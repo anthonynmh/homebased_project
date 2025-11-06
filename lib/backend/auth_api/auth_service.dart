@@ -11,10 +11,8 @@ final authService = AuthService();
 class AuthService {
   final SupabaseClient _supabase;
 
-  /// Default constructor uses the global supabase instance
   AuthService({SupabaseClient? client}) : _supabase = client ?? supabase;
 
-  /// Sign in user with email + password
   Future<AuthResponse> signInWithEmailPassword({
     required String email,
     required String password,
@@ -25,7 +23,6 @@ class AuthService {
     );
   }
 
-  /// Sign up user with email + password
   Future<AuthResponse> signUpWithEmailPassword({
     required String email,
     required String password,
@@ -54,7 +51,6 @@ class AuthService {
     }
   }
 
-  // Future<AuthResponse> signInWithGoogle() async {
   Future<bool> signInWithGoogle() async {
     return await supabase.auth.signInWithOAuth(
       OAuthProvider.google,
@@ -68,7 +64,27 @@ class AuthService {
     );
   }
 
-  /// Sign out user
+  Future<void> sendPasswordResetEmail({required String email}) async {
+    await _supabase.auth.resetPasswordForEmail(
+      email,
+      redirectTo: 'https://foodnfriends.app/',
+      // redirectTo: 'http://localhost:8000/', // for local testing
+    );
+  }
+
+  Future<void> updatePassword({required String newPassword}) async {
+    final res = await _supabase.auth.updateUser(
+      UserAttributes(password: newPassword),
+    );
+
+    if (res.user == null) {
+      throw Exception('Failed to update password.');
+    }
+
+    // Explicit logout so app returns to clean auth state
+    await supabase.auth.signOut();
+  }
+
   Future<void> signOut() async {
     await _supabase.auth.signOut();
   }

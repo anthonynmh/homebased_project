@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:homebased_project/mvp2/auth_page.dart';
+import 'package:homebased_project/backend/auth_api/auth_service.dart';
 
 enum FieldStatus { defaultStatus, success, error }
 
@@ -62,12 +62,7 @@ class _GetResetPasswordEmailPage extends State<GetResetPasswordEmailPage> {
     final email = emailController.text.trim();
 
     try {
-      final supabase = Supabase.instance.client;
-      await supabase.auth.resetPasswordForEmail(
-        email,
-        // redirectTo: 'https://foodnfriends.app/',
-        redirectTo: 'http://localhost:8000/', // for local testing
-      );
+      await authService.sendPasswordResetEmail(email: email);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

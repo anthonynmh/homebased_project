@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:homebased_project/backend/auth_api/auth_service.dart';
 
-import 'package:homebased_project/backend/supabase_api/supabase_service.dart';
 import 'package:homebased_project/mvp2/auth_page.dart';
 
 class ResetPasswordPage extends StatefulWidget {
@@ -25,15 +24,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     });
 
     try {
-      final res = await supabase.auth.updateUser(
-        UserAttributes(password: password),
-      );
-      if (res.user == null) {
-        throw Exception('Failed to update password.');
-      }
-
-      // Explicit logout so app returns to clean auth state
-      await supabase.auth.signOut();
+      await authService.updatePassword(newPassword: password);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
