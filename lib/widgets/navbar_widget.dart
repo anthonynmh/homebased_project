@@ -12,11 +12,23 @@ class NavbarWidget extends StatelessWidget {
         return NavigationBar(
           destinations: [
             NavigationDestination(
-              icon: ImageIcon(AssetImage('assets/searchIcon.png')),
-              label: 'Explore',
+              icon: const Icon(Icons.feed_outlined),
+              label: 'Activity Feed',
             ),
             NavigationDestination(
-              icon: ImageIcon(AssetImage('assets/defaultUser.png')),
+              icon: const Icon(Icons.store_outlined),
+              label: 'Storefront',
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.food_bank_outlined),
+              label: 'Menu',
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.mobile_friendly_outlined),
+              label: 'Orders',
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.person_2_outlined),
               label: 'Profile',
             ),
           ],
