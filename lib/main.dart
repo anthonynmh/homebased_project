@@ -65,7 +65,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Food \'n Friends',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFC23838)),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF5A7A8A)),
         fontFamily: 'Inter',
         textTheme: const TextTheme(
           bodyLarge: TextStyle(fontSize: 26.65, fontWeight: FontWeight.bold),
