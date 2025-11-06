@@ -9,6 +9,8 @@ import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/widgets/snackbar_widget.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
+import 'package:homebased_project/mvp2/auth/reset_password_page.dart';
+import 'package:homebased_project/mvp2/auth/get_reset_password_email_page.dart';
 
 enum FieldStatus { defaultStatus, success, error }
 
@@ -52,19 +54,31 @@ class _AppState extends State<AuthPage> {
     super.initState();
     _authStateSubscription = authService.onAuthStateChange.listen(
       (data) {
-        if (_redirecting) return;
-        final session = data.session;
-        if (session != null) {
-          _redirecting = true;
+        final event = data.event;
+
+        if (event == AuthChangeEvent.passwordRecovery) {
+          if (!mounted) return;
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const WidgetTree()),
+            MaterialPageRoute(builder: (_) => const ResetPasswordPage()),
           );
+        } else {
+          if (_redirecting) return;
+          final session = data.session;
+          if (session != null) {
+            _redirecting = true;
+            if (!mounted) return;
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const WidgetTree()),
+            );
+          }
         }
       },
       onError: (error) {
         if (error is AuthException) {
+          if (!mounted) return;
           context.showSnackBar(error.message, isError: true);
         } else {
+          if (!mounted) return;
           context.showSnackBar('Unexpected error occurred', isError: true);
         }
       },
@@ -160,6 +174,7 @@ class _AppState extends State<AuthPage> {
       );
 
       if (res.user != null) {
+        if (!mounted) return;
         context.showSnackBar("Signup successful!");
 
         // Insert user profile
@@ -187,8 +202,10 @@ class _AppState extends State<AuthPage> {
         // handled by auth listener
       }
     } on AuthException catch (error) {
+      if (!mounted) return;
       context.showSnackBar(error.message, isError: true);
     } catch (_) {
+      if (!mounted) return;
       context.showSnackBar('Unexpected error occurred', isError: true);
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -203,8 +220,10 @@ class _AppState extends State<AuthPage> {
         // handled by auth listener
       }
     } on AuthException catch (error) {
+      if (!mounted) return;
       context.showSnackBar(error.message, isError: true);
     } catch (_) {
+      if (!mounted) return;
       context.showSnackBar('Unexpected error occurred', isError: true);
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -484,6 +503,29 @@ class _AppState extends State<AuthPage> {
                                 ),
                               ),
                             ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text("Forgot your password? "),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            const GetResetPasswordEmailPage(),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text(
+                                    "Click here",
+                                    style: TextStyle(
+                                      color: Colors.blue,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                             if (password.status == FieldStatus.error &&
                                 password.errorMessage != null)
                               Text(
@@ -498,7 +540,7 @@ class _AppState extends State<AuthPage> {
                         ),
 
                         // Confirm Password
-                        if (isSignUp && password.value.isNotEmpty)
+                        if (isSignUp)
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -513,8 +555,14 @@ class _AppState extends State<AuthPage> {
                               TextField(
                                 controller: confirmPasswordController,
                                 obscureText: true,
+                                style: const TextStyle(fontSize: 14),
                                 decoration: InputDecoration(
                                   hintText: "Re-enter your password",
+                                  hintStyle: const TextStyle(fontSize: 14),
+                                  prefixIcon: const Icon(
+                                    Icons.lock_outline,
+                                    size: 20,
+                                  ),
                                   contentPadding: const EdgeInsets.symmetric(
                                     vertical: 12,
                                     horizontal: 16,
