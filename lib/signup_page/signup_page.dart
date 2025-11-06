@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
+import 'package:homebased_project/views/pages/terms_and_conditions_page.dart';
 import 'package:homebased_project/login_page/login_page.dart';
 import 'package:homebased_project/widgets/snackbar_widget.dart';
 
@@ -16,6 +17,7 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _agreedToTerms = false;
 
   @override
   void dispose() {
@@ -115,10 +117,59 @@ class _SignupPageState extends State<SignupPage> {
                               obscure: true,
                             ),
                             const SizedBox(height: 28),
-
+                            // Terms and conditions checkbox
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Checkbox(
+                                  value: _agreedToTerms,
+                                  onChanged: (value) async {
+                                    if (value == true) {
+                                      final accepted =
+                                          await Navigator.push<bool>(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => const TermsPage(),
+                                            ),
+                                          );
+                                      setState(() {
+                                        _agreedToTerms = accepted ?? false;
+                                      });
+                                    } else {
+                                      setState(() {
+                                        _agreedToTerms = false;
+                                      });
+                                    }
+                                  },
+                                ),
+                                GestureDetector(
+                                  onTap: () async {
+                                    final accepted = await Navigator.push<bool>(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const TermsPage(),
+                                      ),
+                                    );
+                                    setState(() {
+                                      _agreedToTerms = accepted ?? false;
+                                    });
+                                  },
+                                  child: const Text(
+                                    "I agree to the Terms and Conditions",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
                             // Sign Up button
                             ElevatedButton(
-                              onPressed: _isLoading ? null : _signUp,
+                              onPressed: _isLoading || !_agreedToTerms
+                                  ? null
+                                  : _signUp,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
@@ -132,10 +183,12 @@ class _SignupPageState extends State<SignupPage> {
                               ),
                               child: Text(
                                 _isLoading ? "Signing up..." : "Sign Up",
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFFFF7949),
+                                  color: _agreedToTerms
+                                      ? Color(0xFFFF7949)
+                                      : Colors.grey,
                                 ),
                               ),
                             ),

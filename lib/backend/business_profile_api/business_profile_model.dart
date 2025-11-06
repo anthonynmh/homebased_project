@@ -51,6 +51,30 @@ class BusinessProfile {
     };
   }
 
+  BusinessProfile copyWith({
+    String? id,
+    String? updatedAt,
+    String? businessName,
+    String? description,
+    String? sector,
+    double? latitude,
+    double? longitude,
+    String? logoUrl,
+    List<String>? photoUrls,
+  }) {
+    return BusinessProfile(
+      id: id ?? this.id,
+      updatedAt: updatedAt ?? this.updatedAt,
+      businessName: businessName ?? this.businessName,
+      description: description ?? this.description,
+      sector: sector ?? this.sector,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      logoUrl: logoUrl ?? this.logoUrl,
+      photoUrls: photoUrls ?? this.photoUrls,
+    );
+  }
+
   @override
   String toString() {
     return const JsonEncoder.withIndent('  ').convert(toMap());

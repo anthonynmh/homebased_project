@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:homebased_project/backend/business_profile_api/business_profile_model.dart';
+import 'package:homebased_project/widgets/custom_marker.dart';
 import 'package:latlong2/latlong.dart';
 import 'map_base_model.dart';
 
@@ -8,13 +9,17 @@ import 'map_base_model.dart';
 class SingleMarkerMap extends StatefulWidget {
   final LatLng initialCenter;
   final double zoom;
-  final Function(LatLng)? onMarkerChanged; // Callback function for when the marker position changes
+  final Function(LatLng)? onMarkerChanged;
+  final String? logoUrl;
+  final bool readOnly; // Callback function for when the marker position changes
 
   const SingleMarkerMap({
     super.key,
     required this.initialCenter,
     this.zoom = MapBase.defaultZoom,
     this.onMarkerChanged,
+    this.logoUrl,
+    this.readOnly = false,
   });
 
   @override
@@ -32,20 +37,26 @@ class _SingleMarkerMapState extends State<SingleMarkerMap> {
       dynamicMarkerPosition: _markerPosition,
       markers: [
         Marker(
-          point: _markerPosition == null ? widget.initialCenter : _markerPosition!,
+          point: _markerPosition == null
+              ? widget.initialCenter
+              : _markerPosition!,
           width: 80,
           height: 80,
-          child: const Icon(Icons.location_on, color: Colors.red, size: 40),
+          child: CustomMarkerIcon(
+            logoPath: widget.logoUrl ?? 'assets/defaultUser.png',
+          ),
         ),
       ],
-      onTap: (latlng) {
-        setState(() {
-          _markerPosition = latlng;
-        });
-        if (widget.onMarkerChanged != null) {
-          widget.onMarkerChanged!(latlng);
-        }
-      },
+      onTap: widget.readOnly
+          ? null
+          : (latlng) {
+              setState(() {
+                _markerPosition = latlng;
+              });
+              if (widget.onMarkerChanged != null) {
+                widget.onMarkerChanged!(latlng);
+              }
+            },
     );
   }
 }
@@ -55,7 +66,8 @@ class MultiMarkerMap extends StatelessWidget {
   final LatLng initialCenter;
   final double zoom;
   final List<BusinessProfile> markerProfiles;
-  final Function(BusinessProfile)? onMarkerTapped; // Callback function called when a marker is tapped
+  final Function(BusinessProfile)?
+  onMarkerTapped; // Callback function called when a marker is tapped
 
   const MultiMarkerMap({
     super.key,
@@ -70,24 +82,26 @@ class MultiMarkerMap extends StatelessWidget {
     return MapBase(
       initialCenter: initialCenter,
       markers: markerProfiles
-          .where((profile) => profile.latitude != null && profile.longitude != null) // Only display profiles with location
-          .map((profile) => Marker(
-                point: LatLng(profile.latitude!, profile.longitude!),
-                width: 80,
-                height: 80,
-                child: GestureDetector(
-                  onTap: () {
-                    if (onMarkerTapped != null) {
-                      onMarkerTapped!(profile);
-                    }
-                  },
-                  child: const Icon(
-                    Icons.location_on,
-                    color: Colors.blue,
-                    size: 30,
-                  ),
+          .where(
+            (profile) => profile.latitude != null && profile.longitude != null,
+          ) // Only display profiles with location
+          .map(
+            (profile) => Marker(
+              point: LatLng(profile.latitude!, profile.longitude!),
+              width: 80,
+              height: 80,
+              child: GestureDetector(
+                onTap: () {
+                  if (onMarkerTapped != null) {
+                    onMarkerTapped!(profile);
+                  }
+                },
+                child: CustomMarkerIcon(
+                  logoPath: profile.logoUrl ?? 'assets/defaultUser.png',
                 ),
-              ))
+              ),
+            ),
+          )
           .toList(),
     );
   }

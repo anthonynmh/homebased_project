@@ -39,6 +39,24 @@ class UserProfile {
     };
   }
 
+  UserProfile copyWith({
+    String? id,
+    String? updatedAt,
+    String? username,
+    String? fullName,
+    String? avatarUrl,
+    String? email,
+  }) {
+    return UserProfile(
+      id: id ?? this.id,
+      updatedAt: updatedAt ?? this.updatedAt,
+      username: username ?? this.username,
+      fullName: fullName ?? this.fullName,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      email: email ?? this.email,
+    );
+  }
+
   @override
   String toString() {
     return const JsonEncoder.withIndent('  ').convert(toMap());
