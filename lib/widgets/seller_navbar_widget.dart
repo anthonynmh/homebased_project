@@ -15,8 +15,8 @@ List<Widget> sellerPages = [
   ProfilePage(),
 ];
 
-class NavbarWidget extends StatelessWidget {
-  const NavbarWidget({super.key});
+class SellerNavbarWidget extends StatelessWidget {
+  const SellerNavbarWidget({super.key});
 
   @override
   Widget build(BuildContext context) {

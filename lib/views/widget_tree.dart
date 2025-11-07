@@ -124,7 +124,7 @@ class _WidgetTreeState extends State<WidgetTree> {
         valueListenable: userMode,
         builder: (context, mode, child) {
           return mode == "seller"
-              ? const NavbarWidget()
+              ? const SellerNavbarWidget()
               : const DefaultUserNavbarWidget();
         },
       ),
