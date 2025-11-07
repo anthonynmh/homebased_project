@@ -4,7 +4,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/data/notifiers.dart';
-import 'package:homebased_project/views/pages/profile_page.dart';
 import 'package:homebased_project/widgets/navbar_widget.dart';
 
 // MVP2
@@ -13,6 +12,7 @@ import 'package:homebased_project/mvp2/views/activity_feed/activity_feed_page.da
 import 'package:homebased_project/mvp2/views/storefront/storefront_page.dart';
 import 'package:homebased_project/mvp2/views/menu/menu_page.dart';
 import 'package:homebased_project/mvp2/views/orders/orders_page.dart';
+import 'package:homebased_project/mvp2/views/profile/profile_page.dart';
 
 List<Widget> sellerPages = [
   ActivityFeedPage(),
