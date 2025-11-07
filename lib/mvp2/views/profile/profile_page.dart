@@ -1,34 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'package:homebased_project/data/notifiers.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+enum UserMode { seller, user }
+
 class ProfilePage extends StatefulWidget {
-  final String userMode; // "seller" or "user"
   final bool hasStorefront;
-  final VoidCallback onToggleMode;
   final VoidCallback? onCreateStorefront;
 
   const ProfilePage({
     super.key,
-    this.userMode = "seller",
     this.hasStorefront = false,
-    this.onToggleMode = _defaultToggle,
     this.onCreateStorefront,
   });
-
-  static void _defaultToggle() {
-    print("Toggle mode clicked");
-  }
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  UserMode userMode = UserMode.seller;
+
   String? username;
   String? profileImagePath;
   String? tempProfileImagePath;
@@ -48,6 +45,13 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _loadProfileData();
+  }
+
+  void _defaultToggle() {
+    setState(() {
+      userMode = userMode == UserMode.seller ? UserMode.user : UserMode.seller;
+    });
+    setUserMode(userMode == UserMode.seller ? "seller" : "user");
   }
 
   void handleInputChange(String field, String value) {
@@ -251,11 +255,12 @@ class _ProfilePageState extends State<ProfilePage> {
                         _buildModeCard(),
 
                         // Storefront prompt
-                        if (widget.userMode == "owner" && !widget.hasStorefront)
+                        if (userMode == UserMode.seller &&
+                            !widget.hasStorefront)
                           _buildStorefrontPrompt(),
 
                         // Business info form
-                        if (widget.userMode == "owner" && widget.hasStorefront)
+                        if (userMode == UserMode.seller && widget.hasStorefront)
                           _buildBusinessInfoForm(),
 
                         // Stats
@@ -274,7 +279,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildModeCard() {
-    bool isOwner = widget.userMode == "owner";
+    bool isOwner = userMode == UserMode.seller;
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       elevation: 1,
@@ -319,7 +324,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ],
             ),
             OutlinedButton(
-              onPressed: widget.onToggleMode,
+              onPressed: _defaultToggle,
               style: OutlinedButton.styleFrom(
                 shape: const StadiumBorder(),
                 side: const BorderSide(color: Color(0xffd8e7f5)),
@@ -502,7 +507,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildStatsCard() {
-    bool isOwner = widget.userMode == "owner";
+    bool isOwner = userMode == UserMode.seller;
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(

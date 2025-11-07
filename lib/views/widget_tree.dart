@@ -4,25 +4,11 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/data/notifiers.dart';
-import 'package:homebased_project/widgets/navbar_widget.dart';
+import 'package:homebased_project/widgets/seller_navbar_widget.dart';
+import 'package:homebased_project/widgets/user_navbar_widget.dart';
 
 // MVP2
 import 'package:homebased_project/mvp2/auth_page.dart';
-import 'package:homebased_project/mvp2/views/activity_feed/activity_feed_page.dart';
-import 'package:homebased_project/mvp2/views/storefront/storefront_page.dart';
-import 'package:homebased_project/mvp2/views/menu/menu_page.dart';
-import 'package:homebased_project/mvp2/views/orders/orders_page.dart';
-import 'package:homebased_project/mvp2/views/profile/profile_page.dart';
-
-List<Widget> sellerPages = [
-  ActivityFeedPage(),
-  StorefrontPage(),
-  MenuPage(),
-  OrdersPage(),
-  ProfilePage(),
-];
-
-List<Widget> defaultUserPages = [Placeholder(), Placeholder(), ProfilePage()];
 
 class WidgetTree extends StatefulWidget {
   const WidgetTree({super.key});
@@ -121,13 +107,27 @@ class _WidgetTreeState extends State<WidgetTree> {
           ),
         ],
       ),
-      body: ValueListenableBuilder(
-        valueListenable: selectedPageNotifier,
-        builder: (context, value, child) {
-          return sellerPages.elementAt(value);
+      body: ValueListenableBuilder<String>(
+        valueListenable: userMode,
+        builder: (context, mode, child) {
+          return ValueListenableBuilder<int>(
+            valueListenable: selectedPageNotifier,
+            builder: (context, selectedIndex, _) {
+              final pages = mode == "seller" ? sellerPages : defaultUserPages;
+              return pages.elementAt(selectedIndex);
+            },
+          );
         },
       ),
-      bottomNavigationBar: NavbarWidget(),
+
+      bottomNavigationBar: ValueListenableBuilder<String>(
+        valueListenable: userMode,
+        builder: (context, mode, child) {
+          return mode == "seller"
+              ? const NavbarWidget()
+              : const DefaultUserNavbarWidget();
+        },
+      ),
     );
   }
 }
