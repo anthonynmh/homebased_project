@@ -7,7 +7,7 @@ import 'package:homebased_project/data/notifiers.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
-import 'package:homebased_project/models/business_profile.dart';
+import 'package:homebased_project/backend/business_profile_api/business_profile_model.dart';
 import 'package:homebased_project/views/business_profile_tree.dart';
 
 enum UserMode { seller, user }
@@ -51,14 +51,15 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _loadBusinessProfile() async {
     final prefs = await SharedPreferences.getInstance();
-    final String? profileJson = prefs.getString('businessProfile');
+    final profileJson = prefs.getString('businessProfile');
+
     if (profileJson != null) {
       final profile = BusinessProfile.fromJson(profileJson);
-
       setState(() {
         businessProfile = profile;
       });
     } else {
+      // optionally check Supabase for latest if missing locally
       debugPrint("No business profile found in SharedPreferences.");
     }
   }
@@ -166,6 +167,66 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  Widget _buildBusinessProfileCard() {
+    final p = businessProfile!;
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              p.businessName,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            if (p.description != null && p.description!.isNotEmpty)
+              Text(
+                p.description!,
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+            const SizedBox(height: 12),
+            if (p.photoUrls != null && p.photoUrls!.isNotEmpty)
+              SizedBox(
+                height: 100,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: p.photoUrls!.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (_, i) => ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      p.photoUrls![i],
+                      width: 100,
+                      height: 100,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => BusinessProfileTree()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                shape: const StadiumBorder(),
+                backgroundColor: const Color(0xfffeb885),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text("Edit Profile"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -270,17 +331,16 @@ class _ProfilePageState extends State<ProfilePage> {
                         // Mode toggle card
                         _buildModeCard(),
 
-                        // Storefront prompt
                         if (userMode == UserMode.seller &&
-                            !widget.hasStorefront)
+                            businessProfile == null)
                           _buildStorefrontPrompt(),
 
-                        // Business info form
-                        if (userMode == UserMode.seller && widget.hasStorefront)
-                          _buildBusinessInfoForm(),
+                        if (userMode == UserMode.seller &&
+                            businessProfile != null)
+                          _buildBusinessProfileCard(),
 
                         // Stats
-                        _buildStatsCard(),
+                        // _buildStatsCard(),
                       ],
                     ),
                   ),
@@ -420,153 +480,44 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildBusinessInfoForm() {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Business Information",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _textField("Business Name", "businessName"),
-            _textArea("Description", "description"),
-            _textField(
-              "Location",
-              "location",
-              icon: Icons.location_on,
-              action: _openMaps,
-            ),
-            _textField("Website", "website", icon: Icons.link),
-            _textField("Email", "email", icon: Icons.email),
-            _textField("Phone", "phone", icon: Icons.phone),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                shape: const StadiumBorder(),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                backgroundColor: const Color(0xfffeb885),
-                foregroundColor: Colors.white,
-              ),
-              child: const Text("Save Changes"),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // Widget _buildStatsCard() {
+  //   bool isOwner = userMode == UserMode.seller;
+  //   return Card(
+  //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+  //     child: Padding(
+  //       padding: const EdgeInsets.all(16),
+  //       child: Column(
+  //         children: [
+  //           const Align(
+  //             alignment: Alignment.centerLeft,
+  //             child: Text(
+  //               "Activity",
+  //               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+  //             ),
+  //           ),
+  //           const SizedBox(height: 12),
+  //           Row(
+  //             mainAxisAlignment: MainAxisAlignment.spaceAround,
+  //             children: [
+  //               if (isOwner) _statItem("127", "Posts", const Color(0xffd97a3d)),
+  //               _statItem("1.2K", "Followers", const Color(0xff5a8fb8)),
+  //               _statItem("842", "Following", const Color(0xffd97a3d)),
+  //             ],
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
-  Widget _textField(
-    String label,
-    String field, {
-    IconData? icon,
-    VoidCallback? action,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label),
-          const SizedBox(height: 4),
-          TextField(
-            onChanged: (v) => handleInputChange(field, v),
-            controller: TextEditingController(text: businessInfo[field]),
-            decoration: InputDecoration(
-              prefixIcon: icon != null
-                  ? Icon(icon, color: const Color(0xfffeb885))
-                  : null,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xffd8e7f5)),
-              ),
-            ),
-          ),
-          if (field == "location" && businessInfo["location"]!.isNotEmpty)
-            TextButton.icon(
-              onPressed: action,
-              icon: const Icon(Icons.open_in_new, size: 16),
-              label: const Text("View on Google Maps"),
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xff5a8fb8),
-                shape: const StadiumBorder(),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _textArea(String label, String field) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label),
-          const SizedBox(height: 4),
-          TextField(
-            maxLines: 4,
-            onChanged: (v) => handleInputChange(field, v),
-            controller: TextEditingController(text: businessInfo[field]),
-            decoration: InputDecoration(
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Color(0xffd8e7f5)),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatsCard() {
-    bool isOwner = userMode == UserMode.seller;
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Activity",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                if (isOwner) _statItem("127", "Posts", const Color(0xffd97a3d)),
-                _statItem("1.2K", "Followers", const Color(0xff5a8fb8)),
-                _statItem("842", "Following", const Color(0xffd97a3d)),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _statItem(String value, String label, Color color) {
-    return Column(
-      children: [
-        Text(value, style: TextStyle(fontSize: 20, color: color)),
-        Text(label, style: const TextStyle(color: Colors.grey)),
-      ],
-    );
-  }
+  // Widget _statItem(String value, String label, Color color) {
+  //   return Column(
+  //     children: [
+  //       Text(value, style: TextStyle(fontSize: 20, color: color)),
+  //       Text(label, style: const TextStyle(color: Colors.grey)),
+  //     ],
+  //   );
+  // }
 
   Future<void> _openMaps() async {
     final loc = businessInfo["location"] ?? "";
