@@ -1,23 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:homebased_project/data/notifiers.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:homebased_project/models/business_profile.dart';
+import 'package:homebased_project/views/business_profile_tree.dart';
 
 enum UserMode { seller, user }
 
 class ProfilePage extends StatefulWidget {
   final bool hasStorefront;
-  final VoidCallback? onCreateStorefront;
 
-  const ProfilePage({
-    super.key,
-    this.hasStorefront = false,
-    this.onCreateStorefront,
-  });
+  const ProfilePage({super.key, this.hasStorefront = false});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -32,6 +30,9 @@ class _ProfilePageState extends State<ProfilePage> {
   XFile? tempProfileImage;
   TextEditingController? usernameController;
 
+  BusinessProfile? businessProfile;
+  BusinessProfile? editingBusinessProfile;
+
   Map<String, String> businessInfo = {
     "businessName": "My Business",
     "description": "Tell us about your business...",
@@ -45,6 +46,21 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _loadProfileData();
+    _loadBusinessProfile();
+  }
+
+  Future<void> _loadBusinessProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? profileJson = prefs.getString('businessProfile');
+    if (profileJson != null) {
+      final profile = BusinessProfile.fromJson(profileJson);
+
+      setState(() {
+        businessProfile = profile;
+      });
+    } else {
+      debugPrint("No business profile found in SharedPreferences.");
+    }
   }
 
   void _defaultToggle() {
@@ -378,7 +394,14 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: widget.onCreateStorefront,
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BusinessProfileTree(),
+                  ),
+                );
+              },
               icon: const Icon(Icons.arrow_right_alt),
               label: const Text("Get Started"),
               style: ElevatedButton.styleFrom(
