@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+// views
 import 'package:homebased_project/views/widget_tree.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/widgets/snackbar_widget.dart';
@@ -12,6 +12,16 @@ import 'package:homebased_project/backend/user_profile_api/user_profile_model.da
 import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
 import 'package:homebased_project/mvp2/auth/reset_password_page.dart';
 import 'package:homebased_project/mvp2/auth/get_reset_password_email_page.dart';
+
+// components
+import 'package:homebased_project/mvp2/components/auth_header.dart';
+import 'package:homebased_project/mvp2/components/auth_tabs.dart';
+import 'package:homebased_project/mvp2/components/auth_text_field.dart';
+import 'package:homebased_project/mvp2/components/auth_divider.dart';
+import 'package:homebased_project/mvp2/components/google_button.dart';
+
+// utils
+import 'package:homebased_project/mvp2/utils/field_status.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -116,17 +126,6 @@ class _AuthPageState extends State<AuthPage> {
       );
     }
     return FieldState(value: value, status: FieldStatus.success);
-  }
-
-  Color getBorderColor(FieldStatus status) {
-    switch (status) {
-      case FieldStatus.success:
-        return Colors.green;
-      case FieldStatus.error:
-        return Colors.red;
-      default:
-        return Colors.blue.shade200;
-    }
   }
 
   Future<void> signUp() async {
@@ -284,7 +283,7 @@ class _AuthPageState extends State<AuthPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  _buildHeader(),
+                  const AuthHeader(),
                   const SizedBox(height: 16),
                   Text(
                     isSignUp
@@ -303,11 +302,66 @@ class _AuthPageState extends State<AuthPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _buildTabs(),
+                        AuthTabs(
+                          isSignUp: isSignUp,
+                          onLoginTap: () => setState(() => isSignUp = false),
+                          onSignUpTap: () => setState(() => isSignUp = true),
+                        ),
                         const SizedBox(height: 24),
-                        _buildEmailField(),
-                        _buildPasswordField(),
-                        if (isSignUp) _buildConfirmPasswordField(),
+
+                        // Email field
+                        AuthTextField(
+                          label: "Email",
+                          controller: emailController,
+                          icon: Icons.alternate_email,
+                          status: email.status,
+                          onChanged: (_) => setState(() {
+                            email.status = FieldStatus.defaultStatus;
+                          }),
+                          onComplete: () => setState(() {
+                            email = validateEmail(emailController.text);
+                          }),
+                          errorText: email.errorMessage,
+                        ),
+
+                        // Password field
+                        AuthTextField(
+                          label: "Password",
+                          controller: passwordController,
+                          icon: Icons.lock_outline,
+                          obscure: true,
+                          status: password.status,
+                          onChanged: (_) => setState(() {
+                            password.status = FieldStatus.defaultStatus;
+                          }),
+                          onComplete: () => setState(() {
+                            password = validatePassword(
+                              passwordController.text,
+                            );
+                          }),
+                          errorText: password.errorMessage,
+                        ),
+
+                        // Confirm password (only if sign up)
+                        if (isSignUp)
+                          AuthTextField(
+                            label: "Confirm Password",
+                            controller: confirmPasswordController,
+                            icon: Icons.lock_outline,
+                            obscure: true,
+                            status: confirmPassword.status,
+                            onChanged: (_) => setState(() {
+                              confirmPassword.status =
+                                  FieldStatus.defaultStatus;
+                            }),
+                            onComplete: () => setState(() {
+                              confirmPassword = validateConfirmPassword(
+                                confirmPasswordController.text,
+                              );
+                            }),
+                            errorText: confirmPassword.errorMessage,
+                          ),
+
                         if (isSignUp) _buildTermsSection(),
                         const SizedBox(height: 16),
                         ElevatedButton(
@@ -327,9 +381,12 @@ class _AuthPageState extends State<AuthPage> {
                           child: Text(isSignUp ? "Create Account" : "Log In"),
                         ),
                         const SizedBox(height: 16),
-                        _buildDivider(),
+                        const AuthDivider(),
                         const SizedBox(height: 16),
-                        _buildGoogleButton(),
+                        GoogleButton(
+                          isLoading: _isLoading,
+                          onPressed: signInWithGoogle,
+                        ),
                       ],
                     ),
                   ),
@@ -341,188 +398,4 @@ class _AuthPageState extends State<AuthPage> {
       ),
     );
   }
-
-  // --- Reusable widget sections ---
-  Widget _buildHeader() => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.fromLTRB(32, 32, 32, 40),
-    decoration: const BoxDecoration(
-      gradient: LinearGradient(
-        colors: [Colors.white, Color(0xFFC8E8F8), Color(0xFFE8E0F8)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-    ),
-    child: Column(
-      children: const [
-        Icon(Icons.local_cafe, size: 56, color: Color(0xFFFFB885)),
-        SizedBox(height: 12),
-        Text(
-          "Food 'n Friends",
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF2A4A5A),
-          ),
-        ),
-        SizedBox(height: 4),
-        Text(
-          "Community in Selling",
-          style: TextStyle(fontSize: 12, color: Color(0xFF5A7A8A)),
-        ),
-      ],
-    ),
-  );
-
-  Widget _buildTabs() => Row(
-    children: [
-      Expanded(
-        child: GestureDetector(
-          onTap: () => setState(() => isSignUp = false),
-          child: _buildTab("Log In", !isSignUp),
-        ),
-      ),
-      const SizedBox(width: 12),
-      Expanded(
-        child: GestureDetector(
-          onTap: () => setState(() => isSignUp = true),
-          child: _buildTab("Sign Up", isSignUp),
-        ),
-      ),
-    ],
-  );
-
-  Widget _buildTab(String text, bool active) => Container(
-    padding: const EdgeInsets.symmetric(vertical: 8),
-    decoration: BoxDecoration(
-      color: active ? Colors.white : Colors.transparent,
-      borderRadius: BorderRadius.circular(16),
-      boxShadow: active
-          ? const [BoxShadow(color: Colors.black12, blurRadius: 4)]
-          : null,
-    ),
-    child: Center(
-      child: Text(
-        text,
-        style: TextStyle(
-          color: active ? const Color(0xFF2A4A5A) : const Color(0xFF8A9AAA),
-        ),
-      ),
-    ),
-  );
-
-  Widget _buildEmailField() => _buildTextField(
-    label: "Email",
-    controller: emailController,
-    icon: Icons.alternate_email,
-    status: email.status,
-    onComplete: () =>
-        setState(() => email = validateEmail(emailController.text)),
-    errorText: email.errorMessage,
-  );
-
-  Widget _buildPasswordField() => _buildTextField(
-    label: "Password",
-    controller: passwordController,
-    icon: Icons.lock_outline,
-    obscure: true,
-    status: password.status,
-    onComplete: () =>
-        setState(() => password = validatePassword(passwordController.text)),
-    errorText: password.errorMessage,
-  );
-
-  Widget _buildConfirmPasswordField() => _buildTextField(
-    label: "Confirm Password",
-    controller: confirmPasswordController,
-    icon: Icons.lock_outline,
-    obscure: true,
-    status: confirmPassword.status,
-    onComplete: () => setState(
-      () => confirmPassword = validateConfirmPassword(
-        confirmPasswordController.text,
-      ),
-    ),
-    errorText: confirmPassword.errorMessage,
-  );
-
-  Widget _buildTextField({
-    required String label,
-    required TextEditingController controller,
-    required IconData icon,
-    FieldStatus status = FieldStatus.defaultStatus,
-    bool obscure = false,
-    required VoidCallback onComplete,
-    String? errorText,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(color: Color(0xFF5A7A8A), fontSize: 12),
-        ),
-        const SizedBox(height: 4),
-        TextField(
-          controller: controller,
-          obscureText: obscure,
-          style: const TextStyle(fontSize: 14),
-          decoration: InputDecoration(
-            hintText: "Enter your $label".toLowerCase(),
-            hintStyle: const TextStyle(fontSize: 14),
-            prefixIcon: Icon(icon, size: 20),
-            contentPadding: const EdgeInsets.symmetric(
-              vertical: 12,
-              horizontal: 16,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: getBorderColor(status), width: 2),
-            ),
-          ),
-          onChanged: (_) => setState(() => status = FieldStatus.defaultStatus),
-          onEditingComplete: onComplete,
-        ),
-        if (status == FieldStatus.error && errorText != null)
-          Text(
-            errorText,
-            style: const TextStyle(color: Colors.red, fontSize: 10),
-          ),
-        const SizedBox(height: 12),
-      ],
-    );
-  }
-
-  Widget _buildDivider() => Stack(
-    alignment: Alignment.center,
-    children: [
-      const Divider(thickness: 1, color: Color(0xFFE8F4F8)),
-      Container(
-        color: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: const Text(
-          "or continue with",
-          style: TextStyle(color: Color(0xFFA8B8C8), fontSize: 12),
-        ),
-      ),
-    ],
-  );
-
-  Widget _buildGoogleButton() => OutlinedButton.icon(
-    onPressed: _isLoading ? null : signInWithGoogle,
-    style: OutlinedButton.styleFrom(
-      side: const BorderSide(color: Color(0xFFE8F4F8), width: 2),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      minimumSize: const Size.fromHeight(44),
-    ),
-    icon: SizedBox(
-      width: 20,
-      height: 20,
-      child: SvgPicture.network(
-        "https://upload.wikimedia.org/wikipedia/commons/3/3c/Google_Favicon_2025.svg",
-        fit: BoxFit.contain,
-      ),
-    ),
-    label: const Text("Google", style: TextStyle(fontSize: 14)),
-  );
 }
