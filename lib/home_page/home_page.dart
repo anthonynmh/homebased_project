@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:homebased_project/mvp2/auth_page.dart';
+import 'package:homebased_project/mvp2/auth/auth_page.dart';
 import 'package:homebased_project/widgets/confirmation_dialog.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 

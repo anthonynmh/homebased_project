@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:homebased_project/mvp2/auth_page.dart';
+import 'package:homebased_project/mvp2/auth/auth_page.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 
 enum FieldStatus { defaultStatus, success, error }
