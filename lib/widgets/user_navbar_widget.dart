@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:homebased_project/data/notifiers.dart';
-import 'package:homebased_project/mvp2/views/profile/profile_page.dart';
 
-List<Widget> defaultUserPages = [Placeholder(), Placeholder(), ProfilePage()];
+List<Widget> defaultUserPages = [Placeholder(), Placeholder()];
 
 class DefaultUserNavbarWidget extends StatelessWidget {
   const DefaultUserNavbarWidget({super.key});
@@ -22,10 +21,6 @@ class DefaultUserNavbarWidget extends StatelessWidget {
             NavigationDestination(
               icon: Icon(Icons.search_outlined),
               label: 'Search',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.person_2_outlined),
-              label: 'Profile',
             ),
           ],
           onDestinationSelected: (int index) {
