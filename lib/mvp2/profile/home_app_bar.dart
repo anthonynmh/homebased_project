@@ -36,7 +36,7 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
           children: [
             CircleAvatar(
               radius: 24,
-              backgroundColor: Color(0xFFFFB885),
+              backgroundColor: const Color(0xFFFFB885),
               backgroundImage: profileImage,
             ),
             const SizedBox(width: 12),
@@ -50,7 +50,10 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
             Text('Profile Mode: $profileMode'),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: onSwitchMode,
+              onPressed: () {
+                onSwitchMode();
+                Navigator.of(context).pop();
+              },
               icon: const Icon(Icons.sync),
               label: const Text("Switch Profile Mode"),
               style: ElevatedButton.styleFrom(
@@ -96,16 +99,46 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
         style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
       ),
       actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 16),
-          child: GestureDetector(
-            onTap: () => _showProfileDialog(context),
-            child: CircleAvatar(
-              radius: 20,
-              backgroundColor: Color(0xFFFFB885),
-              backgroundImage: profileImage,
+        Row(
+          children: [
+            // Display-only profile mode
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFB885).withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.person, size: 16, color: Colors.black54),
+                  const SizedBox(width: 4),
+                  Text(
+                    profileMode,
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+
+            // Divider
+            const SizedBox(width: 12),
+            Container(height: 24, width: 1, color: Colors.grey.shade400),
+            const SizedBox(width: 12),
+
+            // Avatar (tap opens dialog)
+            GestureDetector(
+              onTap: () => _showProfileDialog(context),
+              child: CircleAvatar(
+                radius: 20,
+                backgroundColor: const Color(0xFFFFB885),
+                backgroundImage: profileImage,
+              ),
+            ),
+            const SizedBox(width: 16),
+          ],
         ),
       ],
     );

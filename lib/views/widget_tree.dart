@@ -20,8 +20,6 @@ class WidgetTree extends StatefulWidget {
 }
 
 class _WidgetTreeState extends State<WidgetTree> {
-  String profileMode = 'User';
-
   String? username;
   String? profileImagePath;
   String? tempProfileImagePath;
@@ -126,8 +124,9 @@ class _WidgetTreeState extends State<WidgetTree> {
 
   void _switchProfileMode() {
     setState(() {
-      profileMode = profileMode == 'Seller' ? 'User' : 'Seller';
+      userMode.value = userMode.value == 'Seller' ? 'User' : 'Seller';
     });
+    setUserMode(userMode.value);
     // Optionally persist this state to backend
   }
 
@@ -149,7 +148,7 @@ class _WidgetTreeState extends State<WidgetTree> {
         profileImage: profileImagePath == null
             ? const AssetImage('assets/defaultUser.png')
             : NetworkImage(profileImagePath!) as ImageProvider,
-        profileMode: 'Seller',
+        profileMode: userMode.value,
         onSwitchMode: _switchProfileMode,
         onLogout: _logout,
       ),
@@ -159,7 +158,7 @@ class _WidgetTreeState extends State<WidgetTree> {
           return ValueListenableBuilder<int>(
             valueListenable: selectedPageNotifier,
             builder: (context, selectedIndex, _) {
-              final pages = mode == "seller" ? sellerPages : defaultUserPages;
+              final pages = mode == "Seller" ? sellerPages : defaultUserPages;
               return pages.elementAt(selectedIndex);
             },
           );
@@ -169,7 +168,7 @@ class _WidgetTreeState extends State<WidgetTree> {
       bottomNavigationBar: ValueListenableBuilder<String>(
         valueListenable: userMode,
         builder: (context, mode, child) {
-          return mode == "seller"
+          return mode == "Seller"
               ? const SellerNavbarWidget()
               : const DefaultUserNavbarWidget();
         },

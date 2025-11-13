@@ -54,9 +54,8 @@ class AuthService {
   Future<bool> signInWithGoogle() async {
     return await supabase.auth.signInWithOAuth(
       OAuthProvider.google,
-      redirectTo: kIsWeb
-          ? 'http://localhost:8000/'
-          : 'my.scheme://my-host', // Latter option for mobile callbacks via deeplinking, won't be an issue for web deployment
+      redirectTo: 'https://foodnfriends.app/',
+      // redirectTo: 'http://localhost:8000/', // for local testing
       authScreenLaunchMode: kIsWeb
           ? LaunchMode.platformDefault
           : LaunchMode

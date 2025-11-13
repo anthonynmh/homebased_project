@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:homebased_project/data/notifiers.dart';
 
-List<Widget> defaultUserPages = [Placeholder(), Placeholder()];
+List<Widget> defaultUserPages = [Placeholder(), Placeholder(), Placeholder()];
 
 class DefaultUserNavbarWidget extends StatelessWidget {
   const DefaultUserNavbarWidget({super.key});
@@ -15,12 +15,16 @@ class DefaultUserNavbarWidget extends StatelessWidget {
         return NavigationBar(
           destinations: const [
             NavigationDestination(
-              icon: Icon(Icons.feed_outlined),
-              label: 'Activity Feed',
+              icon: Icon(Icons.rotate_90_degrees_ccw_outlined),
+              label: 'Catch Up',
             ),
             NavigationDestination(
               icon: Icon(Icons.search_outlined),
               label: 'Search',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.favorite_border_outlined),
+              label: 'Followed HBBs',
             ),
           ],
           onDestinationSelected: (int index) {
