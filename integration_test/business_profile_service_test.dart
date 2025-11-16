@@ -9,6 +9,7 @@ import 'package:homebased_project/backend/business_profile_api/business_profile_
 import 'package:homebased_project/backend/business_profile_api/business_profile_model.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
+import 'login_details.dart';
 
 void main() {
   late AuthService authService;
@@ -68,27 +69,17 @@ void main() {
         } catch (e) {
           print('⚠️ Failed to delete profile row for ${user.id}: $e');
         }
-
-        try {
-          await adminClient.auth.admin.deleteUser(user.id);
-          print('✅ Deleted auth user ${user.email}');
-        } catch (e) {
-          print('⚠️ Failed to delete auth user ${user.email}: $e');
-        }
       }
     });
 
     testWidgets('BusinessProfileService full integration', (tester) async {
-      // --- 1️⃣ Sign up test user ---
-      final email =
-          'biz_test_${DateTime.now().millisecondsSinceEpoch}@example.com';
-      const password = 'strongpassword123';
-
-      final signUpResponse = await authService.signUpWithEmailPassword(
-        email: email,
-        password: password,
+      // --- 1️⃣ Sign in to a test user ---
+      final signInResponse = await authService.signInWithEmailPassword(
+        email: TestUserConstants.emailA,
+        password: TestUserConstants.passwordA,
       );
-      userA = signUpResponse.user;
+
+      userA = signInResponse.user;
       expect(userA, isNotNull);
 
       // --- 2️⃣ Insert initial profile via RPC ---
@@ -107,7 +98,7 @@ void main() {
         authService.currentUserId!,
       );
       expect(fetchedProfile, isNotNull);
-      expect(fetchedProfile!.email, equals(email));
+      expect(fetchedProfile!.email, equals(TestUserConstants.emailA));
 
       print('✅ Inserted and fetched user profile successfully.');
 
@@ -203,57 +194,42 @@ void main() {
 
   group('BusinessProfileService RLS enforcement tests', () {
     setUpAll(() async {
-      // Sign up two users
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final emailA = 'bizA_$timestamp@example.com';
-      final emailB = 'bizB_$timestamp@example.com';
-      const password = 'strongpassword123';
-
-      // --- Insert user profile for user A ---
-      final signUpA = await authService.signUpWithEmailPassword(
-        email: emailA,
-        password: password,
+      // Insert initial profiles for user A
+      final signInResponseA = await authService.signInWithEmailPassword(
+        email: TestUserConstants.emailA,
+        password: TestUserConstants.passwordA,
       );
-      userA = signUpA.user;
-
-      final profileA = UserProfile(
-        id: authService.currentUserId!,
-        email: userA!.email,
-        username: 'UserA',
-        fullName: 'Userious Abraham',
-      );
+      userA = signInResponseA.user;
+      expect(userA, isNotNull);
 
       await userProfileService.insertCurrentUserProfile(
-        profileA,
+        UserProfile(id: userA!.id, email: userA!.email, username: 'UserA'),
         isTest: true,
       );
-
       await authService.signOut();
 
-      // --- Insert user profile for user B ---
-      final signUpB = await authService.signUpWithEmailPassword(
-        email: emailB,
-        password: password,
+      // Insert initial profiles for user B
+      final signInResponseB = await authService.signInWithEmailPassword(
+        email: TestUserConstants.emailB,
+        password: TestUserConstants.passwordB,
       );
-      userB = signUpB.user;
+      userB = signInResponseB.user;
+      expect(userB, isNotNull);
 
-      final profileB = UserProfile(
-        id: authService.currentUserId!,
-        email: userB!.email,
-        username: 'UserB',
-        fullName: 'Userarnimous Brexit',
+      await authService.signInWithEmailPassword(
+        email: TestUserConstants.emailB,
+        password: TestUserConstants.passwordB,
       );
-
       await userProfileService.insertCurrentUserProfile(
-        profileB,
+        UserProfile(id: userB!.id, email: userB!.email, username: 'UserB'),
         isTest: true,
       );
       await authService.signOut();
 
       // Insert profiles
       await authService.signInWithEmailPassword(
-        email: emailA,
-        password: password,
+        email: TestUserConstants.emailA,
+        password: TestUserConstants.passwordA,
       );
       await businessProfileService.insertCurrentBusinessProfile(
         BusinessProfile(id: userA!.id, businessName: 'BizA', sector: 'Retail'),
@@ -261,8 +237,8 @@ void main() {
       await authService.signOut();
 
       await authService.signInWithEmailPassword(
-        email: emailB,
-        password: password,
+        email: TestUserConstants.emailB,
+        password: TestUserConstants.passwordB,
       );
       await businessProfileService.insertCurrentBusinessProfile(
         BusinessProfile(id: userB!.id, businessName: 'BizB', sector: 'Tech'),
@@ -287,20 +263,13 @@ void main() {
         } catch (e) {
           print('⚠️ Failed to delete profile row for ${user.id}: $e');
         }
-        
-        try {
-          await adminClient.auth.admin.deleteUser(user.id);
-          print('✅ Deleted auth user ${user.email}');
-        } catch (e) {
-          print('⚠️ Failed to delete auth user ${user.email}: $e');
-        }
       }
     });
 
     testWidgets('User A cannot read User B business profile', (tester) async {
       await authService.signInWithEmailPassword(
-        email: userA!.email!,
-        password: 'strongpassword123',
+        email: TestUserConstants.emailA,
+        password: TestUserConstants.passwordA,
       );
 
       final result = await Supabase.instance.client
@@ -315,8 +284,8 @@ void main() {
 
     testWidgets('User A cannot update User B business profile', (tester) async {
       await authService.signInWithEmailPassword(
-        email: userA!.email!,
-        password: 'strongpassword123',
+        email: TestUserConstants.emailA,
+        password: TestUserConstants.passwordA,
       );
 
       try {
@@ -344,8 +313,8 @@ void main() {
 
     testWidgets('User A cannot upload to User B folder', (tester) async {
       await authService.signInWithEmailPassword(
-        email: userA!.email!,
-        password: 'strongpassword123',
+        email: TestUserConstants.emailA,
+        password: TestUserConstants.passwordA,
       );
 
       final tempDir = await getTemporaryDirectory();

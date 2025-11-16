@@ -53,7 +53,11 @@ This method authenticates (logs in) a user using email and password.
 
 ### 2. signUpWithEmailPassword
 
-This method creates (signs up) a new user profile using email and password.
+This method creates (signs up) a new user profile using email and password. 
+
+Throws an error on two scenarios:
+1. User already signed up successfully, and has verified their email.
+2. User signed up previously, but haven't verified their email.
 
 #### Arguments
 
@@ -87,3 +91,29 @@ This method logs in a user via Google.
 #### Returns
 
 - success: Boolean
+
+### sendPasswordResetEmail
+
+This method requests for a confirmation email to reset password.
+
+#### Arguments
+
+- email: String
+
+#### Returns
+
+- None
+
+### updatePassword
+
+This method updates the password of a user, specified by confirmation url. 
+
+Email is **not** required. Clicking on the confirmation email link authenticates the user on the **same browser session**. 
+
+#### Arguments
+
+- newPassword: String
+
+#### Returns
+
+- None

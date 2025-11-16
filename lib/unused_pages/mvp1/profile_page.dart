@@ -348,21 +348,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         readOnly: !isEditing,
                       ),
                       const SizedBox(height: 16),
-                      CustomFormField(
-                        label: "Product Type",
-                        type: FieldType.dropdown,
-                        requiredField: true,
-                        initialValue: isEditing
-                            ? editingBusinessProfile?.productType
-                            : businessProfile?.productType,
-                        onSaved: (val) {
-                          if (isEditing) {
-                            editingBusinessProfile = editingBusinessProfile
-                                ?.copyWith(productType: val ?? '');
-                          }
-                        },
-                        readOnly: !isEditing,
-                      ),
+
                       const SizedBox(height: 16),
                       CustomFormField(
                         label: "Description",

@@ -42,9 +42,26 @@ class UserProfileService {
   Future<UserProfile?> getCurrentUserProfile(String userId) async {
     try {
       final res = await _supabase
+        .from(table)
+        .select()
+        .eq('id', userId)
+        .maybeSingle();
+      
+      if (res == null) return null;
+      return UserProfile.fromMap(res);
+    } catch (e) {
+      print('supabase lookup error: $e');
+      return null;
+    }
+  }
+
+  /// Get profile by email address
+  Future<UserProfile?> getCurrentUserProfileByEmail(String email) async {
+    try {
+      final res = await _supabase
           .from(table)
           .select()
-          .eq('id', userId)
+          .eq('email', email)
           .maybeSingle();
 
       if (res == null) return null;
@@ -89,7 +106,7 @@ class UserProfileService {
       data['updated_at'] = DateTime.now().toUtc().toIso8601String();
 
       if (data.isEmpty) return; // nothing to update
-
+      
       final res = await _supabase
           .from(table)
           .update(data)
@@ -137,6 +154,7 @@ class UserProfileService {
     try {
       final profile = await getCurrentUserProfile(userId);
       final avatarPath = profile?.avatarUrl;
+
       if (avatarPath == null) return; // no avatar to delete
 
       final storage = _supabase.storage;

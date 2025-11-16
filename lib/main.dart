@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import 'package:homebased_project/login_page/login_page.dart';
+import 'package:homebased_project/mvp2/auth/auth_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,9 +63,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Knock Knock',
+      title: 'Food \'n Friends',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFC23838)),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF5A7A8A)),
         fontFamily: 'Inter',
         textTheme: const TextTheme(
           bodyLarge: TextStyle(fontSize: 26.65, fontWeight: FontWeight.bold),
@@ -74,7 +74,7 @@ class MyApp extends StatelessWidget {
           titleLarge: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
         ),
       ),
-      home: const LoginPage(),
+      home: const AuthPage(),
     );
   }
 }

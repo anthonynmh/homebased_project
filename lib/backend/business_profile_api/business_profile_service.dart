@@ -93,10 +93,6 @@ class BusinessProfileService {
       if (profile.description != null) {
         data['description'] = profile.description;
       }
-      if (profile.sector != null) data['sector'] = profile.sector;
-      if (profile.latitude != null) data['latitude'] = profile.latitude;
-      if (profile.longitude != null) data['longitude'] = profile.longitude;
-      if (profile.logoUrl != null) data['logo_url'] = profile.logoUrl;
       data['updated_at'] = DateTime.now().toUtc().toIso8601String();
 
       if (data.isEmpty) return;
@@ -110,7 +106,12 @@ class BusinessProfileService {
   }
 
   /// Upload business logo to Supabase storage and store only file path in table
-  Future<void> uploadBusinessLogo(XFile imageFile, String userId) async {
+  Future<void> uploadBusinessLogo(
+    XFile imageFile,
+    String userId,
+    String businessName,
+    String updatedAt,
+  ) async {
     final ext = path.extension(imageFile.name);
     final filename = 'logo$ext'; // always the same file name for overwrite
     final filepath = '$userId/logo/$filename';
@@ -128,7 +129,11 @@ class BusinessProfileService {
 
       // Update DB with only the file path
       await updateCurrentBusinessProfile(
-        BusinessProfile(id: userId, logoUrl: filepath),
+        BusinessProfile(
+          id: userId,
+          businessName: businessName,
+          updatedAt: updatedAt,
+        ),
         userId,
       );
 

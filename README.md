@@ -1,8 +1,8 @@
 # Deployment Status
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/40080a13-bc5f-45ef-87f0-d967d8135635/deploy-status)](https://app.netlify.com/projects/knockknock-homebased/deploys)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/40080a13-bc5f-45ef-87f0-d967d8135635/deploy-status)](https://app.netlify.com/projects/foodnfriends/deploys)
 
-# Knock Knock: Community in Selling.
+# Food 'n Friends: Community in Selling.
 
 The go-to platform to to start your home based businesses (HBB).
 

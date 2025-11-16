@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+
 import 'package:homebased_project/data/notifiers.dart';
 
-class NavbarWidget extends StatelessWidget {
-  const NavbarWidget({super.key});
+List<Widget> defaultUserPages = [Placeholder(), Placeholder(), Placeholder()];
+
+class DefaultUserNavbarWidget extends StatelessWidget {
+  const DefaultUserNavbarWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -10,14 +13,18 @@ class NavbarWidget extends StatelessWidget {
       valueListenable: selectedPageNotifier,
       builder: (context, selectedPage, child) {
         return NavigationBar(
-          destinations: [
+          destinations: const [
             NavigationDestination(
-              icon: ImageIcon(AssetImage('assets/searchIcon.png')),
-              label: 'Explore',
+              icon: Icon(Icons.rotate_90_degrees_ccw_outlined),
+              label: 'Catch Up',
             ),
             NavigationDestination(
-              icon: ImageIcon(AssetImage('assets/defaultUser.png')),
-              label: 'Profile',
+              icon: Icon(Icons.search_outlined),
+              label: 'Search',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.favorite_border_outlined),
+              label: 'Followed HBBs',
             ),
           ],
           onDestinationSelected: (int index) {

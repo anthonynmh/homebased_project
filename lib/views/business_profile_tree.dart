@@ -1,14 +1,15 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:homebased_project/models/business_profile.dart';
-import 'package:homebased_project/views/pages/business_description_page.dart';
-import 'package:homebased_project/views/pages/business_images_page.dart';
-import 'package:homebased_project/views/pages/business_map_page/business_map_page.dart';
-import 'package:homebased_project/views/pages/business_name_page.dart';
-import 'package:homebased_project/views/pages/business_product_type_page.dart';
-import 'package:homebased_project/views/widget_tree.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-//if user reaches this page, it means they have no existing business profile
+import 'package:homebased_project/views/pages/business_description_page.dart';
+import 'package:homebased_project/views/pages/business_images_page.dart';
+import 'package:homebased_project/views/pages/business_name_page.dart';
+import 'package:homebased_project/views/widget_tree.dart';
+import 'package:homebased_project/backend/business_profile_api/business_profile_model.dart';
+import 'package:homebased_project/backend/business_profile_api/business_profile_service.dart';
+import 'package:homebased_project/backend/supabase_api/supabase_service.dart';
+
 class BusinessProfileTree extends StatefulWidget {
   @override
   State<BusinessProfileTree> createState() => _BusinessProfileTreeState();
@@ -16,28 +17,45 @@ class BusinessProfileTree extends StatefulWidget {
 
 class _BusinessProfileTreeState extends State<BusinessProfileTree> {
   BusinessProfile profile = BusinessProfile(
-    name: '',
-    productType: '',
+    id: '',
+    businessName: '',
     description: '',
-    imagePaths: null,
+    photoUrls: [],
+    updatedAt: '',
   );
-  int currentStep = 0;
 
-  void updateProfile(BusinessProfile newProfile) {
-    setState(() {
-      profile = newProfile;
-    });
+  int currentStep = 0;
+  bool isLoading = false;
+
+  late final List<Widget> pages;
+
+  final _userProfileService = BusinessProfileService();
+
+  @override
+  void initState() {
+    super.initState();
+    pages = [
+      BusinessNamePage(
+        name: profile.businessName,
+        onNameChanged: updateName,
+        onNext: nextStep,
+      ),
+      BusinessDescriptionPage(
+        address: profile.description ?? '',
+        onAddressChanged: updateDescription,
+        onNext: nextStep,
+      ),
+      BusinessImagesPage(
+        imagePaths: profile.photoUrls ?? [],
+        onImagesChanged: updateImages,
+        onNext: nextStep,
+      ),
+    ];
   }
 
   void updateName(String name) {
     setState(() {
-      profile.name = name;
-    });
-  }
-
-  void updateProductType(String productType) {
-    setState(() {
-      profile.productType = productType;
+      profile.businessName = name;
     });
   }
 
@@ -49,27 +67,8 @@ class _BusinessProfileTreeState extends State<BusinessProfileTree> {
 
   void updateImages(List<String> imagePaths) {
     setState(() {
-      profile.imagePaths = imagePaths;
+      profile.photoUrls = imagePaths;
     });
-  }
-
-  void nextStep() async {
-    if (currentStep < pages.length - 1) {
-      setState(() {
-        currentStep++;
-      });
-    } else {
-      // Save profile locally in shared preferences
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('businessProfile', profile.toJson());
-      if (!mounted) return;
-      // Navigate to profile page and reset the stack
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => WidgetTree()),
-        (route) => false,
-      );
-    }
   }
 
   void previousStep() {
@@ -80,34 +79,39 @@ class _BusinessProfileTreeState extends State<BusinessProfileTree> {
     }
   }
 
-  late final List<Widget> pages;
+  Future<void> nextStep() async {
+    if (currentStep < pages.length - 1) {
+      setState(() => currentStep++);
+      return;
+    }
 
-  @override
-  void initState() {
-    super.initState();
-    pages = [
-      BusinessNamePage(
-        name: profile.name,
-        onNameChanged: updateName,
-        onNext: nextStep,
-      ),
-      BusinessProductTypePage(
-        productType: profile.productType,
-        onProductTypeChanged: updateProductType,
-        onNext: nextStep,
-      ),
-      BusinessDescriptionPage(
-        address: profile.description,
-        onAddressChanged: updateDescription,
-        onNext: nextStep,
-      ),
-      BusinessMapPage(onNext: nextStep),
-      BusinessImagesPage(
-        imagePaths: profile.imagePaths,
-        onImagesChanged: updateImages,
-        onNext: nextStep,
-      ),
-    ];
+    setState(() => isLoading = true);
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('businessProfile', jsonEncode(profile.toMap()));
+
+      final user = supabase.auth.currentUser;
+      if (user != null) {
+        profile.id = user.id;
+        profile.updatedAt = DateTime.now().toUtc().toIso8601String();
+        await _userProfileService.insertCurrentBusinessProfile(profile);
+      }
+
+      if (!mounted) return;
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => WidgetTree()),
+        (route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save business profile: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
   }
 
   @override
@@ -124,13 +128,10 @@ class _BusinessProfileTreeState extends State<BusinessProfileTree> {
                   style: ElevatedButton.styleFrom(
                     shape: CircleBorder(),
                     padding: EdgeInsets.all(10),
-                    backgroundColor: Colors.white, // button background
-                    elevation: 3, // shadow depth
+                    backgroundColor: Colors.white,
+                    elevation: 3,
                   ),
-                  child: Icon(
-                    Icons.arrow_back,
-                    color: Colors.black,
-                  ), // back arrow icon
+                  child: Icon(Icons.arrow_back, color: Colors.black),
                 ),
               )
             : null,
@@ -156,7 +157,16 @@ class _BusinessProfileTreeState extends State<BusinessProfileTree> {
           ),
         ],
       ),
-      body: IndexedStack(index: currentStep, children: pages),
+      body: Stack(
+        children: [
+          IndexedStack(index: currentStep, children: pages),
+          if (isLoading)
+            Container(
+              color: Colors.black45,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+        ],
+      ),
     );
   }
 }
