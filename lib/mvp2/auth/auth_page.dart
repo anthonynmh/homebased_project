@@ -342,6 +342,31 @@ class _AuthPageState extends State<AuthPage> {
                           errorText: password.errorMessage,
                         ),
 
+                        if (!isSignUp)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text("Forgot your password? "),
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const GetResetPasswordEmailPage(),
+                                    ),
+                                  );
+                                },
+                                child: const Text(
+                                  "Click here",
+                                  style: TextStyle(
+                                    color: Colors.blue,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
                         // Confirm password (only if sign up)
                         if (isSignUp)
                           AuthTextField(
