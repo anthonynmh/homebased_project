@@ -6,7 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 // views
 import 'package:homebased_project/views/widget_tree.dart';
-import 'package:homebased_project/backend/auth_api/auth_service.dart';
+import 'package:homebased_project/features/auth/data/auth_service.dart';
 import 'package:homebased_project/widgets/snackbar_widget.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';

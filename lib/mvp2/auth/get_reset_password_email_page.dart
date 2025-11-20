@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 // views
 import 'package:homebased_project/mvp2/auth/auth_page.dart';
-import 'package:homebased_project/backend/auth_api/auth_service.dart';
+import 'package:homebased_project/features/auth/data/auth_service.dart';
 
 // utils
 import 'package:homebased_project/mvp2/utils/field_status.dart';
