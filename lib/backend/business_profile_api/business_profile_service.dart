@@ -6,7 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homebased_project/backend/business_profile_api/business_profile_model.dart';
 
 /// Expose business profile related operations
-final userProfileService = BusinessProfileService();
+final businessProfileService = BusinessProfileService();
 
 class BusinessProfileService {
   final SupabaseClient _supabase;
