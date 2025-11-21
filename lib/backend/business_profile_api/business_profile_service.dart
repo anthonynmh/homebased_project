@@ -81,23 +81,9 @@ class BusinessProfileService {
   }
 
   /// Update current business profile (only non-null fields will be updated)
-  Future<void> updateCurrentBusinessProfile(
-    BusinessProfile profile,
-    String userId,
-  ) async {
+  Future<void> updateCurrentBusinessProfile(BusinessProfile profile) async {
     try {
-      final data = <String, dynamic>{};
-      if (profile.businessName != null) {
-        data['business_name'] = profile.businessName;
-      }
-      if (profile.description != null) {
-        data['description'] = profile.description;
-      }
-      data['updated_at'] = DateTime.now().toUtc().toIso8601String();
-
-      if (data.isEmpty) return;
-
-      await _supabase.from(table).update(data).eq('id', userId);
+      await _supabase.from(table).update(profile.toMap()).eq('id', profile.id);
       print('Business profile updated successfully.');
     } catch (e, st) {
       print('Failed to update business profile: $e\n$st');
@@ -134,7 +120,6 @@ class BusinessProfileService {
           businessName: businessName,
           updatedAt: updatedAt,
         ),
-        userId,
       );
 
       print('Business logo uploaded and path stored: $filepath');

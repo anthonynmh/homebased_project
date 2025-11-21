@@ -23,6 +23,7 @@ class _StorefrontState extends State<StorefrontPageV2> {
   final _locationController = TextEditingController();
 
   bool _isEditing = false;
+  bool _hasStorefront = false;
 
   @override
   void initState() {
@@ -44,6 +45,10 @@ class _StorefrontState extends State<StorefrontPageV2> {
 
     _nameController.text = storefront.businessName ?? '';
     _descriptionController.text = storefront.description ?? '';
+
+    setState(() {
+      _hasStorefront = true;
+    });
   }
 
   Future<void> handleSave() async {
@@ -63,7 +68,12 @@ class _StorefrontState extends State<StorefrontPageV2> {
     );
 
     try {
-      await businessProfileService.insertCurrentBusinessProfile(storefront);
+      if (_hasStorefront) {
+        await businessProfileService.updateCurrentBusinessProfile(storefront);
+      } else {
+        await businessProfileService.insertCurrentBusinessProfile(storefront);
+      }
+
       setState(() {
         _isEditing = false;
       });
@@ -71,10 +81,7 @@ class _StorefrontState extends State<StorefrontPageV2> {
       if (widget.onBroadcast != null) {
         widget.onBroadcast!("Store profile created.");
       }
-      debugPrint("Storefront updated successfully.");
-    } catch (e) {
-      // handle insert failure
-    }
+    } catch (_) {}
   }
 
   @override
