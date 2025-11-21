@@ -1,28 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-// service
+import 'package:homebased_project/backend/business_profile_api/business_profile_model.dart';
 import 'package:homebased_project/backend/business_profile_api/business_profile_service.dart';
+import 'package:homebased_project/backend/auth_api/auth_service.dart';
 
 // components
 import 'package:homebased_project/mvp2/components/app_text_field.dart';
-
-class ScheduleDay {
-  DateTime date;
-  bool isOpen;
-  String openTime;
-  String closeTime;
-  String remarks;
-
-  ScheduleDay({
-    required this.date,
-    this.isOpen = false,
-    this.openTime = "09:00",
-    this.closeTime = "17:00",
-    this.remarks = "",
-  });
-}
 
 class StorefrontPageV2 extends StatefulWidget {
   final void Function(String message)? onBroadcast;
@@ -37,49 +21,59 @@ class _StorefrontState extends State<StorefrontPageV2> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
-  int _selectedDayIndex = 0;
-
-  late List<ScheduleDay> _schedule;
 
   bool _isEditing = false;
 
   @override
   void initState() {
     super.initState();
-    _schedule = _generateNext14Days();
+    loadStorefront();
   }
 
-  List<ScheduleDay> _generateNext14Days() {
-    final today = DateTime.now();
-    return List.generate(14, (i) {
-      final date = today.add(Duration(days: i));
-      return ScheduleDay(date: date);
-    });
+  Future<void> loadStorefront() async {
+    final userId = authService.currentUserId;
+    if (userId == null) return;
+
+    final storefront = await businessProfileService.getCurrentBusinessProfile(
+      userId,
+    );
+    if (storefront == null) {
+      debugPrint("no storefront found");
+      return;
+    }
+
+    _nameController.text = storefront.businessName ?? '';
+    _descriptionController.text = storefront.description ?? '';
   }
 
-  void _updateScheduleField(int index, String field, String value) {
-    setState(() {
-      final day = _schedule[index];
-      switch (field) {
-        case 'openTime':
-          day.openTime = value;
-        case 'closeTime':
-          day.closeTime = value;
-        case 'remarks':
-          day.remarks = value;
+  Future<void> handleSave() async {
+    final userId = authService.currentUserId;
+
+    if (userId == null) {
+      // handle error: user not logged in
+      return;
+    }
+
+    final storefront = BusinessProfile(
+      id: userId,
+      updatedAt: DateTime.now().toUtc().toIso8601String(),
+      businessName: _nameController.text.trim(),
+      description: _descriptionController.text.trim(),
+      photoUrls: null,
+    );
+
+    try {
+      await businessProfileService.insertCurrentBusinessProfile(storefront);
+      setState(() {
+        _isEditing = false;
+      });
+
+      if (widget.onBroadcast != null) {
+        widget.onBroadcast!("Store profile created.");
       }
-    });
-  }
-
-  void _handleBroadcastSchedule() {
-    final openDays = _schedule.where((d) => d.isOpen).toList();
-    if (openDays.isNotEmpty && widget.onBroadcast != null) {
-      final firstDay = openDays.first;
-      final formattedDate = DateFormat('MMMM d').format(firstDay.date);
-      final message =
-          '${_nameController.text.isEmpty ? "Our store" : _nameController.text} has updated their schedule! '
-          'We are open on $formattedDate from ${firstDay.openTime} to ${firstDay.closeTime}.';
-      widget.onBroadcast!(message);
+      debugPrint("Storefront updated successfully.");
+    } catch (e) {
+      // handle insert failure
     }
   }
 
@@ -103,13 +97,7 @@ class _StorefrontState extends State<StorefrontPageV2> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            _buildStoreInfoCard(context),
-            const SizedBox(height: 16),
-            _buildScheduleCard(context),
-          ],
-        ),
+        child: Column(children: [_buildStoreInfoCard(context)]),
       ),
     );
   }
@@ -149,6 +137,7 @@ class _StorefrontState extends State<StorefrontPageV2> {
               onChanged: _isEditing ? (_) {} : null,
               onComplete: _isEditing ? () {} : null,
               errorText: null,
+              readOnly: !_isEditing,
             ),
 
             AppTextField(
@@ -158,6 +147,7 @@ class _StorefrontState extends State<StorefrontPageV2> {
               onChanged: _isEditing ? (_) {} : null,
               onComplete: _isEditing ? () {} : null,
               errorText: null,
+              readOnly: !_isEditing,
             ),
 
             AppTextField(
@@ -167,6 +157,7 @@ class _StorefrontState extends State<StorefrontPageV2> {
               onChanged: _isEditing ? (_) => setState(() {}) : null,
               onComplete: _isEditing ? () {} : null,
               errorText: null,
+              readOnly: !_isEditing,
             ),
 
             if (_locationController.text.isNotEmpty)
@@ -192,175 +183,9 @@ class _StorefrontState extends State<StorefrontPageV2> {
                   backgroundColor: Colors.orangeAccent,
                   shape: const StadiumBorder(),
                 ),
-                onPressed: () {
-                  setState(() {
-                    _isEditing = false;
-                  });
-                },
+                onPressed: handleSave,
                 child: const Text("Save Changes"),
               ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Text(
-          "Opening Hours (Next 2 Weeks)",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        OutlinedButton.icon(
-          icon: const Icon(Icons.message_outlined, size: 16),
-          label: const Text("Broadcast Update"),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.orange,
-            side: const BorderSide(color: Colors.orange),
-            shape: const StadiumBorder(),
-          ),
-          onPressed: _handleBroadcastSchedule,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDayEditor(BuildContext context, ScheduleDay day) {
-    return Card(
-      color: day.isOpen ? Colors.orange.withValues(alpha: 0.05) : Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  DateFormat('EEEE, MMM d').format(day.date),
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
-                TextButton(
-                  onPressed: () => setState(() => day.isOpen = !day.isOpen),
-                  style: TextButton.styleFrom(
-                    foregroundColor: day.isOpen ? Colors.white : Colors.orange,
-                    backgroundColor: day.isOpen
-                        ? Colors.orange
-                        : Colors.transparent,
-                    shape: const StadiumBorder(),
-                  ),
-                  child: Text(day.isOpen ? "Open" : "Closed"),
-                ),
-              ],
-            ),
-            if (day.isOpen) ...[
-              const Divider(),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      decoration: const InputDecoration(labelText: "Open Time"),
-                      controller: TextEditingController(text: day.openTime),
-                      onChanged: (v) => _updateScheduleField(
-                        _selectedDayIndex,
-                        'openTime',
-                        v,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      decoration: const InputDecoration(
-                        labelText: "Close Time",
-                      ),
-                      controller: TextEditingController(text: day.closeTime),
-                      onChanged: (v) => _updateScheduleField(
-                        _selectedDayIndex,
-                        'closeTime',
-                        v,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                decoration: const InputDecoration(
-                  labelText: "Remarks (optional)",
-                ),
-                controller: TextEditingController(text: day.remarks),
-                onChanged: (v) =>
-                    _updateScheduleField(_selectedDayIndex, 'remarks', v),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildScheduleCard(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            _buildHeader(context),
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 80,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: _schedule.length,
-                itemBuilder: (context, index) {
-                  final day = _schedule[index];
-                  final isSelected = index == _selectedDayIndex;
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedDayIndex = index),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isSelected ? Colors.orange : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isSelected
-                              ? Colors.orange
-                              : Colors.grey.shade300,
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            DateFormat('E').format(day.date),
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "${day.date.day}",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: isSelected ? Colors.white : Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildDayEditor(context, _schedule[_selectedDayIndex]),
           ],
         ),
       ),
