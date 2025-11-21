@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+// service
+import 'package:homebased_project/backend/business_profile_api/business_profile_service.dart';
+
 // components
 import 'package:homebased_project/mvp2/components/app_text_field.dart';
 
@@ -54,25 +57,16 @@ class _StorefrontState extends State<StorefrontPageV2> {
     });
   }
 
-  void _toggleDay(int index) {
-    setState(() {
-      _schedule[index].isOpen = !_schedule[index].isOpen;
-    });
-  }
-
   void _updateScheduleField(int index, String field, String value) {
     setState(() {
       final day = _schedule[index];
       switch (field) {
         case 'openTime':
           day.openTime = value;
-          break;
         case 'closeTime':
           day.closeTime = value;
-          break;
         case 'remarks':
           day.remarks = value;
-          break;
       }
     });
   }
@@ -89,22 +83,9 @@ class _StorefrontState extends State<StorefrontPageV2> {
     }
   }
 
-  String _formatDate(DateTime date) {
-    return DateFormat('E, MMM d').format(date);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          const LinearGradient(
-                colors: [Color(0xFFD8E7F5), Color(0xFFF9FBFD)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ).createShader(Rect.fromLTWH(0, 0, 0, 0)) ==
-              null
-          ? const Color(0xFFF9FBFD)
-          : null,
       appBar: AppBar(
         title: const Text("Storefront Management"),
         backgroundColor: Colors.white,
@@ -248,7 +229,7 @@ class _StorefrontState extends State<StorefrontPageV2> {
 
   Widget _buildDayEditor(BuildContext context, ScheduleDay day) {
     return Card(
-      color: day.isOpen ? Colors.orange.withOpacity(0.05) : Colors.white,
+      color: day.isOpen ? Colors.orange.withValues(alpha: 0.05) : Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(12),
