@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-
-// utils
 import 'package:homebased_project/mvp2/utils/field_status.dart';
 import 'package:homebased_project/mvp2/utils/border_color.dart';
+
+// components
+import 'package:homebased_project/mvp2/components/app_text_field.dart';
 
 class AuthTextField extends StatelessWidget {
   final String label;
@@ -28,41 +29,23 @@ class AuthTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(color: Color(0xFF5A7A8A), fontSize: 12),
-        ),
-        const SizedBox(height: 4),
-        TextField(
-          controller: controller,
-          obscureText: obscure,
-          style: const TextStyle(fontSize: 14),
-          decoration: InputDecoration(
-            hintText: "Enter your $label".toLowerCase(),
-            hintStyle: const TextStyle(fontSize: 14),
-            prefixIcon: Icon(icon, size: 20),
-            contentPadding: const EdgeInsets.symmetric(
-              vertical: 12,
-              horizontal: 16,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: getBorderColor(status), width: 2),
-            ),
+    return AppTextField(
+      label: label,
+      controller: controller,
+      icon: icon,
+      obscure: obscure,
+      onComplete: onComplete,
+      onChanged: onChanged,
+      errorText: status == FieldStatus.error ? errorText : null,
+      hintText: "Enter your $label".toLowerCase(),
+      decorationBuilder: (base) {
+        return base.copyWith(
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide(color: getBorderColor(status), width: 2),
           ),
-          onChanged: onChanged,
-          onEditingComplete: onComplete,
-        ),
-        if (status == FieldStatus.error && errorText != null)
-          Text(
-            errorText!,
-            style: const TextStyle(color: Colors.red, fontSize: 10),
-          ),
-        const SizedBox(height: 12),
-      ],
+        );
+      },
     );
   }
 }

@@ -3,14 +3,14 @@ import 'dart:convert';
 class BusinessProfile {
   String _id;
   String _updatedAt;
-  String _businessName;
+  String? _businessName;
   String? _description;
   List<String>? _photoUrls;
 
   BusinessProfile({
     required String id,
     required String updatedAt,
-    required String businessName,
+    String? businessName,
     String? description,
     List<String>? photoUrls,
   }) : _id = id,
@@ -22,14 +22,14 @@ class BusinessProfile {
   // Getters
   String get id => _id;
   String get updatedAt => _updatedAt;
-  String get businessName => _businessName;
+  String? get businessName => _businessName;
   String? get description => _description;
   List<String>? get photoUrls => _photoUrls;
 
   // Setters (optional, include only if mutation is needed)
   set id(String value) => _id = value;
   set updatedAt(String value) => _updatedAt = value;
-  set businessName(String value) => _businessName = value;
+  set businessName(String? value) => _businessName = value;
   set description(String? value) => _description = value;
   set photoUrls(List<String>? value) => _photoUrls = value;
 
