@@ -8,7 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:typed_data';
 
-import 'package:homebased_project/backend/auth_api/auth_service.dart';
+import 'package:homebased_project/features/auth/data/auth_service.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
 import 'login_details.dart';
@@ -109,12 +109,13 @@ void main() {
         print("Avatar test begin");
         final bytes = Uint8List.fromList([1, 2, 3, 4, 5]);
         final fakeImage = XFile.fromData(
-          bytes, 
+          bytes,
           name: 'fakeImage.png',
-          mimeType: 'image/png');
+          mimeType: 'image/png',
+        );
 
         print("Fake image created successfully");
-        
+
         await userProfileService.uploadAvatar(
           fakeImage,
           authService.currentUserId!,
@@ -124,7 +125,9 @@ void main() {
           authService.currentUserId!,
         );
         expect(withAvatar!.avatarUrl, isNotNull);
-        print('✅ Uploaded avatar and stored file path: ${withAvatar.avatarUrl}');
+        print(
+          '✅ Uploaded avatar and stored file path: ${withAvatar.avatarUrl}',
+        );
       });
 
       // --- 5️⃣ Retrieve signed avatar URL ---
@@ -149,7 +152,6 @@ void main() {
         expect(authService.currentUser, isNull);
         print('✅ Signed out successfully.');
       });
-      
     });
   });
 
@@ -237,7 +239,7 @@ void main() {
       //     .select()
       //     .eq('id', userB!.id)
       //     .maybeSingle();
-      
+
       final profileB = await userProfileService.getCurrentUserProfile(
         userB!.id,
       );

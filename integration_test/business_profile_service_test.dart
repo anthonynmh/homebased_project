@@ -4,7 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:homebased_project/backend/auth_api/auth_service.dart';
+import 'package:homebased_project/features/auth/data/auth_service.dart';
 import 'package:homebased_project/backend/business_profile_api/business_profile_service.dart';
 import 'package:homebased_project/backend/business_profile_api/business_profile_model.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
@@ -191,7 +191,6 @@ void main() {
     });
   });
 
-
   group('BusinessProfileService RLS enforcement tests', () {
     setUpAll(() async {
       // Insert initial profiles for user A
@@ -342,5 +341,4 @@ void main() {
       await authService.signOut();
     });
   });
-
 }

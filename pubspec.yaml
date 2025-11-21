@@ -27,6 +27,8 @@ dependencies:
   flutter_svg: ^2.2.2
   url_launcher: ^6.3.2
   intl: ^0.20.2
+  redux: ^5.0.0
+  flutter_redux: ^0.10.0
 
 dev_dependencies:
   flutter_test:

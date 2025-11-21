@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:homebased_project/features/auth/presentation/auth_gate.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-
-import 'package:homebased_project/mvp2/auth/auth_page.dart';
+import 'package:flutter_redux/flutter_redux.dart';
+import 'app/store/store.dart';
+import 'app/store/app_state.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await _loadAndValidateEnv();
 
-  runApp(const MyApp());
+  final store = createStore();
+
+  runApp(StoreProvider<AppState>(store: store, child: const MyApp()));
 }
 
 Future<void> _loadAndValidateEnv() async {
@@ -74,7 +78,7 @@ class MyApp extends StatelessWidget {
           titleLarge: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
         ),
       ),
-      home: const AuthPage(),
+      home: const AuthGate(),
     );
   }
 }

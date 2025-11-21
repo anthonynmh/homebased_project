@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:homebased_project/backend/auth_api/auth_service.dart';
+import 'package:homebased_project/features/auth/data/auth_service.dart';
 
 import 'package:homebased_project/mvp2/auth/auth_page.dart';
 

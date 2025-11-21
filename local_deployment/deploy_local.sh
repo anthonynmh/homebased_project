@@ -12,4 +12,4 @@ if [ ! -d "$BUILD_DIR" ]; then
 fi
 
 cd "$BUILD_DIR" || exit 1
-python3 -m http.server 8000
+py -3 -m http.server 8000
