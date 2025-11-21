@@ -5,6 +5,7 @@ class AppTextField extends StatelessWidget {
   final TextEditingController controller;
   final IconData? icon;
   final bool obscure;
+  final bool readOnly;
   final VoidCallback? onComplete;
   final ValueChanged<String>? onChanged;
   final String? hintText;
@@ -17,6 +18,7 @@ class AppTextField extends StatelessWidget {
     required this.controller,
     this.icon,
     this.obscure = false,
+    this.readOnly = false,
     this.onComplete,
     this.onChanged,
     this.hintText,
@@ -50,6 +52,7 @@ class AppTextField extends StatelessWidget {
           ),
           onChanged: onChanged,
           onEditingComplete: onComplete,
+          readOnly: readOnly,
         ),
         if (errorText != null)
           Text(
