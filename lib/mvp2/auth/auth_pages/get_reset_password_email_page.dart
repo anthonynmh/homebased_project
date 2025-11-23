@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // views
-import 'package:homebased_project/mvp2/auth/auth_page.dart';
+import 'package:homebased_project/mvp2/auth/auth_pages/auth_page.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 
 // utils

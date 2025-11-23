@@ -9,7 +9,7 @@ import 'package:homebased_project/widgets/seller_navbar_widget.dart';
 import 'package:homebased_project/widgets/user_navbar_widget.dart';
 
 // MVP2
-import 'package:homebased_project/mvp2/auth/auth_page.dart';
+import 'package:homebased_project/mvp2/auth/auth_pages/auth_page.dart';
 import 'package:homebased_project/mvp2/profile/home_app_bar.dart';
 
 class WidgetTree extends StatefulWidget {

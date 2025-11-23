@@ -3,7 +3,7 @@ import 'package:homebased_project/mvp2/utils/field_status.dart';
 import 'package:homebased_project/mvp2/utils/border_color.dart';
 
 // components
-import 'package:homebased_project/mvp2/components/app_text_field.dart';
+import 'package:homebased_project/mvp2/app_components/app_text_field.dart';
 
 class AuthTextField extends StatelessWidget {
   final String label;

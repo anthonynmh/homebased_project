@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:homebased_project/mvp2/app_components/app_form_button.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // views
@@ -10,15 +11,15 @@ import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/widgets/snackbar_widget.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
-import 'package:homebased_project/mvp2/auth/reset_password_page.dart';
-import 'package:homebased_project/mvp2/auth/get_reset_password_email_page.dart';
+import 'package:homebased_project/mvp2/auth/auth_pages/reset_password_page.dart';
+import 'package:homebased_project/mvp2/auth/auth_pages/get_reset_password_email_page.dart';
 
 // components
-import 'package:homebased_project/mvp2/components/auth_header.dart';
-import 'package:homebased_project/mvp2/components/auth_tabs.dart';
-import 'package:homebased_project/mvp2/components/auth_text_field.dart';
-import 'package:homebased_project/mvp2/components/auth_divider.dart';
-import 'package:homebased_project/mvp2/components/google_button.dart';
+import 'package:homebased_project/mvp2/auth/auth_components/auth_header.dart';
+import 'package:homebased_project/mvp2/auth/auth_components/auth_tabs.dart';
+import 'package:homebased_project/mvp2/auth/auth_components/auth_text_field.dart';
+import 'package:homebased_project/mvp2/auth/auth_components/auth_divider.dart';
+import 'package:homebased_project/mvp2/auth/auth_components/google_button.dart';
 
 // utils
 import 'package:homebased_project/mvp2/utils/field_status.dart';
@@ -203,9 +204,9 @@ class _AuthPageState extends State<AuthPage> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text("Terms and Conditions"),
-        content: const Text(
+        content: Text(
           "By proceeding, you acknowledge that Food 'n Friends does not oversee or manage home-based businesses (‘HBBs’). Each HBB owner (‘Seller’) operates independently and bears sole responsibility for their products, services, and business practices.",
-          style: TextStyle(fontSize: 14),
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
         actions: [
           TextButton(
@@ -389,21 +390,14 @@ class _AuthPageState extends State<AuthPage> {
 
                         if (isSignUp) _buildTermsSection(),
                         const SizedBox(height: 16),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFFB885),
-                            foregroundColor: Colors.white,
-                            minimumSize: const Size.fromHeight(48),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
+                        AppFormButton(
+                          label: isSignUp ? "Create Account" : "Log In",
+                          isLoading: _isLoading,
                           onPressed: _isLoading
                               ? null
                               : isSignUp
                               ? (_hasAcceptedTerms ? signUp : null)
                               : signIn,
-                          child: Text(isSignUp ? "Create Account" : "Log In"),
                         ),
                         const SizedBox(height: 16),
                         const AuthDivider(),

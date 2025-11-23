@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:homebased_project/mvp2/app_components/app_form_button.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -49,17 +50,13 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
           children: [
             Text('Profile Mode: $profileMode'),
             const SizedBox(height: 16),
-            ElevatedButton.icon(
+            AppFormButton(
+              label: "Switch Profile Mode",
               onPressed: () {
                 onSwitchMode();
                 Navigator.of(context).pop();
               },
               icon: const Icon(Icons.sync),
-              label: const Text("Switch Profile Mode"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFFB885),
-                foregroundColor: Colors.white,
-              ),
             ),
             const Divider(height: 32),
             ListTile(
