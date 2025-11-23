@@ -6,7 +6,7 @@ import 'package:homebased_project/backend/business_profile_api/business_profile_
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 
 // components
-import 'package:homebased_project/mvp2/components/app_text_field.dart';
+import 'package:homebased_project/mvp2/app_components/app_text_field.dart';
 
 class StorefrontPageV2 extends StatefulWidget {
   final void Function(String message)? onBroadcast;
