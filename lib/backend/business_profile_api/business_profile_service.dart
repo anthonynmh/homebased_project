@@ -6,15 +6,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homebased_project/backend/business_profile_api/business_profile_model.dart';
 
 /// Expose business profile related operations
-final businessProfileService = BusinessProfileService();
+final storefrontService = StorefrontService();
 
-class BusinessProfileService {
+class StorefrontService {
   final SupabaseClient _supabase;
   final bool isTest;
   final String table;
   final String bucket;
 
-  BusinessProfileService({SupabaseClient? client, this.isTest = false})
+  StorefrontService({SupabaseClient? client, this.isTest = false})
     : _supabase = client ?? Supabase.instance.client,
       table = _resolveTable(isTest),
       bucket = _resolveBucket(isTest);
@@ -39,18 +39,18 @@ class BusinessProfileService {
         : dotenv.env["BUSINESS_PROFILE_BUCKET_PROD"] ?? '';
   }
 
-  /// Insert a new business profile (only id and email are required)
-  Future<void> insertCurrentBusinessProfile(BusinessProfile profile) {
+  /// Insert a new storefront profile (only id and email are required)
+  Future<void> insertCurrentStorefront(Storefront profile) {
     try {
       return _supabase.from(table).insert(profile.toMap());
     } catch (e) {
-      print('Insert business profile error: $e');
-      throw Exception('Failed to insert business profile');
+      print('Insert storefront profile error: $e');
+      throw Exception('Failed to insert storefront');
     }
   }
 
-  /// Get current user's business profile by ID
-  Future<BusinessProfile?> getCurrentBusinessProfile(String userId) async {
+  /// Get current user's storefront profile by ID
+  Future<Storefront?> getCurrentStorefront(String userId) async {
     try {
       final res = await _supabase
           .from(table)
@@ -59,40 +59,38 @@ class BusinessProfileService {
           .maybeSingle();
 
       if (res == null) return null;
-      return BusinessProfile.fromMap(res);
+      return Storefront.fromMap(res);
     } catch (e) {
-      print('Error fetching current business profile: $e');
+      print('Error fetching current storefront: $e');
       return null;
     }
   }
 
-  /// Get all business profiles (useful for listings / marketplace view)
-  Future<List<BusinessProfile>> getAllBusinessProfiles() async {
+  /// Get all Storefronts (useful for listings / marketplace view)
+  Future<List<Storefront>> getAllStorefronts() async {
     try {
       final res = await _supabase.from(table).select();
 
-      return (res as List)
-          .map((item) => BusinessProfile.fromMap(item))
-          .toList();
+      return (res as List).map((item) => Storefront.fromMap(item)).toList();
     } catch (e) {
-      print('Error fetching all business profiles: $e');
+      print('Error fetching all storefronts: $e');
       return [];
     }
   }
 
-  /// Update current business profile (only non-null fields will be updated)
-  Future<void> updateCurrentBusinessProfile(BusinessProfile profile) async {
+  /// Update current storefront (only non-null fields will be updated)
+  Future<void> updateCurrentStorefront(Storefront profile) async {
     try {
       await _supabase.from(table).update(profile.toMap()).eq('id', profile.id);
-      print('Business profile updated successfully.');
+      print('Storefront profile updated successfully.');
     } catch (e, st) {
-      print('Failed to update business profile: $e\n$st');
-      throw Exception('Failed to update business profile');
+      print('Failed to update storefront profile: $e\n$st');
+      throw Exception('Failed to update storefront profile');
     }
   }
 
-  /// Upload business logo to Supabase storage and store only file path in table
-  Future<void> uploadBusinessLogo(
+  /// Upload storefront logo to Supabase storage and store only file path in table
+  Future<void> uploadStorefrontLogo(
     XFile imageFile,
     String userId,
     String businessName,
@@ -114,22 +112,22 @@ class BusinessProfileService {
       await storage.from(bucket).uploadBinary(filepath, bytes);
 
       // Update DB with only the file path
-      await updateCurrentBusinessProfile(
-        BusinessProfile(
+      await updateCurrentStorefront(
+        Storefront(
           id: userId,
           businessName: businessName,
           updatedAt: updatedAt,
         ),
       );
 
-      print('Business logo uploaded and path stored: $filepath');
+      print('Storefront logo uploaded and path stored: $filepath');
     } catch (e, st) {
-      print('Upload business logo error: $e\n$st');
+      print('Upload Storefront logo error: $e\n$st');
     }
   }
 
-  /// Upload one or more business photos to Supabase storage and store file paths in table
-  Future<void> uploadBusinessPhotos(
+  /// Upload one or more storefront photos to Supabase storage and store file paths in table
+  Future<void> uploadStorefrontPhotos(
     List<XFile> imageFiles,
     String userId,
   ) async {
@@ -142,7 +140,7 @@ class BusinessProfileService {
         final basename = path.basenameWithoutExtension(imageFile.name);
         final filename =
             '${basename}_${DateTime.now().millisecondsSinceEpoch}$ext'; // avoid collisions
-        final filepath = '$userId/business_photos/$filename';
+        final filepath = '$userId/storefront_photos/$filename';
         var bytes = await imageFile.readAsBytes();
 
         await storage.from(bucket).uploadBinary(filepath, bytes);
@@ -172,14 +170,14 @@ class BusinessProfileService {
           .update({'photo_urls': updatedPaths})
           .eq('id', userId);
 
-      print('Business photos uploaded: $uploadedPaths');
+      print('Storefront photos uploaded: $uploadedPaths');
     } catch (e, st) {
-      print('Upload business photos error: $e\n$st');
+      print('Upload storefront photos error: $e\n$st');
     }
   }
 
-  /// Get signed URLs for all business photos
-  Future<List<String>> getCurrentBusinessPhotosUrls(String userId) async {
+  /// Get signed URLs for all storefront photos
+  Future<List<String>> getCurrentStorefrontPhotosUrls(String userId) async {
     try {
       final res = await _supabase
           .from(table)
@@ -200,13 +198,13 @@ class BusinessProfileService {
 
       return signedUrls;
     } catch (e, st) {
-      print('Get business photos signed URLs error: $e\n$st');
+      print('Get storefront photos signed URLs error: $e\n$st');
       return [];
     }
   }
 
-  /// Returns a signed URL to the business logo (valid for 60 seconds)
-  Future<String?> getCurrentBusinessLogoUrl(String userId) async {
+  /// Returns a signed URL to the storefront logo (valid for 60 seconds)
+  Future<String?> getCurrentStorefrontLogoUrl(String userId) async {
     try {
       final res = await _supabase
           .from(table)
@@ -223,24 +221,8 @@ class BusinessProfileService {
 
       return signedUrl;
     } catch (e, st) {
-      print('Get business logo signed URL error: $e\n$st');
+      print('Get storefront logo signed URL error: $e\n$st');
       return null;
-    }
-  }
-
-  /// Example: Search business profiles by sector
-  Future<List<BusinessProfile>> searchBusinessProfilesBySector(
-    String sector,
-  ) async {
-    try {
-      final res = await _supabase.from(table).select().eq('sector', sector);
-
-      return (res as List)
-          .map((item) => BusinessProfile.fromMap(item))
-          .toList();
-    } catch (e) {
-      print('Error searching business profiles by sector: $e');
-      return [];
     }
   }
 }

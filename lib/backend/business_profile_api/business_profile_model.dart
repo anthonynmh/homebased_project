@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-class BusinessProfile {
+class Storefront {
   String id;
   String updatedAt;
   String? businessName;
@@ -8,7 +8,7 @@ class BusinessProfile {
   List<String>? photoUrls;
   int? postalCode;
 
-  BusinessProfile({
+  Storefront({
     required this.id,
     required this.updatedAt,
     this.businessName,
@@ -17,8 +17,8 @@ class BusinessProfile {
     this.postalCode,
   });
 
-  factory BusinessProfile.fromMap(Map<String, dynamic> map) {
-    return BusinessProfile(
+  factory Storefront.fromMap(Map<String, dynamic> map) {
+    return Storefront(
       id: map['id'] as String,
       updatedAt: map['updated_at'] as String,
       businessName: map['business_name'] as String?,
@@ -43,8 +43,8 @@ class BusinessProfile {
 
   String toJson() => jsonEncode(toMap());
 
-  factory BusinessProfile.fromJson(String source) =>
-      BusinessProfile.fromMap(jsonDecode(source));
+  factory Storefront.fromJson(String source) =>
+      Storefront.fromMap(jsonDecode(source));
 
   @override
   String toString() => const JsonEncoder.withIndent('  ').convert(toMap());

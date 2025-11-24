@@ -34,9 +34,7 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
     final userId = authService.currentUserId;
     if (userId == null) return;
 
-    final storefront = await businessProfileService.getCurrentBusinessProfile(
-      userId,
-    );
+    final storefront = await storefrontService.getCurrentStorefront(userId);
     if (storefront == null) return;
 
     _nameController.text = storefront.businessName ?? '';
@@ -62,7 +60,7 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
 
     final parsedPostalCode = int.tryParse(_locationController.text.trim());
 
-    final storefront = BusinessProfile(
+    final storefront = Storefront(
       id: userId,
       updatedAt: DateTime.now().toUtc().toIso8601String(),
       businessName: _nameController.text.trim(),
@@ -73,9 +71,9 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
 
     try {
       if (_hasStorefront) {
-        await businessProfileService.updateCurrentBusinessProfile(storefront);
+        await storefrontService.updateCurrentStorefront(storefront);
       } else {
-        await businessProfileService.insertCurrentBusinessProfile(storefront);
+        await storefrontService.insertCurrentStorefront(storefront);
       }
 
       setState(() {
