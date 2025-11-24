@@ -1,26 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:homebased_project/backend/business_profile_api/business_profile_model.dart';
-import 'package:homebased_project/backend/business_profile_api/business_profile_service.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
-
-// components
+import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_model.dart';
+import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_service.dart';
+import 'package:homebased_project/mvp2/app_components/app_card.dart';
 import 'package:homebased_project/mvp2/app_components/app_text_field.dart';
 
-class StorefrontPageV2 extends StatefulWidget {
+class StorefrontInfoCard extends StatefulWidget {
   final void Function(String message)? onBroadcast;
 
-  const StorefrontPageV2({super.key, this.onBroadcast});
+  const StorefrontInfoCard({super.key, this.onBroadcast});
 
   @override
-  State<StorefrontPageV2> createState() => _StorefrontState();
+  State<StorefrontInfoCard> createState() => _StorefrontInfoCardState();
 }
 
-class _StorefrontState extends State<StorefrontPageV2> {
+class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _locationController = TextEditingController();
+  final _locationController = TextEditingController(); // postal code
 
   bool _isEditing = false;
   bool _hasStorefront = false;
@@ -35,90 +34,64 @@ class _StorefrontState extends State<StorefrontPageV2> {
     final userId = authService.currentUserId;
     if (userId == null) return;
 
-    final storefront = await businessProfileService.getCurrentBusinessProfile(
-      userId,
-    );
-    if (storefront == null) {
-      debugPrint("no storefront found");
-      return;
-    }
+    final storefront = await storefrontService.getCurrentStorefront(userId);
+    if (storefront == null) return;
 
     _nameController.text = storefront.businessName ?? '';
     _descriptionController.text = storefront.description ?? '';
+    _locationController.text = storefront.postalCode?.toString() ?? '';
 
     setState(() {
       _hasStorefront = true;
     });
   }
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    _locationController.dispose();
+    super.dispose();
+  }
+
   Future<void> handleSave() async {
     final userId = authService.currentUserId;
+    if (userId == null) return;
 
-    if (userId == null) {
-      // handle error: user not logged in
-      return;
-    }
+    final parsedPostalCode = int.tryParse(_locationController.text.trim());
 
-    final storefront = BusinessProfile(
+    final storefront = Storefront(
       id: userId,
       updatedAt: DateTime.now().toUtc().toIso8601String(),
       businessName: _nameController.text.trim(),
       description: _descriptionController.text.trim(),
       photoUrls: null,
+      postalCode: parsedPostalCode,
     );
 
     try {
       if (_hasStorefront) {
-        await businessProfileService.updateCurrentBusinessProfile(storefront);
+        await storefrontService.updateCurrentStorefront(storefront);
       } else {
-        await businessProfileService.insertCurrentBusinessProfile(storefront);
+        await storefrontService.insertCurrentStorefront(storefront);
       }
 
       setState(() {
         _isEditing = false;
       });
 
-      if (widget.onBroadcast != null) {
-        widget.onBroadcast!("Store profile created.");
-      }
+      widget.onBroadcast?.call("Store profile saved.");
     } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Storefront Management"),
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(20),
-          child: Padding(
-            padding: EdgeInsets.only(bottom: 8.0),
-            child: Text(
-              "Manage your store information and schedule",
-              style: TextStyle(color: Colors.grey, fontSize: 12),
-            ),
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(children: [_buildStoreInfoCard(context)]),
-      ),
-    );
-  }
-
-  Widget _buildStoreInfoCard(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+    return AppCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
                   "Store Information",
@@ -128,9 +101,7 @@ class _StorefrontState extends State<StorefrontPageV2> {
                   icon: Icon(_isEditing ? Icons.close : Icons.edit, size: 18),
                   label: Text(_isEditing ? "Cancel" : "Edit"),
                   onPressed: () {
-                    setState(() {
-                      _isEditing = !_isEditing;
-                    });
+                    setState(() => _isEditing = !_isEditing);
                   },
                 ),
               ],
@@ -140,30 +111,20 @@ class _StorefrontState extends State<StorefrontPageV2> {
             AppTextField(
               label: "Store Name",
               controller: _nameController,
-              icon: null,
-              onChanged: _isEditing ? (_) {} : null,
-              onComplete: _isEditing ? () {} : null,
-              errorText: null,
               readOnly: !_isEditing,
             ),
 
             AppTextField(
               label: "Store Description",
               controller: _descriptionController,
-              icon: null,
-              onChanged: _isEditing ? (_) {} : null,
-              onComplete: _isEditing ? () {} : null,
-              errorText: null,
               readOnly: !_isEditing,
             ),
 
             AppTextField(
-              label: "Store Location",
+              label: "Postal Code",
               controller: _locationController,
               icon: Icons.location_pin,
               onChanged: _isEditing ? (_) => setState(() {}) : null,
-              onComplete: _isEditing ? () {} : null,
-              errorText: null,
               readOnly: !_isEditing,
             ),
 
