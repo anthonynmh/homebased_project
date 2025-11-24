@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:homebased_project/mvp2/app_components/app_page.dart';
 import 'package:homebased_project/mvp2/app_components/app_form_button.dart';
 import 'package:homebased_project/mvp2/storefront/storefront_components/storefront_info_card.dart';
+import 'package:homebased_project/mvp2/storefront/storefront_components/storefront_logo_card.dart';
 
 class StorefrontPage extends StatefulWidget {
   final void Function(String message)? onBroadcast;
@@ -31,7 +32,11 @@ class _StorefrontState extends State<StorefrontPage> {
         icon: const Icon(Icons.speaker_phone),
       ),
       child: Column(
-        children: [StorefrontInfoCard(onBroadcast: widget.onBroadcast)],
+        children: [
+          StorefrontLogoCard(),
+          const SizedBox(height: 20),
+          StorefrontInfoCard(onBroadcast: widget.onBroadcast),
+        ],
       ),
     );
   }
