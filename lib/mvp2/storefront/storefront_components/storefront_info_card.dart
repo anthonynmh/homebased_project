@@ -19,7 +19,7 @@ class StorefrontInfoCard extends StatefulWidget {
 class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _locationController = TextEditingController();
+  final _locationController = TextEditingController(); // postal code
 
   bool _isEditing = false;
   bool _hasStorefront = false;
@@ -41,6 +41,7 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
 
     _nameController.text = storefront.businessName ?? '';
     _descriptionController.text = storefront.description ?? '';
+    _locationController.text = storefront.postalCode?.toString() ?? '';
 
     setState(() {
       _hasStorefront = true;
@@ -59,12 +60,15 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
     final userId = authService.currentUserId;
     if (userId == null) return;
 
+    final parsedPostalCode = int.tryParse(_locationController.text.trim());
+
     final storefront = BusinessProfile(
       id: userId,
       updatedAt: DateTime.now().toUtc().toIso8601String(),
       businessName: _nameController.text.trim(),
       description: _descriptionController.text.trim(),
       photoUrls: null,
+      postalCode: parsedPostalCode,
     );
 
     try {
@@ -78,7 +82,7 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
         _isEditing = false;
       });
 
-      widget.onBroadcast?.call("Store profile created.");
+      widget.onBroadcast?.call("Store profile saved.");
     } catch (_) {}
   }
 
@@ -119,7 +123,7 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
             ),
 
             AppTextField(
-              label: "Store Location",
+              label: "Postal Code",
               controller: _locationController,
               icon: Icons.location_pin,
               onChanged: _isEditing ? (_) => setState(() {}) : null,
