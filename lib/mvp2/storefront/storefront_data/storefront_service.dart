@@ -93,11 +93,9 @@ class StorefrontService {
   Future<void> uploadStorefrontLogo(
     XFile imageFile,
     String userId,
-    String businessName,
     String updatedAt,
   ) async {
-    final ext = path.extension(imageFile.name);
-    final filename = 'logo$ext'; // always the same file name for overwrite
+    final filename = 'logo'; // always the same file name for overwrite
     final filepath = '$userId/logo/$filename';
 
     try {
@@ -112,17 +110,40 @@ class StorefrontService {
       await storage.from(bucket).uploadBinary(filepath, bytes);
 
       // Update DB with only the file path
-      await updateCurrentStorefront(
-        Storefront(
-          id: userId,
-          businessName: businessName,
-          updatedAt: updatedAt,
-        ),
-      );
+      Storefront? currentStorefront = await getCurrentStorefront(userId);
 
-      print('Storefront logo uploaded and path stored: $filepath');
+      if (currentStorefront != null) {
+        currentStorefront.logoUrl = filepath;
+        await updateCurrentStorefront(currentStorefront);
+        print('Storefront logo uploaded and path stored: $filepath');
+      } else {
+        throw Exception("No storefront found");
+      }
     } catch (e, st) {
       print('Upload Storefront logo error: $e\n$st');
+    }
+  }
+
+  /// Returns a signed URL to the storefront logo (valid for 60 seconds)
+  Future<String?> getStorefrontLogoUrl(String userId) async {
+    try {
+      final res = await _supabase
+          .from(table)
+          .select('logo_url')
+          .eq('id', userId)
+          .maybeSingle();
+
+      final filepath = res?['logo_url'] as String?;
+      if (filepath == null) return null;
+
+      final signedUrl = await _supabase.storage
+          .from(bucket)
+          .createSignedUrl(filepath, 60);
+
+      return signedUrl;
+    } catch (e, st) {
+      print('Get storefront logo signed URL error: $e\n$st');
+      return null;
     }
   }
 
@@ -200,29 +221,6 @@ class StorefrontService {
     } catch (e, st) {
       print('Get storefront photos signed URLs error: $e\n$st');
       return [];
-    }
-  }
-
-  /// Returns a signed URL to the storefront logo (valid for 60 seconds)
-  Future<String?> getCurrentStorefrontLogoUrl(String userId) async {
-    try {
-      final res = await _supabase
-          .from(table)
-          .select('logo_url')
-          .eq('id', userId)
-          .maybeSingle();
-
-      final filepath = res?['logo_url'] as String?;
-      if (filepath == null) return null;
-
-      final signedUrl = await _supabase.storage
-          .from(bucket)
-          .createSignedUrl(filepath, 60);
-
-      return signedUrl;
-    } catch (e, st) {
-      print('Get storefront logo signed URL error: $e\n$st');
-      return null;
     }
   }
 }

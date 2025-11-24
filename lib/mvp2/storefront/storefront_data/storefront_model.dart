@@ -5,6 +5,7 @@ class Storefront {
   String updatedAt;
   String? businessName;
   String? description;
+  String? logoUrl;
   List<String>? photoUrls;
   int? postalCode;
 
@@ -13,6 +14,7 @@ class Storefront {
     required this.updatedAt,
     this.businessName,
     this.description,
+    this.logoUrl,
     this.photoUrls,
     this.postalCode,
   });
@@ -23,6 +25,7 @@ class Storefront {
       updatedAt: map['updated_at'] as String,
       businessName: map['business_name'] as String?,
       description: map['description'] as String?,
+      logoUrl: map['logo_url'] as String?,
       photoUrls: map['photo_urls'] != null
           ? List<String>.from(map['photo_urls'])
           : null,
@@ -36,6 +39,7 @@ class Storefront {
       'updated_at': updatedAt,
       'business_name': businessName,
       'description': description,
+      'logo_url': logoUrl,
       'photo_urls': photoUrls,
       'postal_code': postalCode,
     };
