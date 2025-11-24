@@ -1,57 +1,43 @@
 import 'dart:convert';
 
 class BusinessProfile {
-  String _id;
-  String _updatedAt;
-  String? _businessName;
-  String? _description;
-  List<String>? _photoUrls;
+  String id;
+  String updatedAt;
+  String? businessName;
+  String? description;
+  List<String>? photoUrls;
+  int? postalCode;
 
   BusinessProfile({
-    required String id,
-    required String updatedAt,
-    String? businessName,
-    String? description,
-    List<String>? photoUrls,
-  }) : _id = id,
-       _updatedAt = updatedAt,
-       _businessName = businessName,
-       _description = description,
-       _photoUrls = photoUrls;
-
-  // Getters
-  String get id => _id;
-  String get updatedAt => _updatedAt;
-  String? get businessName => _businessName;
-  String? get description => _description;
-  List<String>? get photoUrls => _photoUrls;
-
-  // Setters (optional, include only if mutation is needed)
-  set id(String value) => _id = value;
-  set updatedAt(String value) => _updatedAt = value;
-  set businessName(String? value) => _businessName = value;
-  set description(String? value) => _description = value;
-  set photoUrls(List<String>? value) => _photoUrls = value;
+    required this.id,
+    required this.updatedAt,
+    this.businessName,
+    this.description,
+    this.photoUrls,
+    this.postalCode,
+  });
 
   factory BusinessProfile.fromMap(Map<String, dynamic> map) {
     return BusinessProfile(
       id: map['id'] as String,
       updatedAt: map['updated_at'] as String,
-      businessName: map['business_name'] as String,
+      businessName: map['business_name'] as String?,
       description: map['description'] as String?,
       photoUrls: map['photo_urls'] != null
           ? List<String>.from(map['photo_urls'])
           : null,
+      postalCode: map['postal_code'] as int?,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'id': _id,
-      'updated_at': _updatedAt,
-      'business_name': _businessName,
-      'description': _description,
-      'photo_urls': _photoUrls,
+      'id': id,
+      'updated_at': updatedAt,
+      'business_name': businessName,
+      'description': description,
+      'photo_urls': photoUrls,
+      'postal_code': postalCode,
     };
   }
 
