@@ -6,18 +6,21 @@ import 'package:homebased_project/backend/business_profile_api/business_profile_
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 
 // components
+import 'package:homebased_project/mvp2/app_components/app_page.dart';
+import 'package:homebased_project/mvp2/app_components/app_card.dart';
+import 'package:homebased_project/mvp2/app_components/app_form_button.dart';
 import 'package:homebased_project/mvp2/app_components/app_text_field.dart';
 
-class StorefrontPageV2 extends StatefulWidget {
+class StorefrontPage extends StatefulWidget {
   final void Function(String message)? onBroadcast;
 
-  const StorefrontPageV2({super.key, this.onBroadcast});
+  const StorefrontPage({super.key, this.onBroadcast});
 
   @override
-  State<StorefrontPageV2> createState() => _StorefrontState();
+  State<StorefrontPage> createState() => _StorefrontState();
 }
 
-class _StorefrontState extends State<StorefrontPageV2> {
+class _StorefrontState extends State<StorefrontPage> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
@@ -86,25 +89,22 @@ class _StorefrontState extends State<StorefrontPageV2> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Storefront Management"),
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(20),
-          child: Padding(
-            padding: EdgeInsets.only(bottom: 8.0),
-            child: Text(
-              "Manage your store information and schedule",
-              style: TextStyle(color: Colors.grey, fontSize: 12),
-            ),
-          ),
-        ),
+    return AppPage(
+      title: 'Storefront Management',
+      subtitle: 'Manage your store information and schedule',
+      scrollable: true,
+      action: AppFormButton(
+        label: 'Broadcast',
+        onPressed: () {},
+        icon: const Icon(Icons.speaker_phone),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(children: [_buildStoreInfoCard(context)]),
+      child: Column(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(children: [_buildStoreInfoCard(context)]),
+          ),
+        ],
       ),
     );
   }
