@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
-import 'package:homebased_project/backend/business_profile_api/business_profile_model.dart';
-import 'package:homebased_project/backend/business_profile_api/business_profile_service.dart';
+import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_model.dart';
+import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_service.dart';
 import 'package:homebased_project/mvp2/app_components/app_card.dart';
 import 'package:homebased_project/mvp2/app_components/app_text_field.dart';
 

@@ -3,7 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:homebased_project/backend/business_profile_api/business_profile_model.dart';
+import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_model.dart';
 
 /// Expose business profile related operations
 final storefrontService = StorefrontService();
