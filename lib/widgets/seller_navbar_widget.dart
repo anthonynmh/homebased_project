@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 
 import 'package:homebased_project/data/notifiers.dart';
 import 'package:homebased_project/mvp2/views/activity_feed/activity_feed_page.dart';
-import 'package:homebased_project/mvp2/views/storefront_v2/storefront_page_v2.dart';
-import 'package:homebased_project/mvp2/views/menu/menu_page.dart';
+import 'package:homebased_project/mvp2/storefront/storefront_pages/storefront_page.dart';
+import 'package:homebased_project/mvp2/menu/menu_pages/menu_page.dart';
 import 'package:homebased_project/mvp2/views/orders/orders_page.dart';
 
 List<Widget> sellerPages = [
   ActivityFeedPage(),
-  StorefrontPageV2(),
+  StorefrontPage(),
   MenuPage(),
   OrdersPage(),
 ];

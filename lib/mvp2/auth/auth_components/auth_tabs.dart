@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 // components
-import 'package:homebased_project/mvp2/components/toggling_tabs.dart';
+import 'package:homebased_project/mvp2/app_components/toggling_tabs.dart';
 
 class AuthTabs extends StatelessWidget {
   final bool isSignUp;
