@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
 
-Future<bool> showLogoutConfirmation(
-  BuildContext context,
-  String textBody,
-) async {
+Future<bool> showConfirmDialog({
+  required BuildContext context,
+  required String title,
+  required String message,
+  String cancelText = "Cancel",
+  String confirmText = "Confirm",
+}) async {
   return await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Confirm Action'),
-          content: Text(textBody),
+          title: Text(title),
+          content: Text(message),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: Text(cancelText),
             ),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Confirm'),
+              child: Text(confirmText),
             ),
           ],
         ),

@@ -6,9 +6,9 @@ import 'package:homebased_project/mvp2/app_components/app_form_button.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // views
-import 'package:homebased_project/views/widget_tree.dart';
+import 'package:homebased_project/mvp2/main/main_pages/widget_tree.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
-import 'package:homebased_project/widgets/snackbar_widget.dart';
+import 'package:homebased_project/mvp2/main/main_components/main_snackbar_widget.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
 import 'package:homebased_project/mvp2/auth/auth_pages/reset_password_page.dart';
