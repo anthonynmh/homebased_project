@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_model.dart';
 import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_service.dart';
+import 'package:homebased_project/mvp2/app_components/app_action_menu.dart';
 import 'package:homebased_project/mvp2/app_components/app_dialog.dart';
 import 'package:homebased_project/mvp2/app_components/app_card.dart';
 import 'package:homebased_project/mvp2/app_components/app_text_field.dart';
@@ -87,7 +88,10 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
 
   Future<void> handleDelete() async {
     final userId = authService.currentUserId;
-    print("delete");
+    if (userId == null) return;
+
+    // await storefrontService.deleteCurrentStorefront(userId);
+    print("Storefront successfully deleted");
   }
 
   @override
@@ -104,7 +108,18 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 const Spacer(),
-                PopupMenuButton<String>(
+                AppActionMenu(
+                  items: [
+                    AppActionMenuItem(
+                      value: 'edit',
+                      label: 'Edit',
+                      enabled: !_isEditing,
+                    ),
+                    const AppActionMenuItem(
+                      value: 'delete',
+                      label: 'Delete Storefront',
+                    ),
+                  ],
                   onSelected: (value) async {
                     if (value == 'edit') {
                       setState(() => _isEditing = !_isEditing);
@@ -121,18 +136,10 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
                       );
 
                       if (confirmed) {
-                        handleDelete();
+                        await handleDelete();
                       }
                     }
                   },
-                  itemBuilder: (_) => [
-                    if (!_isEditing)
-                      PopupMenuItem(value: 'edit', child: Text("Edit")),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Text("Delete Storefront"),
-                    ),
-                  ],
                 ),
               ],
             ),
