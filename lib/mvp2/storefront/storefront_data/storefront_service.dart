@@ -66,6 +66,19 @@ class StorefrontService {
     }
   }
 
+  /// Delete current user's storefront profile by ID
+  Future<void> deleteCurrentStorefront(String userId) async {
+    try {
+      // delete logo from bucket, if any
+      await deleteStorefrontLogo(userId);
+
+      // then delete storefront
+      await _supabase.from(table).delete().eq('id', userId);
+    } catch (e) {
+      print('Error deleting current storefront: $e');
+    }
+  }
+
   /// Get all Storefronts (useful for listings / marketplace view)
   Future<List<Storefront>> getAllStorefronts() async {
     try {
@@ -124,8 +137,8 @@ class StorefrontService {
     }
   }
 
-  /// Returns a signed URL to the storefront logo (valid for 60 seconds)
-  Future<String?> getStorefrontLogoUrl(String userId) async {
+  /// Returns the filepath to the storefront logo (valid for 60 seconds)
+  Future<String?> getStorefrontLogoFilepath(String userId) async {
     try {
       final res = await _supabase
           .from(table)
@@ -134,6 +147,18 @@ class StorefrontService {
           .maybeSingle();
 
       final filepath = res?['logo_url'] as String?;
+
+      return filepath;
+    } catch (e, st) {
+      print('Get storefront logo filepath error: $e\n$st');
+      return null;
+    }
+  }
+
+  /// Returns a signed URL to the storefront logo (valid for 60 seconds)
+  Future<String?> getStorefrontLogoSignedUrl(String userId) async {
+    try {
+      final filepath = await getStorefrontLogoFilepath(userId);
       if (filepath == null) return null;
 
       final signedUrl = await _supabase.storage
@@ -144,6 +169,26 @@ class StorefrontService {
     } catch (e, st) {
       print('Get storefront logo signed URL error: $e\n$st');
       return null;
+    }
+  }
+
+  Future<void> deleteStorefrontLogo(String userId) async {
+    final storage = _supabase.storage;
+    final filepath = await getStorefrontLogoFilepath(userId) ?? '';
+
+    try {
+      await storage.from(bucket).remove([filepath]);
+
+      // Update DB to remove filepath
+      Storefront? currentStorefront = await getCurrentStorefront(userId);
+
+      if (currentStorefront != null) {
+        currentStorefront.logoUrl = '';
+        currentStorefront.updatedAt = DateTime.now().toUtc().toIso8601String();
+        await updateCurrentStorefront(currentStorefront);
+      }
+    } catch (e) {
+      print('Error deleting current storefront logo: $e');
     }
   }
 
