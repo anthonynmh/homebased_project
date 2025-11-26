@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_model.dart';
 import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_service.dart';
+import 'package:homebased_project/mvp2/app_components/app_dialog.dart';
 import 'package:homebased_project/mvp2/app_components/app_card.dart';
 import 'package:homebased_project/mvp2/app_components/app_text_field.dart';
 
@@ -84,6 +85,11 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
     } catch (_) {}
   }
 
+  Future<void> handleDelete() async {
+    final userId = authService.currentUserId;
+    print("delete");
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppCard(
@@ -97,12 +103,36 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
                   "Store Information",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-                TextButton.icon(
-                  icon: Icon(_isEditing ? Icons.close : Icons.edit, size: 18),
-                  label: Text(_isEditing ? "Cancel" : "Edit"),
-                  onPressed: () {
-                    setState(() => _isEditing = !_isEditing);
+                const Spacer(),
+                PopupMenuButton<String>(
+                  onSelected: (value) async {
+                    if (value == 'edit') {
+                      setState(() => _isEditing = !_isEditing);
+                    }
+
+                    if (value == 'delete') {
+                      final confirmed = await showConfirmDialog(
+                        context: context,
+                        title: "Confirm Delete",
+                        message:
+                            "Are you sure you want to delete this storefront?",
+                        cancelText: "Cancel",
+                        confirmText: "Delete",
+                      );
+
+                      if (confirmed) {
+                        handleDelete();
+                      }
+                    }
                   },
+                  itemBuilder: (_) => [
+                    if (!_isEditing)
+                      PopupMenuItem(value: 'edit', child: Text("Edit")),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Text("Delete Storefront"),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -124,7 +154,6 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
               label: "Postal Code",
               controller: _locationController,
               icon: Icons.location_pin,
-              onChanged: _isEditing ? (_) => setState(() {}) : null,
               readOnly: !_isEditing,
             ),
 
@@ -146,13 +175,28 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
             const SizedBox(height: 12),
 
             if (_isEditing)
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orangeAccent,
-                  shape: const StadiumBorder(),
-                ),
-                onPressed: handleSave,
-                child: const Text("Save Changes"),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey,
+                      shape: const StadiumBorder(),
+                    ),
+                    onPressed: () {
+                      setState(() => _isEditing = !_isEditing);
+                    },
+                    child: const Text("Cancel"),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orangeAccent,
+                      shape: const StadiumBorder(),
+                    ),
+                    onPressed: handleSave,
+                    child: const Text("Save Changes"),
+                  ),
+                ],
               ),
           ],
         ),
