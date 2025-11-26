@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
+import 'package:homebased_project/mvp2/app_components/app_dialog.dart';
+import 'package:homebased_project/mvp2/app_components/app_action_menu.dart';
 import 'package:homebased_project/mvp2/app_components/app_card.dart';
 import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_service.dart';
 
@@ -27,7 +29,7 @@ class _StorefrontLogoCardState extends State<StorefrontLogoCard> {
     final userId = authService.currentUserId;
     if (userId == null) return;
 
-    final signed = await storefrontService.getStorefrontLogoUrl(userId);
+    final signed = await storefrontService.getStorefrontLogoSignedUrl(userId);
 
     if (!mounted) return;
     setState(() => logoUrl = signed);
@@ -54,7 +56,7 @@ class _StorefrontLogoCardState extends State<StorefrontLogoCard> {
         DateTime.now().toUtc().toIso8601String(),
       );
 
-      final refreshed = await storefrontService.getStorefrontLogoUrl(
+      final refreshed = await storefrontService.getStorefrontLogoSignedUrl(
         authService.currentUserId!,
       );
 
@@ -65,15 +67,66 @@ class _StorefrontLogoCardState extends State<StorefrontLogoCard> {
     } catch (_) {}
   }
 
+  Future<void> removeLogo() async {
+    final userId = authService.currentUserId;
+    if (userId == null) return;
+
+    try {
+      await storefrontService.deleteStorefrontLogo(userId);
+
+      if (!mounted) return;
+      setState(() {
+        logoUrl = null;
+        tempPath = null;
+        tempImage = null;
+      });
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppCard(
       child: Column(
         children: [
-          const Text(
-            "Store Logo",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          Row(
+            children: [
+              const Text(
+                "Storefront Logo",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const Spacer(),
+              AppActionMenu(
+                items: [
+                  AppActionMenuItem(value: 'pick', label: 'Pick Logo Image'),
+                  const AppActionMenuItem(
+                    value: 'remove',
+                    label: 'Remove Logo Image',
+                  ),
+                ],
+                onSelected: (value) async {
+                  if (value == 'pick') {
+                    await pickLogo();
+                  }
+
+                  if (value == 'remove') {
+                    final confirmed = await showConfirmDialog(
+                      context: context,
+                      title: "Confirm Remove",
+                      message:
+                          "Are you sure you want to remove this storefront logo image?",
+                      cancelText: "Cancel",
+                      confirmText: "Remove",
+                    );
+
+                    if (confirmed) {
+                      await removeLogo();
+                    }
+                  }
+                },
+              ),
+            ],
           ),
+
           const SizedBox(height: 16),
 
           // Image preview
@@ -86,18 +139,6 @@ class _StorefrontLogoCardState extends State<StorefrontLogoCard> {
                           ? NetworkImage(logoUrl!)
                           : const AssetImage('assets/ion_home.png'))
                       as ImageProvider,
-          ),
-
-          const SizedBox(height: 12),
-
-          ElevatedButton.icon(
-            icon: const Icon(Icons.camera_alt, size: 18),
-            label: const Text("Change Logo"),
-            onPressed: pickLogo,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orangeAccent,
-              shape: const StadiumBorder(),
-            ),
           ),
         ],
       ),
