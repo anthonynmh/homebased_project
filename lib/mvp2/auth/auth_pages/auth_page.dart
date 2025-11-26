@@ -15,6 +15,7 @@ import 'package:homebased_project/mvp2/auth/auth_pages/reset_password_page.dart'
 import 'package:homebased_project/mvp2/auth/auth_pages/get_reset_password_email_page.dart';
 
 // components
+import 'package:homebased_project/mvp2/auth/auth_components/auth_terms_text.dart';
 import 'package:homebased_project/mvp2/auth/auth_components/auth_header.dart';
 import 'package:homebased_project/mvp2/auth/auth_components/auth_tabs.dart';
 import 'package:homebased_project/mvp2/auth/auth_components/auth_text_field.dart';
@@ -204,9 +205,11 @@ class _AuthPageState extends State<AuthPage> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text("Terms and Conditions"),
-        content: Text(
-          "By proceeding, you acknowledge that Food 'n Friends does not oversee or manage home-based businesses (‘HBBs’). Each HBB owner (‘Seller’) operates independently and bears sole responsibility for their products, services, and business practices.",
-          style: Theme.of(context).textTheme.bodyMedium,
+        content: SingleChildScrollView(
+          child: Text(
+            termsAndConditionsText,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
         ),
         actions: [
           TextButton(
