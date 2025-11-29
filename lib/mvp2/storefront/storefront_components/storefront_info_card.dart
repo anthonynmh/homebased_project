@@ -32,6 +32,14 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
     loadStorefront();
   }
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    _locationController.dispose();
+    super.dispose();
+  }
+
   Future<void> loadStorefront() async {
     final userId = authService.currentUserId;
     if (userId == null) return;
@@ -48,21 +56,10 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
     });
   }
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
-    _locationController.dispose();
-    super.dispose();
-  }
-
-  Future<void> handleSave() async {
-    final userId = authService.currentUserId;
-    if (userId == null) return;
-
+  Future<Storefront> _buildStorefront(String userId) async {
     final parsedPostalCode = int.tryParse(_locationController.text.trim());
 
-    final storefront = Storefront(
+    return Storefront(
       id: userId,
       updatedAt: DateTime.now().toUtc().toIso8601String(),
       businessName: _nameController.text.trim(),
@@ -70,19 +67,44 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
       photoUrls: null,
       postalCode: parsedPostalCode,
     );
+  }
 
+  Future<void> createStorefront() async {
+    final userId = authService.currentUserId;
+    if (userId == null) return;
+
+    final storefront = await _buildStorefront(userId);
+    await storefrontService.insertCurrentStorefront(storefront);
+
+    setState(() {
+      _hasStorefront = true;
+    });
+
+    widget.onBroadcast?.call("Storefront created.");
+  }
+
+  Future<void> updateStorefront() async {
+    final userId = authService.currentUserId;
+    if (userId == null) return;
+
+    final storefront = await _buildStorefront(userId);
+    await storefrontService.updateCurrentStorefront(storefront);
+
+    widget.onBroadcast?.call("Storefront updated.");
+  }
+
+  Future<void> handleSave() async {
     try {
       if (_hasStorefront) {
-        await storefrontService.updateCurrentStorefront(storefront);
+        await updateStorefront();
       } else {
-        await storefrontService.insertCurrentStorefront(storefront);
+        await createStorefront();
       }
 
       setState(() {
         _isEditing = false;
+        _hasStorefront = true;
       });
-
-      widget.onBroadcast?.call("Store profile saved.");
     } catch (_) {}
   }
 
@@ -90,12 +112,50 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
     final userId = authService.currentUserId;
     if (userId == null) return;
 
-    // await storefrontService.deleteCurrentStorefront(userId);
-    print("Storefront successfully deleted");
+    try {
+      await storefrontService.deleteCurrentStorefront(userId);
+
+      setState(() {
+        _hasStorefront = false;
+        _isEditing = false;
+        _nameController.clear();
+        _descriptionController.clear();
+        _locationController.clear();
+      });
+
+      widget.onBroadcast?.call("Storefront deleted.");
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!_hasStorefront) {
+      return AppCard(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Store Information",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 12),
+              const Text("You have not created a storefront yet."),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orangeAccent,
+                  shape: const StadiumBorder(),
+                ),
+                onPressed: createStorefront,
+                child: const Text("Create Storefront"),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     return AppCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
