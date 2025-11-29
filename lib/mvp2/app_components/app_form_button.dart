@@ -5,6 +5,7 @@ class AppFormButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool isLoading;
   final Icon? icon;
+  final Color? backgroundColor;
 
   const AppFormButton({
     super.key,
@@ -12,12 +13,13 @@ class AppFormButton extends StatelessWidget {
     required this.onPressed,
     this.icon,
     this.isLoading = false,
+    this.backgroundColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final buttonStyle = ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFFFFB885),
+      backgroundColor: backgroundColor ?? const Color(0xFFFFB885),
       foregroundColor: Colors.white,
       minimumSize: const Size.fromHeight(48),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
