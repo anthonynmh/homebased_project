@@ -6,7 +6,6 @@ import 'package:homebased_project/mvp2/app_components/app_action_menu.dart';
 import 'package:homebased_project/mvp2/app_components/app_dialog.dart';
 import 'package:homebased_project/mvp2/app_components/app_card.dart';
 import 'package:homebased_project/mvp2/app_components/app_text_field.dart';
-import 'package:homebased_project/mvp2/storefront/storefront_components/storefront_prompt_card.dart';
 
 class StorefrontInfoCard extends StatelessWidget {
   final bool isEditing;
@@ -16,7 +15,6 @@ class StorefrontInfoCard extends StatelessWidget {
   final TextEditingController descriptionController;
   final TextEditingController locationController;
 
-  final VoidCallback? onCreate;
   final VoidCallback? onSave;
   final VoidCallback? onCancel;
   final Future<void> Function()? onDelete;
@@ -29,7 +27,6 @@ class StorefrontInfoCard extends StatelessWidget {
     required this.nameController,
     required this.descriptionController,
     required this.locationController,
-    this.onCreate,
     this.onSave,
     this.onCancel,
     this.onDelete,
@@ -38,10 +35,6 @@ class StorefrontInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!hasStorefront) {
-      return StorefrontPromptCard(onCreate: onCreate);
-    }
-
     return AppCard(
       child: Padding(
         padding: const EdgeInsets.all(16),

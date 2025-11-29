@@ -5,6 +5,7 @@ import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/mvp2/main/main_components/main_snackbar_widget.dart';
 import 'package:homebased_project/mvp2/app_components/app_page.dart';
 import 'package:homebased_project/mvp2/app_components/app_form_button.dart';
+import 'package:homebased_project/mvp2/storefront/storefront_components/storefront_prompt_card.dart';
 import 'package:homebased_project/mvp2/storefront/storefront_components/storefront_info_card.dart';
 import 'package:homebased_project/mvp2/storefront/storefront_components/storefront_logo_card.dart';
 import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_model.dart';
@@ -221,26 +222,29 @@ class _StorefrontState extends State<StorefrontPage> {
       ),
       child: Column(
         children: [
-          StorefrontLogoCard(
-            pickLogo: pickLogo,
-            removeLogo: removeLogo,
-            logoUrl: logoUrl,
-            tempPath: tempPath,
-            tempImage: tempImage,
-          ),
-          const SizedBox(height: 20),
-          StorefrontInfoCard(
-            isEditing: _isEditing,
-            hasStorefront: _hasStorefront,
-            nameController: _nameController,
-            descriptionController: _descriptionController,
-            locationController: _locationController,
-            onCreate: createStorefront,
-            onSave: updateStorefront,
-            onCancel: () => setState(() => _isEditing = false),
-            onDelete: handleDelete,
-            onEditToggle: () => setState(() => _isEditing = true),
-          ),
+          if (!_hasStorefront) ...[
+            StorefrontPromptCard(onCreate: createStorefront),
+          ] else ...[
+            StorefrontLogoCard(
+              pickLogo: pickLogo,
+              removeLogo: removeLogo,
+              logoUrl: logoUrl,
+              tempPath: tempPath,
+              tempImage: tempImage,
+            ),
+            const SizedBox(height: 20),
+            StorefrontInfoCard(
+              isEditing: _isEditing,
+              hasStorefront: _hasStorefront,
+              nameController: _nameController,
+              descriptionController: _descriptionController,
+              locationController: _locationController,
+              onSave: updateStorefront,
+              onCancel: () => setState(() => _isEditing = false),
+              onDelete: handleDelete,
+              onEditToggle: () => setState(() => _isEditing = true),
+            ),
+          ],
         ],
       ),
     );
