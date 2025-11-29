@@ -1,86 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/mvp2/app_components/app_dialog.dart';
 import 'package:homebased_project/mvp2/app_components/app_action_menu.dart';
 import 'package:homebased_project/mvp2/app_components/app_card.dart';
-import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_service.dart';
 
-class StorefrontLogoCard extends StatefulWidget {
-  const StorefrontLogoCard({super.key});
+class StorefrontLogoCard extends StatelessWidget {
+  final VoidCallback pickLogo;
+  final VoidCallback removeLogo;
+  final String? logoUrl;
+  final String? tempPath;
+  final XFile? tempImage;
 
-  @override
-  State<StorefrontLogoCard> createState() => _StorefrontLogoCardState();
-}
-
-class _StorefrontLogoCardState extends State<StorefrontLogoCard> {
-  String? logoUrl;
-  String? tempPath;
-  XFile? tempImage;
-
-  @override
-  void initState() {
-    super.initState();
-    loadLogo();
-  }
-
-  Future<void> loadLogo() async {
-    final userId = authService.currentUserId;
-    if (userId == null) return;
-
-    final signed = await storefrontService.getStorefrontLogoSignedUrl(userId);
-
-    if (!mounted) return;
-    setState(() => logoUrl = signed);
-  }
-
-  Future<void> pickLogo() async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-    );
-
-    if (picked == null) return;
-
-    setState(() {
-      tempImage = picked;
-      tempPath = picked.path;
-    });
-
-    try {
-      await storefrontService.uploadStorefrontLogo(
-        picked,
-        authService.currentUserId!,
-      );
-
-      final refreshed = await storefrontService.getStorefrontLogoSignedUrl(
-        authService.currentUserId!,
-      );
-
-      setState(() {
-        logoUrl = refreshed;
-        tempPath = null;
-      });
-    } catch (_) {}
-  }
-
-  Future<void> removeLogo() async {
-    final userId = authService.currentUserId;
-    if (userId == null) return;
-
-    try {
-      await storefrontService.deleteStorefrontLogo(userId);
-
-      if (!mounted) return;
-      setState(() {
-        logoUrl = null;
-        tempPath = null;
-        tempImage = null;
-      });
-    } catch (_) {}
-  }
+  const StorefrontLogoCard({
+    super.key,
+    required this.pickLogo,
+    required this.removeLogo,
+    this.logoUrl,
+    this.tempPath,
+    this.tempImage,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +43,7 @@ class _StorefrontLogoCardState extends State<StorefrontLogoCard> {
                 ],
                 onSelected: (value) async {
                   if (value == 'pick') {
-                    await pickLogo();
+                    pickLogo();
                   }
 
                   if (value == 'remove') {
@@ -118,7 +57,7 @@ class _StorefrontLogoCardState extends State<StorefrontLogoCard> {
                     );
 
                     if (confirmed) {
-                      await removeLogo();
+                      removeLogo();
                     }
                   }
                 },
@@ -128,7 +67,6 @@ class _StorefrontLogoCardState extends State<StorefrontLogoCard> {
 
           const SizedBox(height: 16),
 
-          // Image preview
           CircleAvatar(
             radius: 48,
             backgroundColor: Colors.white,
