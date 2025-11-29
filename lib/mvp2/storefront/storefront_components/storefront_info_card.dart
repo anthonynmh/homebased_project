@@ -57,7 +57,13 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
   }
 
   Future<Storefront> _buildStorefront(String userId) async {
-    final parsedPostalCode = int.tryParse(_locationController.text.trim());
+    final rawPostal = _locationController.text.trim();
+
+    if (rawPostal.isNotEmpty && !RegExp(r'^\d+$').hasMatch(rawPostal)) {
+      throw FormatException("Postal code must contain only numbers.");
+    }
+
+    final parsedPostalCode = rawPostal.isEmpty ? null : int.parse(rawPostal);
 
     return Storefront(
       id: userId,
