@@ -6,6 +6,7 @@ import 'package:homebased_project/mvp2/app_components/app_action_menu.dart';
 import 'package:homebased_project/mvp2/app_components/app_dialog.dart';
 import 'package:homebased_project/mvp2/app_components/app_card.dart';
 import 'package:homebased_project/mvp2/app_components/app_text_field.dart';
+import 'package:homebased_project/mvp2/storefront/storefront_components/storefront_prompt_card.dart';
 
 class StorefrontInfoCard extends StatelessWidget {
   final bool isEditing;
@@ -38,28 +39,7 @@ class StorefrontInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!hasStorefront) {
-      return AppCard(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Store Information",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              const SizedBox(height: 12),
-              const Text("You have not created a storefront yet."),
-              const SizedBox(height: 16),
-              AppFormButton(
-                label: "Create Storefront",
-                onPressed: onCreate,
-                icon: const Icon(Icons.add),
-              ),
-            ],
-          ),
-        ),
-      );
+      return StorefrontPromptCard(onCreate: onCreate);
     }
 
     return AppCard(
