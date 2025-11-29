@@ -5,6 +5,7 @@ import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_model.dart';
 import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_service.dart';
 import 'package:homebased_project/mvp2/main/main_components/main_snackbar_widget.dart';
+import 'package:homebased_project/mvp2/app_components/app_form_button.dart';
 import 'package:homebased_project/mvp2/app_components/app_action_menu.dart';
 import 'package:homebased_project/mvp2/app_components/app_dialog.dart';
 import 'package:homebased_project/mvp2/app_components/app_card.dart';
@@ -78,7 +79,6 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
   }
 
   Future<void> createStorefront() async {
-    print("creating storefront");
     final userId = authService.currentUserId;
     if (userId == null) return;
 
@@ -87,8 +87,6 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
         id: userId,
         updatedAt: DateTime.now().toUtc().toIso8601String(),
       );
-
-      print(storefront.toString());
 
       await storefrontService.insertCurrentStorefront(storefront);
       print("storefront created successfully");
@@ -162,13 +160,10 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
               const SizedBox(height: 12),
               const Text("You have not created a storefront yet."),
               const SizedBox(height: 16),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orangeAccent,
-                  shape: const StadiumBorder(),
-                ),
+              AppFormButton(
+                label: "Create Storefront",
                 onPressed: createStorefront,
-                child: const Text("Create Storefront"),
+                icon: const Icon(Icons.add),
               ),
             ],
           ),
@@ -262,25 +257,22 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
 
             if (_isEditing)
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
+                  Expanded(
+                    child: AppFormButton(
+                      label: "Cancel",
                       backgroundColor: Colors.grey,
-                      shape: const StadiumBorder(),
+                      onPressed: () {
+                        setState(() => _isEditing = false);
+                      },
                     ),
-                    onPressed: () {
-                      setState(() => _isEditing = !_isEditing);
-                    },
-                    child: const Text("Cancel"),
                   ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orangeAccent,
-                      shape: const StadiumBorder(),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: AppFormButton(
+                      label: "Save Changes",
+                      onPressed: updateStorefront,
                     ),
-                    onPressed: updateStorefront,
-                    child: const Text("Save Changes"),
                   ),
                 ],
               ),
