@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_model.dart';
 import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_service.dart';
+import 'package:homebased_project/mvp2/main/main_components/main_snackbar_widget.dart';
 import 'package:homebased_project/mvp2/app_components/app_action_menu.dart';
 import 'package:homebased_project/mvp2/app_components/app_dialog.dart';
 import 'package:homebased_project/mvp2/app_components/app_card.dart';
@@ -60,7 +61,9 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
     final rawPostal = _locationController.text.trim();
 
     if (rawPostal.isNotEmpty && !RegExp(r'^\d+$').hasMatch(rawPostal)) {
-      throw FormatException("Postal code must contain only numbers.");
+      String err = "Postal code must contain only numbers.";
+      context.showSnackBar(err, isError: true);
+      throw FormatException(err);
     }
 
     final parsedPostalCode = rawPostal.isEmpty ? null : int.parse(rawPostal);
