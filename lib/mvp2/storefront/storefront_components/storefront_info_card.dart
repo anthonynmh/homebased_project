@@ -57,63 +57,73 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
     });
   }
 
-  Future<Storefront> _buildStorefront(String userId) async {
+  Future<Map<String, dynamic>> _getStorefrontFields() async {
     final rawPostal = _locationController.text.trim();
 
     if (rawPostal.isNotEmpty && !RegExp(r'^\d+$').hasMatch(rawPostal)) {
-      String err = "Postal code must contain only numbers.";
+      final err = "Postal code must contain only numbers.";
       context.showSnackBar(err, isError: true);
       throw FormatException(err);
     }
 
     final parsedPostalCode = rawPostal.isEmpty ? null : int.parse(rawPostal);
 
-    return Storefront(
-      id: userId,
-      updatedAt: DateTime.now().toUtc().toIso8601String(),
-      businessName: _nameController.text.trim(),
-      description: _descriptionController.text.trim(),
-      photoUrls: null,
-      postalCode: parsedPostalCode,
-    );
+    return {
+      'businessName': _nameController.text.trim(),
+      'description': _descriptionController.text.trim(),
+      'photoUrls': null,
+      'postalCode': parsedPostalCode,
+      'updatedAt': DateTime.now().toUtc().toIso8601String(),
+    };
   }
 
   Future<void> createStorefront() async {
+    print("creating storefront");
     final userId = authService.currentUserId;
     if (userId == null) return;
 
-    final storefront = await _buildStorefront(userId);
-    await storefrontService.insertCurrentStorefront(storefront);
+    try {
+      final storefront = Storefront(
+        id: userId,
+        updatedAt: DateTime.now().toUtc().toIso8601String(),
+      );
 
-    setState(() {
-      _hasStorefront = true;
-    });
+      print(storefront.toString());
 
-    widget.onBroadcast?.call("Storefront created.");
+      await storefrontService.insertCurrentStorefront(storefront);
+      print("storefront created successfully");
+      setState(() {
+        _hasStorefront = true;
+      });
+
+      widget.onBroadcast?.call("Storefront created.");
+    } catch (e) {
+      print("error creating storefront: $e");
+    }
   }
 
   Future<void> updateStorefront() async {
     final userId = authService.currentUserId;
     if (userId == null) return;
 
-    final storefront = await _buildStorefront(userId);
-    await storefrontService.updateCurrentStorefront(storefront);
-
-    widget.onBroadcast?.call("Storefront updated.");
-  }
-
-  Future<void> handleSave() async {
     try {
-      if (_hasStorefront) {
-        await updateStorefront();
-      } else {
-        await createStorefront();
-      }
+      final data = await _getStorefrontFields();
+
+      await storefrontService.updateCurrentStorefront(
+        userId: userId,
+        businessName: data['businessName'] as String?,
+        description: data['description'] as String?,
+        logoUrl: null,
+        photoUrls: null,
+        postalCode: data['postalCode'] as int?,
+      );
 
       setState(() {
         _isEditing = false;
         _hasStorefront = true;
       });
+
+      widget.onBroadcast?.call("Storefront updated.");
     } catch (_) {}
   }
 
@@ -269,7 +279,7 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
                       backgroundColor: Colors.orangeAccent,
                       shape: const StadiumBorder(),
                     ),
-                    onPressed: handleSave,
+                    onPressed: updateStorefront,
                     child: const Text("Save Changes"),
                   ),
                 ],
