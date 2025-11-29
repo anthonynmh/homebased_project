@@ -53,7 +53,6 @@ class _StorefrontLogoCardState extends State<StorefrontLogoCard> {
       await storefrontService.uploadStorefrontLogo(
         picked,
         authService.currentUserId!,
-        DateTime.now().toUtc().toIso8601String(),
       );
 
       final refreshed = await storefrontService.getStorefrontLogoSignedUrl(
