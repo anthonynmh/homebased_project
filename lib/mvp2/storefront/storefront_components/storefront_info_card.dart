@@ -1,88 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:homebased_project/backend/auth_api/auth_service.dart';
-import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_model.dart';
-import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_service.dart';
+import 'package:homebased_project/mvp2/app_components/app_form_button.dart';
+import 'package:homebased_project/mvp2/app_components/app_action_menu.dart';
+import 'package:homebased_project/mvp2/app_components/app_dialog.dart';
 import 'package:homebased_project/mvp2/app_components/app_card.dart';
 import 'package:homebased_project/mvp2/app_components/app_text_field.dart';
 
-class StorefrontInfoCard extends StatefulWidget {
-  final void Function(String message)? onBroadcast;
+class StorefrontInfoCard extends StatelessWidget {
+  final bool isEditing;
+  final bool hasStorefront;
 
-  const StorefrontInfoCard({super.key, this.onBroadcast});
+  final TextEditingController nameController;
+  final TextEditingController descriptionController;
+  final TextEditingController locationController;
 
-  @override
-  State<StorefrontInfoCard> createState() => _StorefrontInfoCardState();
-}
+  final VoidCallback? onSave;
+  final VoidCallback? onCancel;
+  final Future<void> Function()? onDelete;
+  final VoidCallback? onEditToggle;
 
-class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
-  final _nameController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _locationController = TextEditingController(); // postal code
-
-  bool _isEditing = false;
-  bool _hasStorefront = false;
-
-  @override
-  void initState() {
-    super.initState();
-    loadStorefront();
-  }
-
-  Future<void> loadStorefront() async {
-    final userId = authService.currentUserId;
-    if (userId == null) return;
-
-    final storefront = await storefrontService.getCurrentStorefront(userId);
-    if (storefront == null) return;
-
-    _nameController.text = storefront.businessName ?? '';
-    _descriptionController.text = storefront.description ?? '';
-    _locationController.text = storefront.postalCode?.toString() ?? '';
-
-    setState(() {
-      _hasStorefront = true;
-    });
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
-    _locationController.dispose();
-    super.dispose();
-  }
-
-  Future<void> handleSave() async {
-    final userId = authService.currentUserId;
-    if (userId == null) return;
-
-    final parsedPostalCode = int.tryParse(_locationController.text.trim());
-
-    final storefront = Storefront(
-      id: userId,
-      updatedAt: DateTime.now().toUtc().toIso8601String(),
-      businessName: _nameController.text.trim(),
-      description: _descriptionController.text.trim(),
-      photoUrls: null,
-      postalCode: parsedPostalCode,
-    );
-
-    try {
-      if (_hasStorefront) {
-        await storefrontService.updateCurrentStorefront(storefront);
-      } else {
-        await storefrontService.insertCurrentStorefront(storefront);
-      }
-
-      setState(() {
-        _isEditing = false;
-      });
-
-      widget.onBroadcast?.call("Store profile saved.");
-    } catch (_) {}
-  }
+  const StorefrontInfoCard({
+    super.key,
+    required this.isEditing,
+    required this.hasStorefront,
+    required this.nameController,
+    required this.descriptionController,
+    required this.locationController,
+    this.onSave,
+    this.onCancel,
+    this.onDelete,
+    this.onEditToggle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -97,43 +46,65 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
                   "Store Information",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-                TextButton.icon(
-                  icon: Icon(_isEditing ? Icons.close : Icons.edit, size: 18),
-                  label: Text(_isEditing ? "Cancel" : "Edit"),
-                  onPressed: () {
-                    setState(() => _isEditing = !_isEditing);
+                const Spacer(),
+                AppActionMenu(
+                  items: [
+                    AppActionMenuItem(
+                      value: 'edit',
+                      label: 'Edit',
+                      enabled: !isEditing,
+                    ),
+                    const AppActionMenuItem(
+                      value: 'delete',
+                      label: 'Delete Storefront',
+                    ),
+                  ],
+                  onSelected: (value) async {
+                    if (value == 'edit') {
+                      onEditToggle?.call();
+                    }
+
+                    if (value == 'delete') {
+                      final confirmed = await showConfirmDialog(
+                        context: context,
+                        title: "Confirm Delete",
+                        message:
+                            "Are you sure you want to delete this storefront?",
+                        cancelText: "Cancel",
+                        confirmText: "Delete",
+                      );
+
+                      if (confirmed) {
+                        await onDelete?.call();
+                      }
+                    }
                   },
                 ),
               ],
             ),
             const SizedBox(height: 12),
-
             AppTextField(
               label: "Store Name",
-              controller: _nameController,
-              readOnly: !_isEditing,
+              controller: nameController,
+              readOnly: !isEditing,
             ),
-
             AppTextField(
               label: "Store Description",
-              controller: _descriptionController,
-              readOnly: !_isEditing,
+              controller: descriptionController,
+              readOnly: !isEditing,
             ),
-
             AppTextField(
               label: "Postal Code",
-              controller: _locationController,
+              controller: locationController,
               icon: Icons.location_pin,
-              onChanged: _isEditing ? (_) => setState(() {}) : null,
-              readOnly: !_isEditing,
+              readOnly: !isEditing,
             ),
-
-            if (_locationController.text.isNotEmpty)
+            if (locationController.text.isNotEmpty)
               TextButton.icon(
                 icon: const Icon(Icons.map_outlined, size: 18),
                 label: const Text("View on Google Maps"),
                 onPressed: () async {
-                  final query = Uri.encodeComponent(_locationController.text);
+                  final query = Uri.encodeComponent(locationController.text);
                   final url = Uri.parse(
                     'https://www.google.com/maps/search/?api=1&query=$query',
                   );
@@ -142,17 +113,25 @@ class _StorefrontInfoCardState extends State<StorefrontInfoCard> {
                   }
                 },
               ),
-
             const SizedBox(height: 12),
-
-            if (_isEditing)
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orangeAccent,
-                  shape: const StadiumBorder(),
-                ),
-                onPressed: handleSave,
-                child: const Text("Save Changes"),
+            if (isEditing)
+              Row(
+                children: [
+                  Expanded(
+                    child: AppFormButton(
+                      label: "Cancel",
+                      backgroundColor: Colors.grey,
+                      onPressed: onCancel,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: AppFormButton(
+                      label: "Save Changes",
+                      onPressed: onSave,
+                    ),
+                  ),
+                ],
               ),
           ],
         ),
