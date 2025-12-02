@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'post_card.dart';
-import 'create_post_dialog.dart';
+import '../activity_feed_components/activity_feed_post_card.dart';
+import '../activity_feed_components/activity_feed_create_post_dialog.dart';
 
 class ActivityFeedPage extends StatefulWidget {
   const ActivityFeedPage({Key? key}) : super(key: key);
