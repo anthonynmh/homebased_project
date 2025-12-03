@@ -1,82 +1,72 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'package:homebased_project/backend/auth_api/auth_service.dart';
+import 'package:homebased_project/mvp2/app_components/app_dialog.dart';
+import 'package:homebased_project/mvp2/app_components/app_action_menu.dart';
 import 'package:homebased_project/mvp2/app_components/app_card.dart';
-import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_service.dart';
 
-class StorefrontLogoCard extends StatefulWidget {
-  const StorefrontLogoCard({super.key});
+class StorefrontLogoCard extends StatelessWidget {
+  final VoidCallback pickLogo;
+  final VoidCallback removeLogo;
+  final String? logoUrl;
+  final String? tempPath;
+  final XFile? tempImage;
 
-  @override
-  State<StorefrontLogoCard> createState() => _StorefrontLogoCardState();
-}
-
-class _StorefrontLogoCardState extends State<StorefrontLogoCard> {
-  String? logoUrl;
-  String? tempPath;
-  XFile? tempImage;
-
-  @override
-  void initState() {
-    super.initState();
-    loadLogo();
-  }
-
-  Future<void> loadLogo() async {
-    final userId = authService.currentUserId;
-    if (userId == null) return;
-
-    final signed = await storefrontService.getStorefrontLogoUrl(userId);
-
-    if (!mounted) return;
-    setState(() => logoUrl = signed);
-  }
-
-  Future<void> pickLogo() async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-    );
-
-    if (picked == null) return;
-
-    setState(() {
-      tempImage = picked;
-      tempPath = picked.path;
-    });
-
-    try {
-      await storefrontService.uploadStorefrontLogo(
-        picked,
-        authService.currentUserId!,
-        DateTime.now().toUtc().toIso8601String(),
-      );
-
-      final refreshed = await storefrontService.getStorefrontLogoUrl(
-        authService.currentUserId!,
-      );
-
-      setState(() {
-        logoUrl = refreshed;
-        tempPath = null;
-      });
-    } catch (_) {}
-  }
+  const StorefrontLogoCard({
+    super.key,
+    required this.pickLogo,
+    required this.removeLogo,
+    this.logoUrl,
+    this.tempPath,
+    this.tempImage,
+  });
 
   @override
   Widget build(BuildContext context) {
     return AppCard(
       child: Column(
         children: [
-          const Text(
-            "Store Logo",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          Row(
+            children: [
+              const Text(
+                "Storefront Logo",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const Spacer(),
+              AppActionMenu(
+                items: [
+                  AppActionMenuItem(value: 'pick', label: 'Pick Logo Image'),
+                  const AppActionMenuItem(
+                    value: 'remove',
+                    label: 'Remove Logo Image',
+                  ),
+                ],
+                onSelected: (value) async {
+                  if (value == 'pick') {
+                    pickLogo();
+                  }
+
+                  if (value == 'remove') {
+                    final confirmed = await showConfirmDialog(
+                      context: context,
+                      title: "Confirm Remove",
+                      message:
+                          "Are you sure you want to remove this storefront logo image?",
+                      cancelText: "Cancel",
+                      confirmText: "Remove",
+                    );
+
+                    if (confirmed) {
+                      removeLogo();
+                    }
+                  }
+                },
+              ),
+            ],
           ),
+
           const SizedBox(height: 16),
 
-          // Image preview
           CircleAvatar(
             radius: 48,
             backgroundColor: Colors.white,
@@ -86,18 +76,6 @@ class _StorefrontLogoCardState extends State<StorefrontLogoCard> {
                           ? NetworkImage(logoUrl!)
                           : const AssetImage('assets/ion_home.png'))
                       as ImageProvider,
-          ),
-
-          const SizedBox(height: 12),
-
-          ElevatedButton.icon(
-            icon: const Icon(Icons.camera_alt, size: 18),
-            label: const Text("Change Logo"),
-            onPressed: pickLogo,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orangeAccent,
-              shape: const StadiumBorder(),
-            ),
           ),
         ],
       ),

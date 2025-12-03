@@ -6,15 +6,16 @@ import 'package:homebased_project/mvp2/app_components/app_form_button.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // views
-import 'package:homebased_project/views/widget_tree.dart';
+import 'package:homebased_project/mvp2/main/main_pages/widget_tree.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
-import 'package:homebased_project/widgets/snackbar_widget.dart';
+import 'package:homebased_project/mvp2/main/main_components/main_snackbar_widget.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
 import 'package:homebased_project/mvp2/auth/auth_pages/reset_password_page.dart';
 import 'package:homebased_project/mvp2/auth/auth_pages/get_reset_password_email_page.dart';
 
 // components
+import 'package:homebased_project/mvp2/auth/auth_components/auth_terms_text.dart';
 import 'package:homebased_project/mvp2/auth/auth_components/auth_header.dart';
 import 'package:homebased_project/mvp2/auth/auth_components/auth_tabs.dart';
 import 'package:homebased_project/mvp2/auth/auth_components/auth_text_field.dart';
@@ -204,9 +205,11 @@ class _AuthPageState extends State<AuthPage> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text("Terms and Conditions"),
-        content: Text(
-          "By proceeding, you acknowledge that Food 'n Friends does not oversee or manage home-based businesses (‘HBBs’). Each HBB owner (‘Seller’) operates independently and bears sole responsibility for their products, services, and business practices.",
-          style: Theme.of(context).textTheme.bodyMedium,
+        content: SingleChildScrollView(
+          child: Text(
+            termsAndConditionsText,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
         ),
         actions: [
           TextButton(
