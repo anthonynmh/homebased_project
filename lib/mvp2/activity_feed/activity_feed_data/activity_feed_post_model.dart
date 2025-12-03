@@ -4,13 +4,13 @@ class Author {
   final String name;
   final String username;
   final String avatar;
-  final String businessName;
+  final String? businessName;
 
   Author({
     required this.name,
     required this.username,
     required this.avatar,
-    required this.businessName,
+    this.businessName,
   });
 
   Map<String, dynamic> toMap() {
@@ -80,6 +80,6 @@ class Post {
   }
 
   String toJson() => json.encode(toMap());
-  
+
   factory Post.fromJson(String source) => Post.fromMap(json.decode(source));
 }

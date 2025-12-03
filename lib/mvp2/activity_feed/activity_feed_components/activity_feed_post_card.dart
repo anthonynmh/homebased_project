@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:homebased_project/mvp2/activity_feed/activity_feed_data/activity_feed_post_model.dart';
 import 'package:homebased_project/mvp2/app_components/app_card.dart';
 
 class PostCard extends StatefulWidget {
@@ -11,7 +12,7 @@ class PostCard extends StatefulWidget {
 }
 
 class PostCardSub extends StatelessWidget {
-  final Map<String, dynamic> post;
+  final Post post;
   final int likes;
   final int replies;
   final bool isLiked;
@@ -31,18 +32,16 @@ class PostCardSub extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final author = post['author'];
-    final image = post['image'];
-    final content = post['content'];
+    final author = post.author;
     return AppCard(child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (image != null)
+          if (post.image != null)
             ClipRRect(
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(20),
               ),
-              child: Image.network(image, fit: BoxFit.cover),
+              child: Image.network(post.image!, fit: BoxFit.cover),
             ),
           Padding(
             padding: const EdgeInsets.all(12),
@@ -50,7 +49,7 @@ class PostCardSub extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CircleAvatar(
-                  backgroundImage: NetworkImage(author['avatar']),
+                  backgroundImage: NetworkImage(author.avatar),
                   radius: 20,
                 ),
                 const SizedBox(width: 8),
@@ -59,10 +58,10 @@ class PostCardSub extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        author['name'],
+                        author.name,
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
-                      if (author['businessName'] != null)
+                      if (author.businessName != null)
                         Container(
                           margin: const EdgeInsets.only(top: 2),
                           padding: const EdgeInsets.symmetric(
@@ -74,7 +73,7 @@ class PostCardSub extends StatelessWidget {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            author['businessName'],
+                            author.businessName!,
                             style: const TextStyle(
                               color: Color(0xFFD97A3D),
                               fontSize: 11,
@@ -82,7 +81,7 @@ class PostCardSub extends StatelessWidget {
                           ),
                         ),
                       Text(
-                        post['timestamp'],
+                        post.timestamp,
                         style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 11,
@@ -97,7 +96,7 @@ class PostCardSub extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(
-              content,
+              post.content,
               style: const TextStyle(fontSize: 14, color: Colors.black87),
             ),
           ),
