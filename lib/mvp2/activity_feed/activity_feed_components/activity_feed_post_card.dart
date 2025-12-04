@@ -2,19 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:homebased_project/mvp2/activity_feed/activity_feed_data/activity_feed_post_model.dart';
 import 'package:homebased_project/mvp2/app_components/app_card.dart';
 
-class PostCard extends StatefulWidget {
-  final Map<String, dynamic> post;
-
-  const PostCard({Key? key, required this.post}) : super(key: key);
-
-  @override
-  State<PostCard> createState() => _PostCardState();
-}
 
 class PostCardSub extends StatelessWidget {
   final Post post;
-  final int likes;
-  final int replies;
   final bool isLiked;
 
   final VoidCallback? toggleLike;
@@ -23,9 +13,7 @@ class PostCardSub extends StatelessWidget {
   const PostCardSub({
     super.key,
     required this.post,
-    required this.likes,
-    required this.replies,
-    required this.isLiked,
+    this.isLiked = false,
     this.toggleLike,
     this.incrementReply
   });
@@ -33,7 +21,11 @@ class PostCardSub extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final author = post.author;
-    return AppCard(child: Column(
+    final likes = post.initialLikes;
+    final replies = post.initialReplies;
+
+    return AppCard(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (post.image != null)
@@ -130,6 +122,15 @@ class PostCardSub extends StatelessWidget {
       ),
     );
   }
+}
+
+class PostCard extends StatefulWidget {
+  final Map<String, dynamic> post;
+
+  const PostCard({Key? key, required this.post}) : super(key: key);
+
+  @override
+  State<PostCard> createState() => _PostCardState();
 }
 
 class _PostCardState extends State<PostCard> {

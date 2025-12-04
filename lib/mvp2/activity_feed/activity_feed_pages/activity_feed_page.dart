@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:homebased_project/mvp2/activity_feed/activity_feed_data/activity_feed_post_model.dart';
+import 'package:homebased_project/mvp2/app_components/app_page.dart';
 import '../activity_feed_components/activity_feed_post_card.dart';
 import '../activity_feed_components/activity_feed_create_post_dialog.dart';
 
@@ -92,7 +94,8 @@ class _FeedPageState extends State<ActivityFeedPage> {
       body: ListView.builder(
         padding: const EdgeInsets.all(12),
         itemCount: mockPosts.length,
-        itemBuilder: (context, index) => PostCard(post: mockPosts[index]),
+        itemBuilder: (context, index) => PostCardSub(post: Post.fromMap(mockPosts[index])),
+        // itemBuilder: (context, index) => PostCard(post: mockPosts[index]),
       ),
       floatingActionButton: _isDialogOpen
           ? null
