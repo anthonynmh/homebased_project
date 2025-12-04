@@ -3,10 +3,11 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:homebased_project/mvp2/app_components/app_form_button.dart';
 import 'package:homebased_project/mvp2/profile/profile_components/profile_option_tile.dart';
+import 'package:homebased_project/mvp2/profile/profile_components/profile_avatar.dart';
 
 class ProfilePopup extends StatelessWidget {
   final String username;
-  final ImageProvider profileImage;
+  final String profileImageUrl;
   final String profileMode;
   final VoidCallback onSwitchMode;
   final VoidCallback onLogout;
@@ -15,7 +16,7 @@ class ProfilePopup extends StatelessWidget {
   const ProfilePopup({
     super.key,
     required this.username,
-    required this.profileImage,
+    required this.profileImageUrl,
     required this.profileMode,
     required this.onSwitchMode,
     required this.onLogout,
@@ -46,11 +47,7 @@ class ProfilePopup extends StatelessWidget {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  CircleAvatar(
-                    radius: 32,
-                    backgroundColor: const Color(0xFFFFB885),
-                    backgroundImage: profileImage,
-                  ),
+                  ProfileAvatar(radius: 32, profileImageUrl: profileImageUrl),
                   Positioned(
                     bottom: 0,
                     right: 0,

@@ -5,6 +5,7 @@ import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
 import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
 import 'package:homebased_project/mvp2/profile/profile_components/profile_popup.dart';
+import 'package:homebased_project/mvp2/profile/profile_components/profile_avatar.dart';
 
 class ProfileAppBarSection extends StatefulWidget
     implements PreferredSizeWidget {
@@ -95,9 +96,7 @@ class _ProfileAppBarSectionState extends State<ProfileAppBarSection> {
       builder: (context) => ProfilePopup(
         username: username,
         profileMode: widget.profileMode,
-        profileImage: profileImageUrl == null
-            ? const AssetImage('assets/defaultUser.png')
-            : NetworkImage(profileImageUrl!),
+        profileImageUrl: profileImageUrl ?? '',
         onSwitchMode: widget.onSwitchMode,
         onLogout: widget.onLogout,
         onChangeAvatar: _pickImage,
@@ -107,10 +106,6 @@ class _ProfileAppBarSectionState extends State<ProfileAppBarSection> {
 
   @override
   Widget build(BuildContext context) {
-    final imageProvider = profileImageUrl == null
-        ? const AssetImage("assets/defaultUser.png")
-        : NetworkImage(profileImageUrl!) as ImageProvider;
-
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0.5,
@@ -148,10 +143,9 @@ class _ProfileAppBarSectionState extends State<ProfileAppBarSection> {
 
             GestureDetector(
               onTap: () => _showProfileDialog(context),
-              child: CircleAvatar(
+              child: ProfileAvatar(
                 radius: 20,
-                backgroundColor: const Color(0xFFFFB885),
-                backgroundImage: imageProvider,
+                profileImageUrl: profileImageUrl ?? '',
               ),
             ),
             const SizedBox(width: 16),
