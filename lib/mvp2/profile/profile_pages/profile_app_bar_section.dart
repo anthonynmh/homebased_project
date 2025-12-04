@@ -71,12 +71,15 @@ class _ProfileAppBarSectionState extends State<ProfileAppBarSection> {
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final file = await picker.pickImage(source: ImageSource.gallery);
-
     if (file == null) return;
 
     final userId = authService.currentUserId!;
 
-    await userProfileService.uploadAvatar(file, userId);
+    try {
+      await userProfileService.uploadAvatar(file, userId);
+    } catch (e) {
+      print('$e');
+    }
 
     final url = await userProfileService.getAvatarUrl(userId);
 
