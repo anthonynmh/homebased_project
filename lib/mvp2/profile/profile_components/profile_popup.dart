@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:homebased_project/mvp2/app_components/app_form_button.dart';
+import 'package:homebased_project/mvp2/profile/profile_components/profile_option_tile.dart';
 
 class ProfilePopup extends StatelessWidget {
   final String username;
@@ -8,7 +10,7 @@ class ProfilePopup extends StatelessWidget {
   final String profileMode;
   final VoidCallback onSwitchMode;
   final VoidCallback onLogout;
-  final VoidCallback onOpenTelegram;
+  final VoidCallback onChangeAvatar;
 
   const ProfilePopup({
     super.key,
@@ -17,14 +19,22 @@ class ProfilePopup extends StatelessWidget {
     required this.profileMode,
     required this.onSwitchMode,
     required this.onLogout,
-    required this.onOpenTelegram,
+    required this.onChangeAvatar,
   });
+
+  Future<void> _openTelegram() async {
+    final url = Uri.parse('https://t.me/food_n_friends');
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      debugPrint('Could not launch $url');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
             radius: 24,
@@ -32,15 +42,29 @@ class ProfilePopup extends StatelessWidget {
             backgroundImage: profileImage,
           ),
           const SizedBox(width: 12),
-          Text(username, style: const TextStyle(fontWeight: FontWeight.bold)),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  username,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'Profile Mode: $profileMode',
+                  style: const TextStyle(fontSize: 14, color: Colors.blueGrey),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
+
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Profile Mode: $profileMode'),
-          const SizedBox(height: 16),
           AppFormButton(
             label: "Switch Profile Mode",
             onPressed: () {
@@ -50,16 +74,19 @@ class ProfilePopup extends StatelessWidget {
             icon: const Icon(Icons.sync),
           ),
           const Divider(height: 32),
-          ListTile(
-            leading: const Icon(Icons.campaign, color: Colors.blue),
-            title: const Text('Stay Updated'),
-            subtitle: const Text('Join our Telegram channel'),
-            onTap: onOpenTelegram,
+          ProfileOptionTile(
+            icon: Icons.campaign,
+            iconColor: Colors.blue,
+            title: 'Stay Updated',
+            subtitle: 'Join our Telegram channel',
+            onTap: _openTelegram,
           ),
           const Divider(),
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('Logout'),
+          ProfileOptionTile(
+            icon: Icons.logout,
+            iconColor: Colors.red,
+            title: 'Logout',
+            subtitle: '',
             onTap: () {
               Navigator.pop(context);
               onLogout();
