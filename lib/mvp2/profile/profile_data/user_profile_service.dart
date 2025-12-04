@@ -2,7 +2,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
+import 'package:homebased_project/mvp2/profile/profile_data/user_profile_model.dart';
 
 /// Expose user profile related operations
 final userProfileService = UserProfileService();
@@ -42,11 +42,11 @@ class UserProfileService {
   Future<UserProfile?> getCurrentUserProfile(String userId) async {
     try {
       final res = await _supabase
-        .from(table)
-        .select()
-        .eq('id', userId)
-        .maybeSingle();
-      
+          .from(table)
+          .select()
+          .eq('id', userId)
+          .maybeSingle();
+
       if (res == null) return null;
       return UserProfile.fromMap(res);
     } catch (e) {
@@ -106,7 +106,7 @@ class UserProfileService {
       data['updated_at'] = DateTime.now().toUtc().toIso8601String();
 
       if (data.isEmpty) return; // nothing to update
-      
+
       final res = await _supabase
           .from(table)
           .update(data)

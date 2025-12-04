@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
-import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
-import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
+import 'package:homebased_project/mvp2/profile/profile_data/user_profile_model.dart';
+import 'package:homebased_project/mvp2/profile/profile_data/user_profile_service.dart';
 import 'package:homebased_project/mvp2/profile/profile_components/profile_popup.dart';
 import 'package:homebased_project/mvp2/profile/profile_components/profile_avatar.dart';
 
