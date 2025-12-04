@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
-import 'package:homebased_project/mvp2/profile/profile_data/user_profile_model.dart';
-import 'package:homebased_project/mvp2/profile/profile_data/user_profile_service.dart';
+import 'package:homebased_project/mvp2/profile/profile_data/profile_model.dart';
+import 'package:homebased_project/mvp2/profile/profile_data/profile_service.dart';
 import 'package:homebased_project/mvp2/profile/profile_components/profile_popup.dart';
 import 'package:homebased_project/mvp2/profile/profile_components/profile_avatar.dart';
 
@@ -40,25 +40,23 @@ class _ProfileAppBarSectionState extends State<ProfileAppBarSection> {
 
   Future<void> _loadProfile() async {
     final userId = authService.currentUserId!;
-    UserProfile? profile = await userProfileService.getCurrentUserProfile(
-      userId,
-    );
+    Profile? profile = await profileService.getCurrentUserProfile(userId);
 
     if (profile == null) {
-      final newProfile = UserProfile(
+      final newProfile = Profile(
         id: userId,
         email: authService.currentUser?.email,
         username: 'Guest',
         avatarUrl: null,
         fullName: null,
       );
-      await userProfileService.insertCurrentUserProfile(newProfile);
+      await profileService.insertCurrentUserProfile(newProfile);
       profile = newProfile;
     }
 
     String? signedUrl;
     if (profile.avatarUrl != null) {
-      signedUrl = await userProfileService.getAvatarUrl(userId);
+      signedUrl = await profileService.getAvatarUrl(userId);
     }
 
     if (!mounted) return;
@@ -77,12 +75,12 @@ class _ProfileAppBarSectionState extends State<ProfileAppBarSection> {
     final userId = authService.currentUserId!;
 
     try {
-      await userProfileService.uploadAvatar(file, userId);
+      await profileService.uploadAvatar(file, userId);
     } catch (e) {
       print('$e');
     }
 
-    final url = await userProfileService.getAvatarUrl(userId);
+    final url = await profileService.getAvatarUrl(userId);
 
     if (!mounted) return;
     setState(() {

@@ -2,7 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:homebased_project/backend/supabase_api/supabase_service.dart';
-import 'package:homebased_project/mvp2/profile/profile_data/user_profile_service.dart';
+import 'package:homebased_project/mvp2/profile/profile_data/profile_service.dart';
 
 /// Expose a single AuthService instance that uses the global supabase
 final authService = AuthService();
@@ -28,9 +28,7 @@ class AuthService {
   }) async {
     try {
       // Check if user already exists
-      final profile = await userProfileService.getCurrentUserProfileByEmail(
-        email,
-      );
+      final profile = await profileService.getCurrentUserProfileByEmail(email);
 
       if (profile != null) {
         throw Exception(
