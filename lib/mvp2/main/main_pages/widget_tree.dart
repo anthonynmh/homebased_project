@@ -10,7 +10,7 @@ import 'package:homebased_project/mvp2/main/main_components/main_user_navbar_wid
 
 // MVP2
 import 'package:homebased_project/mvp2/auth/auth_pages/auth_page.dart';
-import 'package:homebased_project/mvp2/profile/home_app_bar.dart';
+import 'package:homebased_project/mvp2/profile/profile_app_bar_section.dart';
 
 class WidgetTree extends StatefulWidget {
   const WidgetTree({super.key});
@@ -143,7 +143,7 @@ class _WidgetTreeState extends State<WidgetTree> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: HomeAppBar(
+      appBar: ProfileAppBarSection(
         username: username ?? '',
         profileImage: profileImagePath == null
             ? const AssetImage('assets/defaultUser.png')
