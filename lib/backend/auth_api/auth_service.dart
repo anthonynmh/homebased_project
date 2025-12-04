@@ -1,9 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'package:flutter/foundation.dart';
 
 import 'package:homebased_project/backend/supabase_api/supabase_service.dart';
-import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
+import 'package:homebased_project/mvp2/profile/profile_data/user_profile_service.dart';
 
 /// Expose a single AuthService instance that uses the global supabase
 final authService = AuthService();
