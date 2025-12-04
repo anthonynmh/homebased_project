@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:homebased_project/mvp2/app_components/app_form_button.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+import 'package:homebased_project/mvp2/profile/profile_components/profile_popup.dart';
+
+class ProfileAppBarSection extends StatelessWidget
+    implements PreferredSizeWidget {
   final String username;
   final ImageProvider profileImage;
   final String profileMode;
   final VoidCallback onSwitchMode;
   final VoidCallback onLogout;
 
-  const HomeAppBar({
+  const ProfileAppBarSection({
     super.key,
     required this.username,
     required this.profileImage,
@@ -31,57 +33,13 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   void _showProfileDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            CircleAvatar(
-              radius: 24,
-              backgroundColor: const Color(0xFFFFB885),
-              backgroundImage: profileImage,
-            ),
-            const SizedBox(width: 12),
-            Text(username, style: const TextStyle(fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Profile Mode: $profileMode'),
-            const SizedBox(height: 16),
-            AppFormButton(
-              label: "Switch Profile Mode",
-              onPressed: () {
-                onSwitchMode();
-                Navigator.of(context).pop();
-              },
-              icon: const Icon(Icons.sync),
-            ),
-            const Divider(height: 32),
-            ListTile(
-              leading: const Icon(Icons.campaign, color: Colors.blue),
-              title: const Text('Stay Updated'),
-              subtitle: const Text('Join our Telegram channel'),
-              onTap: _openTelegram,
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text('Logout'),
-              onTap: () {
-                Navigator.pop(context);
-                onLogout();
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
+      builder: (context) => ProfilePopup(
+        username: username,
+        profileImage: profileImage,
+        profileMode: profileMode,
+        onSwitchMode: onSwitchMode,
+        onLogout: onLogout,
+        onOpenTelegram: _openTelegram,
       ),
     );
   }
