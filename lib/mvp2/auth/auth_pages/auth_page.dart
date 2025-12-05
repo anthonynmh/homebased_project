@@ -9,8 +9,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:homebased_project/mvp2/main/main_pages/widget_tree.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/mvp2/main/main_components/main_snackbar_widget.dart';
-import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
-import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
+import 'package:homebased_project/mvp2/profile/profile_data/profile_model.dart';
+import 'package:homebased_project/mvp2/profile/profile_data/profile_service.dart';
 import 'package:homebased_project/mvp2/auth/auth_pages/reset_password_page.dart';
 import 'package:homebased_project/mvp2/auth/auth_pages/get_reset_password_email_page.dart';
 
@@ -149,8 +149,8 @@ class _AuthPageState extends State<AuthPage> {
       if (res.user != null) {
         if (!mounted) return;
         context.showSnackBar("Signup successful!");
-        final profile = UserProfile(id: res.user!.id, email: res.user!.email);
-        await userProfileService.insertCurrentUserProfile(profile);
+        final profile = Profile(id: res.user!.id, email: res.user!.email);
+        await profileService.insertCurrentUserProfile(profile);
       }
     } catch (e) {
       if (!mounted) return;

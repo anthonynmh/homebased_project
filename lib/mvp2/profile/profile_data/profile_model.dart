@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-class UserProfile {
+class Profile {
   final String id;
   final String? updatedAt;
   final String? username;
@@ -8,7 +8,7 @@ class UserProfile {
   final String? avatarUrl;
   final String? email;
 
-  UserProfile({
+  Profile({
     required this.id,
     this.updatedAt,
     this.username,
@@ -17,8 +17,8 @@ class UserProfile {
     this.email,
   });
 
-  factory UserProfile.fromMap(Map<String, dynamic> map) {
-    return UserProfile(
+  factory Profile.fromMap(Map<String, dynamic> map) {
+    return Profile(
       id: map['id'] as String,
       updatedAt: map['updated_at'] as String?,
       username: map['username'] as String?,
