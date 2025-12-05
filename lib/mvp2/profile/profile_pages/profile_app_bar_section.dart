@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'package:homebased_project/data/notifiers.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
+import 'package:homebased_project/mvp2/auth/auth_pages/auth_page.dart';
 import 'package:homebased_project/mvp2/profile/profile_data/profile_model.dart';
 import 'package:homebased_project/mvp2/profile/profile_data/profile_service.dart';
 import 'package:homebased_project/mvp2/profile/profile_components/profile_popup.dart';
@@ -9,22 +11,13 @@ import 'package:homebased_project/mvp2/profile/profile_components/profile_avatar
 
 class ProfileAppBarSection extends StatefulWidget
     implements PreferredSizeWidget {
-  final String profileMode;
-  final VoidCallback onSwitchMode;
-  final VoidCallback onLogout;
-
-  const ProfileAppBarSection({
-    super.key,
-    required this.profileMode,
-    required this.onSwitchMode,
-    required this.onLogout,
-  });
-
-  @override
-  State<ProfileAppBarSection> createState() => _ProfileAppBarSectionState();
+  const ProfileAppBarSection({super.key});
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+
+  @override
+  State<ProfileAppBarSection> createState() => _ProfileAppBarSectionState();
 }
 
 class _ProfileAppBarSectionState extends State<ProfileAppBarSection> {
@@ -67,6 +60,20 @@ class _ProfileAppBarSectionState extends State<ProfileAppBarSection> {
     });
   }
 
+  void _switchProfileMode() {
+    userMode.value = (userMode.value == 'Seller') ? 'User' : 'Seller';
+    setUserMode(userMode.value); // keep persistence if you have it
+  }
+
+  void _logout() async {
+    await authService.signOut();
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const AuthPage()),
+    );
+  }
+
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final file = await picker.pickImage(source: ImageSource.gallery);
@@ -74,29 +81,22 @@ class _ProfileAppBarSectionState extends State<ProfileAppBarSection> {
 
     final userId = authService.currentUserId!;
 
-    try {
-      await profileService.uploadAvatar(file, userId);
-    } catch (e) {
-      print('$e');
-    }
-
+    await profileService.uploadAvatar(file, userId);
     final url = await profileService.getAvatarUrl(userId);
 
     if (!mounted) return;
-    setState(() {
-      profileImageUrl = url;
-    });
+    setState(() => profileImageUrl = url);
   }
 
-  void _showProfileDialog(BuildContext context) {
+  void _showProfileDialog(BuildContext context, String mode) {
     showDialog(
       context: context,
-      builder: (context) => ProfilePopup(
+      builder: (_) => ProfilePopup(
         username: username,
-        profileMode: widget.profileMode,
+        profileMode: mode,
         profileImageUrl: profileImageUrl ?? '',
-        onSwitchMode: widget.onSwitchMode,
-        onLogout: widget.onLogout,
+        onSwitchMode: _switchProfileMode,
+        onLogout: _logout,
         onChangeAvatar: _pickImage,
       ),
     );
@@ -104,52 +104,58 @@ class _ProfileAppBarSectionState extends State<ProfileAppBarSection> {
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0.5,
-      title: const Text(
-        'Food \'n Friends',
-        style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-      ),
-      actions: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFB885).withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.person, size: 16, color: Colors.black54),
-                  const SizedBox(width: 4),
-                  Text(
-                    widget.profileMode,
-                    style: const TextStyle(
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w500,
-                    ),
+    return ValueListenableBuilder<String>(
+      valueListenable: userMode,
+      builder: (_, mode, _) {
+        return AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0.5,
+          title: const Text(
+            'Food \'n Friends',
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          ),
+          actions: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
                   ),
-                ],
-              ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFB885).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.person, size: 16, color: Colors.black54),
+                      const SizedBox(width: 4),
+                      Text(
+                        mode,
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(height: 24, width: 1, color: Colors.grey.shade400),
+                const SizedBox(width: 12),
+                GestureDetector(
+                  onTap: () => _showProfileDialog(context, mode),
+                  child: ProfileAvatar(
+                    radius: 20,
+                    profileImageUrl: profileImageUrl ?? '',
+                  ),
+                ),
+                const SizedBox(width: 16),
+              ],
             ),
-
-            const SizedBox(width: 12),
-            Container(height: 24, width: 1, color: Colors.grey.shade400),
-            const SizedBox(width: 12),
-
-            GestureDetector(
-              onTap: () => _showProfileDialog(context),
-              child: ProfileAvatar(
-                radius: 20,
-                profileImageUrl: profileImageUrl ?? '',
-              ),
-            ),
-            const SizedBox(width: 16),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 }
