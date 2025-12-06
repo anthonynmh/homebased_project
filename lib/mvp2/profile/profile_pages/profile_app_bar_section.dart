@@ -8,6 +8,7 @@ import 'package:homebased_project/mvp2/profile/profile_data/profile_model.dart';
 import 'package:homebased_project/mvp2/profile/profile_data/profile_service.dart';
 import 'package:homebased_project/mvp2/profile/profile_components/profile_popup.dart';
 import 'package:homebased_project/mvp2/profile/profile_components/profile_avatar.dart';
+import 'package:homebased_project/mvp2/profile/profile_components/profile_mode_container.dart';
 
 class ProfileAppBarSection extends StatefulWidget
     implements PreferredSizeWidget {
@@ -62,7 +63,7 @@ class _ProfileAppBarSectionState extends State<ProfileAppBarSection> {
 
   void _switchProfileMode() {
     userMode.value = (userMode.value == 'Seller') ? 'User' : 'Seller';
-    setUserMode(userMode.value); // keep persistence if you have it
+    setUserMode(userMode.value);
   }
 
   void _logout() async {
@@ -117,29 +118,7 @@ class _ProfileAppBarSectionState extends State<ProfileAppBarSection> {
           actions: [
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFB885).withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.person, size: 16, color: Colors.black54),
-                      const SizedBox(width: 4),
-                      Text(
-                        mode,
-                        style: const TextStyle(
-                          color: Colors.black87,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                ProfileModeContainer(mode: mode),
                 const SizedBox(width: 12),
                 Container(height: 24, width: 1, color: Colors.grey.shade400),
                 const SizedBox(width: 12),
