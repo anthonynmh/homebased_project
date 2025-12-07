@@ -1,62 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:homebased_project/mvp2/app_components/app_action_menu.dart';
 import 'package:homebased_project/mvp2/app_components/app_card.dart';
+import 'package:homebased_project/mvp2/app_components/app_dialog.dart';
+import 'package:homebased_project/mvp2/app_components/app_form_button.dart';
 import 'package:homebased_project/mvp2/app_components/app_text_field.dart';
-import 'package:homebased_project/mvp2/menu/menu_data/menu_item_model.dart';
 
-class MenuItemForm extends StatefulWidget {
-  final MenuItem menuItem;
-  final VoidCallback onRemove;
-  final ValueChanged<MenuItem> onChanged;
+class MenuItemFormComponent extends StatelessWidget {
+  final bool isEditing;
 
-  const MenuItemForm({
+  final TextEditingController nameController;
+  final TextEditingController descController;
+  final TextEditingController quantityController;
+  final TextEditingController priceController;
+
+  final VoidCallback? onSave;
+  final VoidCallback? onCancel;
+  final VoidCallback? onDelete;
+  final VoidCallback? onEditToggle;
+
+  const MenuItemFormComponent({
     super.key,
-    required this.menuItem,
-    required this.onRemove,
-    required this.onChanged,
+    this.isEditing = false,
+    required this.nameController,
+    required this.descController,
+    required this.quantityController,
+    required this.priceController,
+    this.onSave,
+    this.onCancel,
+    this.onDelete,
+    this.onEditToggle,
   });
-
-  @override
-  State<MenuItemForm> createState() => _MenuItemFormState();
-}
-
-class _MenuItemFormState extends State<MenuItemForm> {
-  late final TextEditingController nameController;
-  late final TextEditingController descController;
-  late final TextEditingController quantityController;
-  late final TextEditingController priceController;
-
-  @override
-  void initState() {
-    super.initState();
-    nameController = TextEditingController(text: widget.menuItem.name);
-    descController = TextEditingController(text: widget.menuItem.description);
-    quantityController = TextEditingController(
-      text: widget.menuItem.quantity.toString(),
-    );
-    priceController = TextEditingController(
-      text: widget.menuItem.price.toStringAsFixed(2),
-    );
-  }
-
-  @override
-  void dispose() {
-    nameController.dispose();
-    descController.dispose();
-    quantityController.dispose();
-    priceController.dispose();
-    super.dispose();
-  }
-
-  void _submitChanges() {
-    final updatedItem = MenuItem(
-      name: nameController.text,
-      description: descController.text,
-      quantity: int.tryParse(quantityController.text) ?? 0,
-      price: double.tryParse(priceController.text) ?? 0.0,
-    );
-
-    widget.onChanged(updatedItem);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,36 +41,65 @@ class _MenuItemFormState extends State<MenuItemForm> {
             Row(
               children: [
                 const Text(
-                  'Menu Item',
+                  "Item information",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 const Spacer(),
-                IconButton(
-                  onPressed: widget.onRemove,
-                  icon: const Icon(Icons.close, color: Colors.red),
+                AppActionMenu(
+                  items: [
+                    AppActionMenuItem(
+                      value: isEditing ? 'cancel' : 'edit',
+                      label: isEditing ? 'Cancel' : 'Edit',
+                      enabled: !isEditing,
+                    ),
+                    AppActionMenuItem(value: 'delete', label: 'Delete Item'),
+                  ],
+                  onSelected: (value) async {
+                    if (value == 'edit') {
+                      onEditToggle?.call();
+                    }
+                    if (value == 'cancel') {
+                      onCancel?.call();
+                    }
+                    if (value == 'delete') {
+                      final confirmed = await showConfirmDialog(
+                        context: context,
+                        title: "Confirm Delete",
+                        message:
+                            "Are you sure you want to delete this item from your menu?",
+                        cancelText: "Cancel",
+                        confirmText: "Delete",
+                      );
+
+                      if (confirmed) {
+                        onDelete?.call();
+                      }
+                    }
+                  },
                 ),
               ],
             ),
             AppTextField(
               label: 'Name',
               controller: nameController,
-              onChanged: (_) => _submitChanges(),
+              readOnly: !isEditing,
             ),
             AppTextField(
               label: 'Description',
               controller: descController,
-              onChanged: (_) => _submitChanges(),
+              readOnly: !isEditing,
             ),
             AppTextField(
               label: 'Quantity',
               controller: quantityController,
-              onChanged: (_) => _submitChanges(),
+              readOnly: !isEditing,
             ),
             AppTextField(
               label: 'Price',
               controller: priceController,
-              onChanged: (_) => _submitChanges(),
+              readOnly: !isEditing,
             ),
+            if (isEditing) AppFormButton(label: 'Save', onPressed: onSave),
           ],
         ),
       ),
