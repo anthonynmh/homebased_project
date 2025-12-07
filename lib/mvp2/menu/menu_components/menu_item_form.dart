@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:homebased_project/mvp2/app_components/app_action_menu.dart';
 import 'package:homebased_project/mvp2/app_components/app_card.dart';
-import 'package:homebased_project/mvp2/app_components/app_dialog.dart';
-import 'package:homebased_project/mvp2/app_components/app_form_button.dart';
 import 'package:homebased_project/mvp2/app_components/app_text_field.dart';
+import 'package:homebased_project/mvp2/app_components/app_form_button.dart';
+import 'package:homebased_project/mvp2/app_components/app_action_menu.dart';
+import 'package:homebased_project/mvp2/app_components/app_dialog.dart';
 
 class MenuItemFormComponent extends StatelessWidget {
   final bool isEditing;
-
+  final bool isNewItem;
   final TextEditingController nameController;
   final TextEditingController descController;
   final TextEditingController quantityController;
   final TextEditingController priceController;
-
   final VoidCallback? onSave;
   final VoidCallback? onCancel;
   final VoidCallback? onDelete;
@@ -20,7 +19,8 @@ class MenuItemFormComponent extends StatelessWidget {
 
   const MenuItemFormComponent({
     super.key,
-    this.isEditing = false,
+    required this.isEditing,
+    required this.isNewItem,
     required this.nameController,
     required this.descController,
     required this.quantityController,
@@ -52,15 +52,14 @@ class MenuItemFormComponent extends StatelessWidget {
                       label: isEditing ? 'Cancel' : 'Edit',
                       enabled: !isEditing,
                     ),
-                    AppActionMenuItem(value: 'delete', label: 'Delete Item'),
+                    const AppActionMenuItem(
+                      value: 'delete',
+                      label: 'Delete Item',
+                    ),
                   ],
                   onSelected: (value) async {
-                    if (value == 'edit') {
-                      onEditToggle?.call();
-                    }
-                    if (value == 'cancel') {
-                      onCancel?.call();
-                    }
+                    if (value == 'edit') onEditToggle?.call();
+                    if (value == 'cancel') onCancel?.call();
                     if (value == 'delete') {
                       final confirmed = await showConfirmDialog(
                         context: context,
@@ -70,10 +69,7 @@ class MenuItemFormComponent extends StatelessWidget {
                         cancelText: "Cancel",
                         confirmText: "Delete",
                       );
-
-                      if (confirmed) {
-                        onDelete?.call();
-                      }
+                      if (confirmed) onDelete?.call();
                     }
                   },
                 ),
@@ -82,7 +78,7 @@ class MenuItemFormComponent extends StatelessWidget {
             AppTextField(
               label: 'Name',
               controller: nameController,
-              readOnly: !isEditing,
+              readOnly: !(isEditing && isNewItem),
             ),
             AppTextField(
               label: 'Description',

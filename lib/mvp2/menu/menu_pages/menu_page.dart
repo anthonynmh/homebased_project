@@ -28,20 +28,21 @@ class _MenuPageState extends State<MenuPage> {
     if (userId == null) return;
 
     final items = await menuService.getUserMenuItems(userId);
-
     setState(() {
       _menuItems = items;
+      _isAddingNew = false; // reset when loaded
     });
   }
 
   void _addNewForm() {
-    _isAddingNew = true;
+    if (_isAddingNew) return; // block multiple new forms
+
     final userId = authService.currentUserId;
     if (userId == null) return;
+
     setState(() {
       _menuItems.add(
         MenuItem(
-          id: "", // temporary ID
           userId: userId,
           createdAt: DateTime.now().toIso8601String(),
           updatedAt: DateTime.now().toIso8601String(),
@@ -51,37 +52,34 @@ class _MenuPageState extends State<MenuPage> {
           price: 0.0,
         ),
       );
+      _isAddingNew = true;
     });
   }
 
-  void _handleDelete(String id) {
-    debugPrint("Deleting item with id: $id");
-    setState(() {
-      if (id.isEmpty) {
-        // if id is empty, it is a new unsaved item
-        _menuItems.removeLast();
-      } else {
-        //call delete api here
-        _menuItems.removeWhere((item) => item.id == id);
-      }
-      _isAddingNew = false;
-    });
-  }
+  void _handleDelete(MenuItem item, bool isNewItem) {
+    final userId = authService.currentUserId;
+    if (userId == null) return;
 
-  void _handleSave(MenuItem item) {
-    debugPrint("Saving item: ${item.toJson()}");
-    if (item.id.isEmpty) {
-      // Call create API
-      menuService.insertMenuItem(item).then((_) {
-        _loadMenuItems(); //reloads the page after saving
+    if (isNewItem) {
+      // just remove from local list
+      setState(() {
+        _menuItems.remove(item);
+        _isAddingNew = false;
       });
     } else {
-      // Call update API
-      menuService.updateMenuItem(item).then((_) {
-        _loadMenuItems(); //reloads the page after saving
-      });
+      // call delete API
+      menuService
+          .deleteMenuItem(userId, item.name)
+          .then((_) => _loadMenuItems());
     }
-    //reloads the page after saving
+  }
+
+  void _handleSave(MenuItem item, bool isNewItem) {
+    if (isNewItem) {
+      menuService.insertMenuItem(item).then((_) => _loadMenuItems());
+    } else {
+      menuService.updateMenuItem(item).then((_) => _loadMenuItems());
+    }
     setState(() {
       _isAddingNew = false;
     });
@@ -97,18 +95,18 @@ class _MenuPageState extends State<MenuPage> {
         children: [
           const SizedBox(height: 16),
 
-          // Render existing menu items
           for (final item in _menuItems)
             MenuItemForm(
-              key: ValueKey(item.id),
+              key: ValueKey(_menuItems.indexOf(item)),
               menuItem: item,
+              isNewItem: _isAddingNew && item.name.isEmpty,
               onSave: _handleSave,
-              onDelete: () => _handleDelete(item.id),
+              onDelete: _handleDelete,
+              disableActions: _isAddingNew && item.name.isNotEmpty,
             ),
 
           const SizedBox(height: 12),
 
-          // Add new item button only if user adding is not in progress
           if (!_isAddingNew)
             AppFormButton(
               label: 'Add Menu Item',

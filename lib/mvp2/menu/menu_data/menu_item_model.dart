@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 class MenuItem {
-  String id;
   String userId;
   String name;
   String createdAt;
@@ -11,7 +10,6 @@ class MenuItem {
   double? price;
 
   MenuItem({
-    required this.id,
     required this.userId,
     required this.name,
     required this.createdAt,
@@ -22,21 +20,21 @@ class MenuItem {
   });
 
   Map<String, dynamic> toMap() {
-    return {
-      'id': id,
+    final map = {
       'user_id': userId,
       'created_at': createdAt,
       'updated_at': updatedAt,
-      'name': name,
-      'description': description,
-      'quantity': quantity,
-      'price': price,
+      'item_name': name,
+      'item_description': description,
+      'item_quantity': quantity,
+      'item_price': price,
     };
+
+    return map;
   }
 
   factory MenuItem.fromMap(Map<String, dynamic> map) {
     return MenuItem(
-      id: map['id'] as String,
       userId: map['user_id'] as String,
       createdAt: map['created_at'] as String,
       updatedAt: map['updated_at'] as String,
@@ -53,7 +51,6 @@ class MenuItem {
       MenuItem.fromMap(json.decode(source));
 
   MenuItem copyWith({
-    required String id,
     required String userId,
     required String createdAt,
     required String updatedAt,
@@ -63,7 +60,6 @@ class MenuItem {
     double? price,
   }) {
     return MenuItem(
-      id: this.id,
       userId: this.userId,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
