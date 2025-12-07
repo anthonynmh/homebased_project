@@ -33,18 +33,26 @@ class _StorefrontState extends State<StorefrontPage> {
   final _locationController = TextEditingController(); // postal code
 
   Map<String, dynamic>? _weeklyTemplate = {};
-  Map<String, dynamic>? _exceptions = {};
 
-  final Map<String, dynamic> defaultWeeklyTemplate = {
-    "mon": {"open": true, "start": "09:00", "end": "18:00"},
-    "tue": {"open": true, "start": "09:00", "end": "18:00"},
-    "wed": {"open": true, "start": "09:00", "end": "18:00"},
-    "thu": {"open": true, "start": "09:00", "end": "18:00"},
-    "fri": {"open": true, "start": "09:00", "end": "18:00"},
-    "sat": {"open": false},
-    "sun": {"open": false},
+  // final Map<String, dynamic> defaultWeeklyTemplate = {
+  //   "mon": {"open": true, "start": "09:00", "end": "18:00"},
+  //   "tue": {"open": true, "start": "09:00", "end": "18:00"},
+  //   "wed": {"open": true, "start": "09:00", "end": "18:00"},
+  //   "thu": {"open": true, "start": "09:00", "end": "18:00"},
+  //   "fri": {"open": true, "start": "09:00", "end": "18:00"},
+  //   "sat": {"open": false},
+  //   "sun": {"open": false},
+  // };
+
+  final Map<String, bool> _monthlyScheduleTemplate = {
+    // Example preselected open days for quick testing:
+    "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-05":
+        true,
+    "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-10":
+        true,
+    "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-18":
+        true,
   };
-  final Map<String, dynamic> defaultExceptions = {};
 
   @override
   void initState() {
@@ -227,22 +235,22 @@ class _StorefrontState extends State<StorefrontPage> {
 
   // --- functions for schedule card ---
 
-  Future<void> loadSchedule() async {
-    final userId = authService.currentUserId;
-    if (userId == null) return;
+  // Future<void> loadSchedule() async {
+  //   final userId = authService.currentUserId;
+  //   if (userId == null) return;
 
-    // final sched = await storefrontService.getStorefrontSchedule(userId);
-    // if (sched == null) return;
+  //   // final sched = await storefrontService.getStorefrontSchedule(userId);
+  //   // if (sched == null) return;
 
-    // setState(() {
-    //   _weeklyTemplate = sched.weeklyTemplate;
-    //   _exceptions = sched.exceptions;
-    // });
+  //   // setState(() {
+  //   //   _weeklyTemplate = sched.weeklyTemplate;
+  //   //   _exceptions = sched.exceptions;
+  //   // });
 
-    // TEMP: Show UI with default schedule
-    _weeklyTemplate = defaultWeeklyTemplate;
-    _exceptions = defaultExceptions;
-  }
+  //   // TEMP: Show UI with default schedule
+  //   _weeklyTemplate = defaultWeeklyTemplate;
+  //   _exceptions = defaultExceptions;
+  // }
 
   Future<void> saveWeeklyTemplate(Map<String, dynamic> template) async {
     final userId = authService.currentUserId;
@@ -257,31 +265,18 @@ class _StorefrontState extends State<StorefrontPage> {
     widget.onBroadcast?.call("Weekly template updated.");
   }
 
-  Future<void> saveException(String date, Map<String, dynamic> data) async {
-    final userId = authService.currentUserId;
-    if (userId == null) return;
+  Future<void> saveOpeningDays(Map<String, dynamic> openDays) async {
+    print("OPEN DAYS SAVED:");
+    print(openDays);
 
-    // await storefrontService.updateScheduleException(userId, date, data);
-
-    setState(() {
-      _exceptions ??= {};
-      _exceptions![date] = data;
-    });
-
-    widget.onBroadcast?.call("Exception updated.");
+    context.showSnackBar("Open days saved.");
   }
 
-  Future<void> deleteException(String date) async {
-    final userId = authService.currentUserId;
-    if (userId == null) return;
+  Future<void> saveDayHours(Map<String, dynamic> dayHours) async {
+    print("DAY HOURS SAVED:");
+    print(dayHours);
 
-    // await storefrontService.deleteScheduleException(userId, date);
-
-    setState(() {
-      _exceptions?.remove(date);
-    });
-
-    widget.onBroadcast?.call("Exception removed.");
+    context.showSnackBar("Day hours saved.");
   }
 
   @override
@@ -319,40 +314,16 @@ class _StorefrontState extends State<StorefrontPage> {
               onDelete: handleDelete,
               onEditToggle: () => setState(() => _isEditing = true),
             ),
-            if (_weeklyTemplate != null && _exceptions != null) ...[
+            if (_weeklyTemplate != null) ...[
               const SizedBox(height: 20),
 
               MonthlyScheduleCard(
                 year: DateTime.now().year,
                 month: DateTime.now().month,
-
-                initialOpenDays: {
-                  // Example preselected open days for quick testing:
-                  "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-05":
-                      true,
-                  "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-10":
-                      true,
-                  "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-18":
-                      true,
-                },
-
-                initialDayHours: {
-                  // leave empty for prototype; will be filled from UI
-                },
-
-                onSaveOpenDays: (openDays) {
-                  print("OPEN DAYS SAVED:");
-                  print(openDays);
-
-                  context.showSnackBar("Open days saved.");
-                },
-
-                onSaveDayHours: (dayHours) {
-                  print("DAY HOURS SAVED:");
-                  print(dayHours);
-
-                  context.showSnackBar("Day hours saved.");
-                },
+                initialOpenDays: _monthlyScheduleTemplate,
+                initialDayHours: {},
+                onSaveOpenDays: saveOpeningDays,
+                onSaveDayHours: saveDayHours,
               ),
             ],
           ],
