@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -28,7 +29,9 @@ class MenuService {
 
   Future<void> insertMenuItem(MenuItem item) async {
     try {
-      final response = await _supabase.from(table).insert(item.toMap());
+      Map<String, dynamic> payload = item.toMap();
+      debugPrint('Inserting menu item: $payload');
+      final response = await _supabase.from(table).insert(payload);
       print("Insert response: $response");
     } catch (e) {
       print('Insert menu item error: $e');
@@ -52,10 +55,27 @@ class MenuService {
 
   Future<void> updateMenuItem(MenuItem item) {
     try {
-      return _supabase.from(table).update(item.toMap()).eq('id', item.id);
+      return _supabase
+          .from(table)
+          .update(item.toMap())
+          .eq('user_id', item.userId)
+          .eq('item_name', item.name);
     } catch (e) {
       print('Update menu item error: $e');
       throw Exception('Failed to update menu item');
+    }
+  }
+
+  Future<void> deleteMenuItem(String userId, String name) {
+    try {
+      return _supabase
+          .from(table)
+          .delete()
+          .eq('user_id', userId)
+          .eq('item_name', name);
+    } catch (e) {
+      print('Delete menu item error: $e');
+      throw Exception('Failed to delete menu item');
     }
   }
 }
