@@ -15,27 +15,6 @@ class _FeedPageState extends State<ActivityFeedPage> {
   bool _isDialogOpen = false;
   int? numLikes;
 
-  final List<Map<String, dynamic>> mockPosts = [
-    {
-      "id": "1",
-      "author": {
-        "name": "Sarah Johnson",
-        "username": "sarahj",
-        "avatar":
-            "https://images.unsplash.com/photo-1592849902530-cbabb686381d",
-        "businessName": "Creative Studio Co.",
-      },
-      "content":
-          "Just launched our new product today! 🚀 So excited to share this with everyone. What do you think?",
-      "image": "https://images.unsplash.com/photo-1524758631624-e2822e304c36",
-      "timestamp": "2h",
-      "initialLikes": 142,
-      "initialReplies": 23,
-      "isFollowing": true,
-    },
-    // Add remaining posts...
-  ];
-
   final List<Post> posts = [
     Post(
       id: "1", 
@@ -86,8 +65,8 @@ class _FeedPageState extends State<ActivityFeedPage> {
     });
   }
 
-  final List<PostCardSub> postCards = [
-    PostCardSub(
+  final List<PostCard> postCards = [
+    PostCard(
       post: Post(
         id: "1", 
         author: Author.fromMap({
@@ -164,8 +143,8 @@ class _FeedPageState extends State<ActivityFeedPage> {
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(12),
-        itemCount: mockPosts.length,
-        itemBuilder: (context, index) => PostCardSub(
+        itemCount: posts.length,
+        itemBuilder: (context, index) => PostCard(
           post: posts[index], 
           isLiked: likes[index]['isLiked'], 
           toggleLike: () => toggleLike(index), 
