@@ -82,4 +82,26 @@ class Post {
   String toJson() => json.encode(toMap());
 
   factory Post.fromJson(String source) => Post.fromMap(json.decode(source));
+
+  Post copyWith({
+    String? id,
+    Author? author,
+    String? content,
+    String? image,
+    String? timestamp,
+    int? initialLikes,
+    int? initialReplies,
+    bool? isFollowing,
+  }) {
+    return Post(
+      id: id ?? this.id,
+      author: author ?? this.author,
+      content: content ?? this.content,
+      image: image ?? this.image,
+      timestamp: timestamp ?? this.timestamp,
+      initialLikes: initialLikes ?? this.initialLikes,
+      initialReplies: initialReplies ?? this.initialReplies,
+      isFollowing: isFollowing ?? this.isFollowing,
+    );
+  }
 }
