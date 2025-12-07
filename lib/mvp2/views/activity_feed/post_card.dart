@@ -1,58 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:homebased_project/mvp2/activity_feed/activity_feed_data/activity_feed_post_model.dart';
+import 'package:homebased_project/mvp2/app_components/app_card.dart';
 
-class PostCard extends StatefulWidget {
-  final Map<String, dynamic> post;
 
-  const PostCard({Key? key, required this.post}) : super(key: key);
+class PostCard extends StatelessWidget {
+  final Post post;
+  final bool isLiked;
 
-  @override
-  State<PostCard> createState() => _PostCardState();
-}
+  final VoidCallback? toggleLike;
+  final VoidCallback? incrementReply;
 
-class _PostCardState extends State<PostCard> {
-  late int likes;
-  late int replies;
-  bool isLiked = false;
-
-  @override
-  void initState() {
-    super.initState();
-    likes = widget.post['initialLikes'];
-    replies = widget.post['initialReplies'];
-  }
-
-  void toggleLike() {
-    setState(() {
-      isLiked = !isLiked;
-      likes += isLiked ? 1 : -1;
-    });
-  }
-
-  void incrementReply() {
-    setState(() {
-      replies++;
-    });
-  }
+  const PostCard({
+    super.key,
+    required this.post,
+    this.isLiked = false,
+    this.toggleLike,
+    this.incrementReply
+  });
 
   @override
   Widget build(BuildContext context) {
-    final author = widget.post['author'];
-    final image = widget.post['image'];
-    final content = widget.post['content'];
+    final author = post.author;
+    final likes = post.initialLikes;
+    final replies = post.initialReplies;
 
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
+    return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (image != null)
+          if (post.image != null)
             ClipRRect(
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(20),
               ),
-              child: Image.network(image, fit: BoxFit.cover),
+              child: Image.network(post.image!, fit: BoxFit.cover),
             ),
           Padding(
             padding: const EdgeInsets.all(12),
@@ -60,7 +41,7 @@ class _PostCardState extends State<PostCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CircleAvatar(
-                  backgroundImage: NetworkImage(author['avatar']),
+                  backgroundImage: NetworkImage(author.avatar),
                   radius: 20,
                 ),
                 const SizedBox(width: 8),
@@ -69,10 +50,10 @@ class _PostCardState extends State<PostCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        author['name'],
+                        author.name,
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
-                      if (author['businessName'] != null)
+                      if (author.businessName != null)
                         Container(
                           margin: const EdgeInsets.only(top: 2),
                           padding: const EdgeInsets.symmetric(
@@ -84,7 +65,7 @@ class _PostCardState extends State<PostCard> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            author['businessName'],
+                            author.businessName!,
                             style: const TextStyle(
                               color: Color(0xFFD97A3D),
                               fontSize: 11,
@@ -92,7 +73,7 @@ class _PostCardState extends State<PostCard> {
                           ),
                         ),
                       Text(
-                        widget.post['timestamp'],
+                        post.timestamp,
                         style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 11,
@@ -107,7 +88,7 @@ class _PostCardState extends State<PostCard> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(
-              content,
+              post.content,
               style: const TextStyle(fontSize: 14, color: Colors.black87),
             ),
           ),
