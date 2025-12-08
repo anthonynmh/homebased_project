@@ -26,6 +26,7 @@ class _FeedPageState extends State<ActivityFeedPage> {
         "businessName": "Creative Studio Co.",
       }), 
       content: "Just launched our new product today! 🚀 So excited to share this with everyone. What do you think?", 
+      image: "https://images.unsplash.com/photo-1524758631624-e2822e304c36",
       timestamp: "2h", 
       initialLikes: 142, 
       initialReplies: 23, 
@@ -64,26 +65,6 @@ class _FeedPageState extends State<ActivityFeedPage> {
       posts[index] = updatedPost;
     });
   }
-
-  final List<PostCard> postCards = [
-    PostCard(
-      post: Post(
-        id: "1", 
-        author: Author.fromMap({
-          "name": "Sarah Johnson",
-          "username": "sarahj",
-          "avatar":
-              "https://images.unsplash.com/photo-1592849902530-cbabb686381d",
-          "businessName": "Creative Studio Co.",
-        }), 
-        content: "Just launched our new product today! 🚀 So excited to share this with everyone. What do you think?", 
-        timestamp: "2h", 
-        initialLikes: 142, 
-        initialReplies: 23, 
-        isFollowing: true
-      )
-    )
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -144,7 +125,7 @@ class _FeedPageState extends State<ActivityFeedPage> {
       body: ListView.builder(
         padding: const EdgeInsets.all(12),
         itemCount: posts.length,
-        itemBuilder: (context, index) => PostCard(
+        itemBuilder: (context, index) => PostCardSub(
           post: posts[index], 
           isLiked: likes[index]['isLiked'], 
           toggleLike: () => toggleLike(index), 
