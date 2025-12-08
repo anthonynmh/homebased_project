@@ -12,6 +12,7 @@ class ProfilePopup extends StatelessWidget {
   final VoidCallback onSwitchMode;
   final VoidCallback onLogout;
   final VoidCallback onChangeAvatar;
+  final VoidCallback openTelegram;
 
   const ProfilePopup({
     super.key,
@@ -21,14 +22,8 @@ class ProfilePopup extends StatelessWidget {
     required this.onSwitchMode,
     required this.onLogout,
     required this.onChangeAvatar,
+    required this.openTelegram,
   });
-
-  Future<void> _openTelegram() async {
-    final url = Uri.parse('https://t.me/food_n_friends');
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      debugPrint('Could not launch $url');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +107,7 @@ class ProfilePopup extends StatelessWidget {
             iconColor: Colors.blue,
             title: 'Stay Updated',
             subtitle: 'Join our Telegram channel',
-            onTap: _openTelegram,
+            onTap: openTelegram,
           ),
           const Divider(),
           ProfileOptionTile(
