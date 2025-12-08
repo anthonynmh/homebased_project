@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:homebased_project/data/notifiers.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
@@ -89,6 +90,13 @@ class _ProfileAppBarSectionState extends State<ProfileAppBarSection> {
     setState(() => profileImageUrl = url);
   }
 
+  Future<void> _openTelegram() async {
+    final url = Uri.parse('https://t.me/food_n_friends');
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      debugPrint('Could not launch $url');
+    }
+  }
+
   void _showProfileDialog(BuildContext context, String mode) {
     showDialog(
       context: context,
@@ -99,6 +107,7 @@ class _ProfileAppBarSectionState extends State<ProfileAppBarSection> {
         onSwitchMode: _switchProfileMode,
         onLogout: _logout,
         onChangeAvatar: _pickImage,
+        openTelegram: _openTelegram,
       ),
     );
   }
