@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:homebased_project/mvp2/activity_feed/activity_feed_data/profile_data.dart' as profile_data;
 import 'package:image_picker/image_picker.dart';
 
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
@@ -63,6 +64,11 @@ class _WidgetTreeState extends State<WidgetTree> {
       debugPrint(
         "   Username: ${userProfile.username}, Avatar: ${userProfile.avatarUrl}",
       );
+      profile_data.username = userProfile.username ?? 'Guest';
+      profile_data.fullName = (userProfile.fullName != null && userProfile.fullName!.isNotEmpty)
+          ? userProfile.fullName
+          : null;
+      profile_data.profileImagePath = userProfile.avatarUrl;
     }
 
     // 🔑 Get signed URL
