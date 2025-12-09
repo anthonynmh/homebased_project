@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'post_card.dart';
-import 'create_post_dialog.dart';
+import 'package:homebased_project/mvp2/activity_feed/activity_feed_data/activity_feed_post_model.dart';
+import 'package:homebased_project/mvp2/app_components/app_page.dart';
+import '../activity_feed_components/activity_feed_post_card.dart';
+import '../activity_feed_components/activity_feed_create_post_dialog.dart';
 
 class ActivityFeedPage extends StatefulWidget {
   const ActivityFeedPage({Key? key}) : super(key: key);
@@ -11,27 +13,58 @@ class ActivityFeedPage extends StatefulWidget {
 
 class _FeedPageState extends State<ActivityFeedPage> {
   bool _isDialogOpen = false;
+  int? numLikes;
 
-  final List<Map<String, dynamic>> mockPosts = [
-    {
-      "id": "1",
-      "author": {
+  final List<Post> posts = [
+    Post(
+      id: "1", 
+      author: Author.fromMap({
         "name": "Sarah Johnson",
         "username": "sarahj",
         "avatar":
             "https://images.unsplash.com/photo-1592849902530-cbabb686381d",
         "businessName": "Creative Studio Co.",
-      },
-      "content":
-          "Just launched our new product today! 🚀 So excited to share this with everyone. What do you think?",
-      "image": "https://images.unsplash.com/photo-1524758631624-e2822e304c36",
-      "timestamp": "2h",
-      "initialLikes": 142,
-      "initialReplies": 23,
-      "isFollowing": true,
-    },
-    // Add remaining posts...
+      }), 
+      content: "Just launched our new product today! 🚀 So excited to share this with everyone. What do you think?", 
+      image: "https://images.unsplash.com/photo-1524758631624-e2822e304c36",
+      timestamp: "2h", 
+      initialLikes: 142, 
+      initialReplies: 23, 
+      isFollowing: true
+    )
   ];
+
+  final List<Map<String, dynamic>> likes = [
+    {
+      "id": "1", 
+      "isLiked": false
+    }
+  ];
+
+  // --- functions for post card ---
+  void toggleLike(int index) {
+    Post oldPost = posts[index];
+    bool wasLiked = likes[index]['isLiked'];
+    Post updatedPost = oldPost.copyWith(
+      initialLikes: wasLiked ? 
+        oldPost.initialLikes - 1 : 
+        oldPost.initialLikes + 1,
+    );
+    setState(() {
+      posts[index] = updatedPost;
+      likes[index]['isLiked'] = !wasLiked;
+    });
+  }
+
+  void incrementReply(int index) {
+    Post oldPost = posts[index];
+    Post updatedPost = oldPost.copyWith(
+      initialReplies: oldPost.initialReplies + 1,
+    );
+    setState(() {
+      posts[index] = updatedPost;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,8 +124,14 @@ class _FeedPageState extends State<ActivityFeedPage> {
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(12),
-        itemCount: mockPosts.length,
-        itemBuilder: (context, index) => PostCard(post: mockPosts[index]),
+        itemCount: posts.length,
+        itemBuilder: (context, index) => PostCard(
+          post: posts[index], 
+          isLiked: likes[index]['isLiked'], 
+          toggleLike: () => toggleLike(index), 
+          incrementReply: () => incrementReply(index),
+        ),
+        // itemBuilder: (context, index) => PostCard(post: mockPosts[index]),
       ),
       floatingActionButton: _isDialogOpen
           ? null
@@ -104,6 +143,11 @@ class _FeedPageState extends State<ActivityFeedPage> {
       bottomSheet: _isDialogOpen
           ? CreatePostDialog(
               onClose: () => setState(() => _isDialogOpen = false),
+              onPost: (newPost) => setState(() {
+                posts.insert(0, newPost);
+                likes.insert(0, {"id": newPost.id, "isLiked": false});
+                _isDialogOpen = false;
+              }),
             )
           : null,
     );

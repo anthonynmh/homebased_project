@@ -60,3 +60,6 @@ integration_test/login_details.dart
 
 # chromedriver
 chromedriver/
+
+# Ignore deployment workaround
+local_deployment/deploy_local_workaround.sh
