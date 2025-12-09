@@ -7,7 +7,7 @@ import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/mvp2/auth/auth_pages/auth_page.dart';
 import 'package:homebased_project/mvp2/profile/profile_data/profile_model.dart';
 import 'package:homebased_project/mvp2/profile/profile_data/profile_service.dart';
-import 'package:homebased_project/mvp2/profile/profile_components/profile_popup.dart';
+import 'package:homebased_project/mvp2/profile/profile_pages/profile_popup.dart';
 import 'package:homebased_project/mvp2/profile/profile_components/profile_avatar.dart';
 import 'package:homebased_project/mvp2/profile/profile_components/profile_mode_container.dart';
 
@@ -97,6 +97,17 @@ class _ProfileAppBarSectionState extends State<ProfileAppBarSection> {
     }
   }
 
+  Future<void> _onUpdateUsername(String newName) async {
+    final userId = authService.currentUserId!;
+    await profileService.updateCurrentUserProfile(
+      userId: userId,
+      username: newName,
+    );
+
+    if (!mounted) return;
+    setState(() => username = newName);
+  }
+
   void _showProfileDialog(BuildContext context, String mode) {
     showDialog(
       context: context,
@@ -108,6 +119,7 @@ class _ProfileAppBarSectionState extends State<ProfileAppBarSection> {
         onLogout: _logout,
         onChangeAvatar: _pickImage,
         openTelegram: _openTelegram,
+        onUpdateUsername: _onUpdateUsername,
       ),
     );
   }
