@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:homebased_project/mvp2/app_components/app_text_field.dart';
+
 class UsernameRow extends StatelessWidget {
   final TextEditingController controller;
   final bool isEditing;
@@ -18,15 +20,7 @@ class UsernameRow extends StatelessWidget {
       children: [
         Expanded(
           child: isEditing
-              ? TextField(
-                  controller: controller,
-                  autofocus: true,
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
-                    border: UnderlineInputBorder(),
-                  ),
-                )
+              ? AppTextField(label: 'Username', controller: controller)
               : Text(
                   controller.text,
                   style: const TextStyle(fontWeight: FontWeight.bold),
