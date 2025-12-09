@@ -91,6 +91,23 @@ class StorefrontService {
     }
   }
 
+  /// Search storefronts by business name (case-insensitive)
+  Future<List<Map<String, dynamic>>> searchStorefrontsByName(
+    String query,
+  ) async {
+    try {
+      final res = await _supabase
+          .from(table)
+          .select()
+          .ilike('business_name', '%$query%');
+
+      return res;
+    } catch (e) {
+      print('Error searching storefronts by name: $e');
+      return [];
+    }
+  }
+
   /// Update current storefront (only non-null fields will be updated)
   Future<void> updateCurrentStorefront({
     required String userId,

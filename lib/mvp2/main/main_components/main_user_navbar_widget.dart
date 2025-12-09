@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'package:homebased_project/data/notifiers.dart';
+import 'package:homebased_project/mvp2/search/search_pages/search_page.dart';
 
-List<Widget> defaultUserPages = [Placeholder(), Placeholder(), Placeholder()];
+List<Widget> defaultUserPages = [Placeholder(), SearchPage(), Placeholder()];
 
 class DefaultUserNavbarWidget extends StatelessWidget {
   const DefaultUserNavbarWidget({super.key});
