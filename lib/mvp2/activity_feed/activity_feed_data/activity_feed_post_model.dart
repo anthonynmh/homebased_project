@@ -1,15 +1,15 @@
 import 'dart:convert';
 
 class Author {
-  final String name;
   final String username;
+  final String? name;
   final String avatar;
   final String? businessName;
 
   Author({
-    required this.name,
     required this.username,
     required this.avatar,
+    this.name,
     this.businessName,
   });
 

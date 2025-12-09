@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:homebased_project/mvp2/activity_feed/activity_feed_data/profile_data.dart' as profile_data;
+import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
 import 'package:homebased_project/mvp2/activity_feed/activity_feed_data/activity_feed_post_model.dart';
+import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/mvp2/app_components/app_card.dart';
 
 class CreatePostDialog extends StatefulWidget {
@@ -22,16 +25,18 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
   bool showImageField = false;
 
   void handlePost() {
+    final author = Author(
+      name: profile_data.fullName,
+      username: "@${profile_data.username}",
+      avatar: profile_data.profileImagePath ??
+          "https://images.unsplash.com/photo-1592849902530-cbabb686381d",
+    );
     final content = contentController.text.trim();
     if (content.isEmpty) return;
     debugPrint('Posting: $content, Image: ${imageController.text}');
     final newPost = Post(
       id: DateTime.now().toIso8601String(),
-      author: Author(
-        name: "Holden McGroin",
-        username: "holdenmcgroin",
-        avatar: "https://images.unsplash.com/photo-1592849902530-cbabb686381d",
-      ),
+      author: author,
       content: content,
       image: showImageField ? imageController.text.trim() : null,
       timestamp: "Just now",
