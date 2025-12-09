@@ -143,6 +143,11 @@ class _FeedPageState extends State<ActivityFeedPage> {
       bottomSheet: _isDialogOpen
           ? CreatePostDialog(
               onClose: () => setState(() => _isDialogOpen = false),
+              onPost: (newPost) => setState(() {
+                posts.insert(0, newPost);
+                likes.insert(0, {"id": newPost.id, "isLiked": false});
+                _isDialogOpen = false;
+              }),
             )
           : null,
     );
