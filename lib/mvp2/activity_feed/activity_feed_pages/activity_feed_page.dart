@@ -125,7 +125,7 @@ class _FeedPageState extends State<ActivityFeedPage> {
       body: ListView.builder(
         padding: const EdgeInsets.all(12),
         itemCount: posts.length,
-        itemBuilder: (context, index) => PostCardSub(
+        itemBuilder: (context, index) => PostCard(
           post: posts[index], 
           isLiked: likes[index]['isLiked'], 
           toggleLike: () => toggleLike(index), 
