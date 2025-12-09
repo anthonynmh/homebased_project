@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:homebased_project/backend/supabase_api/supabase_service.dart';
 import 'package:homebased_project/mvp2/activity_feed/activity_feed_data/profile_data.dart' as profile_data;
 import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
 import 'package:homebased_project/mvp2/activity_feed/activity_feed_data/activity_feed_post_model.dart';
@@ -28,6 +27,12 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
   bool showImageField = false;
 
   void handlePost() {
+    final author = Author(
+      name: profile_data.fullName,
+      username: "@${profile_data.username}",
+      avatar: profile_data.profileImagePath ??
+          "https://images.unsplash.com/photo-1592849902530-cbabb686381d",
+    );
     final content = contentController.text.trim();
     final uuid = Uuid();
     if (content.isEmpty) return;
