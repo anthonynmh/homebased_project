@@ -91,36 +91,37 @@ class ProfileService {
     }
   }
 
-  Future<void> updateCurrentUserProfile(Profile profile) async {
-    if (profile.id.isEmpty) {
-      throw Exception('Profile ID is required for update.');
-    }
+  Future<void> updateCurrentUserProfile({
+    required String userId,
+    String? username,
+    String? fullName,
+    String? avatarUrl,
+    String? email,
+  }) async {
+    final data = <String, dynamic>{};
+
+    if (username != null) data['username'] = username;
+    if (fullName != null) data['full_name'] = fullName;
+    if (avatarUrl != null) data['avatar_url'] = avatarUrl;
+    if (email != null) data['email'] = email;
+
+    data['updated_at'] = DateTime.now().toUtc().toIso8601String();
+
+    if (data.isEmpty) return;
 
     try {
-      // Build a map of only the fields that are not null
-      final data = <String, dynamic>{};
-      if (profile.username != null) data['username'] = profile.username;
-      if (profile.fullName != null) data['full_name'] = profile.fullName;
-      if (profile.avatarUrl != null) data['avatar_url'] = profile.avatarUrl;
-      if (profile.email != null) data['email'] = profile.email;
-      data['updated_at'] = DateTime.now().toUtc().toIso8601String();
-
-      if (data.isEmpty) return; // nothing to update
-
       final res = await _supabase
           .from(table)
           .update(data)
-          .eq('id', profile.id)
+          .eq('id', userId)
           .select();
 
       if (res.isEmpty) {
-        throw Exception(
-          'No profile found, or you do not have permission to update it.',
-        );
+        throw Exception('No profile found, or insufficient permissions.');
       }
     } catch (e, st) {
       print('Failed to update user profile: $e\n$st');
-      throw Exception('Failed to update profile: $e');
+      throw Exception('Failed to update user profile');
     }
   }
 
@@ -139,7 +140,7 @@ class ProfileService {
       } catch (_) {}
 
       await storage.from(bucket).uploadBinary(filepath, bytes);
-      await updateCurrentUserProfile(Profile(id: userId, avatarUrl: filepath));
+      await updateCurrentUserProfile(userId: userId, avatarUrl: filepath);
 
       print('Avatar uploaded and path stored: $filepath');
     } catch (e, st) {
@@ -161,7 +162,7 @@ class ProfileService {
       await storage.from(bucket).remove([avatarPath]);
 
       // Clear avatar_url field in profile
-      await updateCurrentUserProfile(Profile(id: userId, avatarUrl: null));
+      await updateCurrentUserProfile(userId: userId, avatarUrl: null);
 
       print('Avatar deleted successfully.');
     } catch (e, st) {
