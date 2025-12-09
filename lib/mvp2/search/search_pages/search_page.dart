@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:homebased_project/mvp2/app_components/app_page.dart';
 import 'package:homebased_project/mvp2/main/main_components/main_snackbar_widget.dart';
 import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_service.dart';
+import 'package:homebased_project/mvp2/app_components/app_card.dart';
+import 'package:homebased_project/mvp2/app_components/app_text_field.dart';
+import 'package:homebased_project/mvp2/app_components/app_form_button.dart';
+import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_model.dart';
 
 class SearchPage extends StatefulWidget {
   final void Function(String message)? onBroadcast;
@@ -15,7 +19,7 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
-  List<Map<String, dynamic>> _stores = [];
+  List<Storefront> _stores = [];
   bool _isLoading = false;
 
   @override
@@ -35,9 +39,12 @@ class _SearchPageState extends State<SearchPage> {
 
     try {
       final results = await storefrontService.searchStorefrontsByName(query);
-      if (!mounted) return;
 
-      setState(() => _stores = results);
+      // Convert maps → Storefront objects
+      final parsed = results.map((m) => Storefront.fromMap(m)).toList();
+
+      if (!mounted) return;
+      setState(() => _stores = parsed);
     } catch (_) {
       if (mounted) {
         context.showSnackBar("Search failed.", isError: true);
@@ -56,23 +63,21 @@ class _SearchPageState extends State<SearchPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextField(
+          AppTextField(
+            label: 'Search Stores',
             controller: _searchController,
-            decoration: InputDecoration(
-              labelText: 'Search Stores',
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            onSubmitted: (_) => _searchStores(),
+            icon: Icons.search,
+            onComplete: _searchStores,
           ),
-          const SizedBox(height: 16),
-          ElevatedButton(
+
+          AppFormButton(
+            label: 'Search',
             onPressed: _isLoading ? null : _searchStores,
-            child: const Text('Search'),
+            isLoading: _isLoading,
           ),
+
           const SizedBox(height: 24),
+
           if (_isLoading)
             const Center(child: CircularProgressIndicator())
           else if (_stores.isEmpty)
@@ -82,51 +87,70 @@ class _SearchPageState extends State<SearchPage> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _stores.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                final store = _stores[index];
-                return Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: const [
-                      BoxShadow(
-                        blurRadius: 4,
-                        offset: Offset(0, 2),
-                        color: Colors.black12,
-                      ),
-                    ],
-                  ),
+                final s = _stores[index];
+
+                return AppCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Store Name
                       Text(
-                        store['business_name'] ?? 'Unknown',
+                        s.businessName ?? 'Unknown',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      if (store['description'] != null &&
-                          store['description'].toString().isNotEmpty)
+
+                      // Description
+                      if ((s.description ?? '').isNotEmpty)
                         Padding(
-                          padding: const EdgeInsets.only(top: 4),
+                          padding: const EdgeInsets.only(top: 6),
                           child: Text(
-                            store['description'],
+                            s.description!,
                             style: const TextStyle(fontSize: 14),
                           ),
                         ),
-                      if (store['postal_code'] != null)
+
+                      // Postal Code
+                      if (s.postalCode != null)
                         Padding(
-                          padding: const EdgeInsets.only(top: 4),
+                          padding: const EdgeInsets.only(top: 6),
                           child: Text(
-                            'Postal Code: ${store['postal_code']}',
+                            'Postal Code: ${s.postalCode}',
                             style: const TextStyle(
                               fontSize: 14,
                               color: Colors.grey,
                             ),
                           ),
+                        ),
+
+                      // Logo preview if exists
+                      if (s.logoUrl != null && s.logoUrl!.isNotEmpty)
+                        FutureBuilder<String?>(
+                          future: storefrontService.getStorefrontLogoSignedUrl(
+                            s.id,
+                          ),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) {
+                              return const SizedBox.shrink();
+                            }
+
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  snapshot.data!,
+                                  height: 80,
+                                  width: 80,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                     ],
                   ),
