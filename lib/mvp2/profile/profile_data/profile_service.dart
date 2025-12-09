@@ -2,18 +2,18 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:homebased_project/backend/user_profile_api/user_profile_model.dart';
+import 'package:homebased_project/mvp2/profile/profile_data/profile_model.dart';
 
 /// Expose user profile related operations
-final userProfileService = UserProfileService();
+final profileService = ProfileService();
 
-class UserProfileService {
+class ProfileService {
   final SupabaseClient _supabase;
   final bool isTest;
   final String table;
   final String bucket;
 
-  UserProfileService({SupabaseClient? client, this.isTest = false})
+  ProfileService({SupabaseClient? client, this.isTest = false})
     : _supabase = client ?? Supabase.instance.client,
       table = _resolveTable(isTest),
       bucket = _resolveBucket(isTest);
@@ -39,16 +39,16 @@ class UserProfileService {
   }
 
   /// Get profile by supabase id (unique user ID)
-  Future<UserProfile?> getCurrentUserProfile(String userId) async {
+  Future<Profile?> getCurrentUserProfile(String userId) async {
     try {
       final res = await _supabase
-        .from(table)
-        .select()
-        .eq('id', userId)
-        .maybeSingle();
-      
+          .from(table)
+          .select()
+          .eq('id', userId)
+          .maybeSingle();
+
       if (res == null) return null;
-      return UserProfile.fromMap(res);
+      return Profile.fromMap(res);
     } catch (e) {
       print('supabase lookup error: $e');
       return null;
@@ -56,7 +56,7 @@ class UserProfileService {
   }
 
   /// Get profile by email address
-  Future<UserProfile?> getCurrentUserProfileByEmail(String email) async {
+  Future<Profile?> getCurrentUserProfileByEmail(String email) async {
     try {
       final res = await _supabase
           .from(table)
@@ -65,7 +65,7 @@ class UserProfileService {
           .maybeSingle();
 
       if (res == null) return null;
-      return UserProfile.fromMap(res);
+      return Profile.fromMap(res);
     } catch (e) {
       print('supabase lookup error: $e');
       return null;
@@ -73,7 +73,7 @@ class UserProfileService {
   }
 
   Future<void> insertCurrentUserProfile(
-    UserProfile profile, {
+    Profile profile, {
     bool isTest = false,
   }) async {
     final rpcName = isTest ? 'create_profile_staging' : 'create_profile';
@@ -91,7 +91,7 @@ class UserProfileService {
     }
   }
 
-  Future<void> updateCurrentUserProfile(UserProfile profile) async {
+  Future<void> updateCurrentUserProfile(Profile profile) async {
     if (profile.id.isEmpty) {
       throw Exception('Profile ID is required for update.');
     }
@@ -106,7 +106,7 @@ class UserProfileService {
       data['updated_at'] = DateTime.now().toUtc().toIso8601String();
 
       if (data.isEmpty) return; // nothing to update
-      
+
       final res = await _supabase
           .from(table)
           .update(data)
@@ -139,9 +139,7 @@ class UserProfileService {
       } catch (_) {}
 
       await storage.from(bucket).uploadBinary(filepath, bytes);
-      await updateCurrentUserProfile(
-        UserProfile(id: userId, avatarUrl: filepath),
-      );
+      await updateCurrentUserProfile(Profile(id: userId, avatarUrl: filepath));
 
       print('Avatar uploaded and path stored: $filepath');
     } catch (e, st) {
@@ -163,7 +161,7 @@ class UserProfileService {
       await storage.from(bucket).remove([avatarPath]);
 
       // Clear avatar_url field in profile
-      await updateCurrentUserProfile(UserProfile(id: userId, avatarUrl: null));
+      await updateCurrentUserProfile(Profile(id: userId, avatarUrl: null));
 
       print('Avatar deleted successfully.');
     } catch (e, st) {
