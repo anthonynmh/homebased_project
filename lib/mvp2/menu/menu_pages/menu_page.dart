@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/mvp2/app_components/app_form_button.dart';
 import 'package:homebased_project/mvp2/app_components/app_page.dart';
-import 'package:homebased_project/mvp2/menu/menu_components/menu_item_form.dart';
+import 'package:homebased_project/mvp2/menu/menu_data/menu_service.dart';
+import 'package:homebased_project/mvp2/menu/menu_pages/menu_item_form.dart';
 import 'package:homebased_project/mvp2/menu/menu_data/menu_item_model.dart';
 
 class MenuPage extends StatefulWidget {
@@ -12,33 +14,75 @@ class MenuPage extends StatefulWidget {
 }
 
 class _MenuPageState extends State<MenuPage> {
-  final List<MenuItem> _menuItems = [];
+  List<MenuItem> _menuItems = [];
+  bool _isAddingNew = false;
 
-  void _addMenuItem() {
+  @override
+  void initState() {
+    super.initState();
+    _loadMenuItems();
+  }
+
+  Future<void> _loadMenuItems() async {
+    final userId = authService.currentUserId;
+    if (userId == null) return;
+
+    final items = await menuService.getUserMenuItems(userId);
+    setState(() {
+      _menuItems = items;
+      _isAddingNew = false; // reset when loaded
+    });
+  }
+
+  void _addNewForm() {
+    if (_isAddingNew) return; // block multiple new forms
+
+    final userId = authService.currentUserId;
+    if (userId == null) return;
+
     setState(() {
       _menuItems.add(
-        MenuItem(name: '', description: '', quantity: 0, price: 0.0),
+        MenuItem(
+          userId: userId,
+          createdAt: DateTime.now().toIso8601String(),
+          updatedAt: DateTime.now().toIso8601String(),
+          name: "",
+          description: "",
+          quantity: 0,
+          price: 0.0,
+        ),
       );
+      _isAddingNew = true;
     });
   }
 
-  void _removeMenuItem(int index) {
+  void _handleDelete(MenuItem item, bool isNewItem) {
+    final userId = authService.currentUserId;
+    if (userId == null) return;
+
+    if (isNewItem) {
+      // just remove from local list
+      setState(() {
+        _menuItems.remove(item);
+        _isAddingNew = false;
+      });
+    } else {
+      // call delete API
+      menuService
+          .deleteMenuItem(userId, item.name)
+          .then((_) => _loadMenuItems());
+    }
+  }
+
+  void _handleSave(MenuItem item, bool isNewItem) {
+    if (isNewItem) {
+      menuService.insertMenuItem(item).then((_) => _loadMenuItems());
+    } else {
+      menuService.updateMenuItem(item).then((_) => _loadMenuItems());
+    }
     setState(() {
-      _menuItems.removeAt(index);
+      _isAddingNew = false;
     });
-  }
-
-  void _updateMenuItem(int index, MenuItem updatedItem) {
-    setState(() {
-      _menuItems[index] = updatedItem;
-    });
-  }
-
-  void _broadcastMenu() {
-    // Feature not ready
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text("Broadcast coming soon")));
   }
 
   @override
@@ -47,29 +91,28 @@ class _MenuPageState extends State<MenuPage> {
       title: 'Menu',
       subtitle: 'Manage your product offerings and updates',
       scrollable: true,
-      action: AppFormButton(
-        label: 'Broadcast',
-        onPressed: _broadcastMenu,
-        icon: const Icon(Icons.speaker_phone),
-      ),
       child: Column(
         children: [
-          // dynamically render all menu item forms
-          ..._menuItems.asMap().entries.map((entry) {
-            final index = entry.key;
-            final item = entry.value;
-            return MenuItemForm(
-              menuItem: item,
-              onRemove: () => _removeMenuItem(index),
-              onChanged: (updatedItem) => _updateMenuItem(index, updatedItem),
-            );
-          }),
           const SizedBox(height: 16),
-          AppFormButton(
-            label: 'Add Menu Item',
-            onPressed: _addMenuItem,
-            icon: const Icon(Icons.add),
-          ),
+
+          for (final item in _menuItems)
+            MenuItemForm(
+              key: ValueKey(_menuItems.indexOf(item)),
+              menuItem: item,
+              isNewItem: _isAddingNew && item.name.isEmpty,
+              onSave: _handleSave,
+              onDelete: _handleDelete,
+              disableActions: _isAddingNew && item.name.isNotEmpty,
+            ),
+
+          const SizedBox(height: 12),
+
+          if (!_isAddingNew)
+            AppFormButton(
+              label: 'Add Menu Item',
+              onPressed: _addNewForm,
+              icon: const Icon(Icons.add),
+            ),
         ],
       ),
     );
