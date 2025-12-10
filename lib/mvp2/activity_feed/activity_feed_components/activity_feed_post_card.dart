@@ -18,20 +18,19 @@ class PostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final author = post.author;
-    final likes = post.initialLikes;
-    final replies = post.initialReplies;
+    final likes = post.numLikes;
+    final replies = post.numReplies;
 
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (post.image != null)
+          if (post.postPhotoUrl != null)
             ClipRRect(
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(20),
               ),
-              child: Image.network(post.image!, fit: BoxFit.cover),
+              child: Image.network(post.postPhotoUrl!, fit: BoxFit.cover),
             ),
           Padding(
             padding: const EdgeInsets.all(12),
@@ -39,7 +38,9 @@ class PostCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CircleAvatar(
-                  backgroundImage: NetworkImage(author.avatar),
+                  backgroundImage: post.avatarUrl != null 
+                    ? NetworkImage(post.avatarUrl!) 
+                    : AssetImage('assets/defaultUser.png'),
                   radius: 20,
                 ),
                 const SizedBox(width: 8),
@@ -48,10 +49,10 @@ class PostCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        author.name ?? author.username,
+                        post.fullName ?? (post.username ?? ''),
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
-                      if (author.businessName != null)
+                      if (post.businessName != null)
                         Container(
                           margin: const EdgeInsets.only(top: 2),
                           padding: const EdgeInsets.symmetric(
@@ -63,7 +64,7 @@ class PostCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            author.businessName!,
+                            post.businessName!,
                             style: const TextStyle(
                               color: Color(0xFFD97A3D),
                               fontSize: 11,
@@ -86,7 +87,7 @@ class PostCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(
-              post.content,
+              post.postText,
               style: const TextStyle(fontSize: 14, color: Colors.black87),
             ),
           ),

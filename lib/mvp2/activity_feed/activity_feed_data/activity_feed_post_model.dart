@@ -33,49 +33,59 @@ class Author {
 }
 
 class Post {
-  final String id;
-  final Author author;
-  final String content;
-  final String? image;
+  final String postId;
+  final String userId;
+  final String username;
+  final String? fullName;
+  final String? avatarUrl;
+  final String? businessName;
+  final String postText;
+  final String? postPhotoUrl;
   final String timestamp;
-  final int initialLikes;
-  final int initialReplies;
+  final int numLikes;
+  final int numReplies;
   final bool isFollowing;
 
   Post({
-    required this.id,
-    required this.author,
-    required this.content,
-    this.image,
+    required this.postId,
+    required this.userId,
+    required this.username,
+    this.fullName,
+    this.avatarUrl,
+    this.businessName,
+    required this.postText,
+    this.postPhotoUrl,
     required this.timestamp,
-    required this.initialLikes,
-    required this.initialReplies,
+    required this.numLikes,
+    required this.numReplies,
     required this.isFollowing,
   });
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toMap() { // Should 
     return {
-      'id': id,
-      'author': author.toMap(),
-      'content': content,
-      'image': image,
-      'timestamp': timestamp,
-      'initialLikes': initialLikes,
-      'initialReplies': initialReplies,
-      'isFollowing': isFollowing,
+      'post_id': postId,
+      'user_id': userId,
+      'post_text': postText,
+      'photo_url': postPhotoUrl,
+      'created_at': timestamp,
+      'num_Likes': numLikes,
     };
   }
 
   factory Post.fromMap(Map<String, dynamic> map) {
     return Post(
-      id: map['id'] ?? '',
-      author: Author.fromMap(map['author']),
-      content: map['content'] ?? '',
-      image: map['image'],
-      timestamp: map['timestamp'] ?? '',
-      initialLikes: map['initialLikes']?.toInt() ?? 0,
-      initialReplies: map['initialReplies']?.toInt() ?? 0,
-      isFollowing: map['isFollowing'] ?? false,
+      postId: map['id'],
+      userId: map['user_id'],
+      username: map['username'],
+      fullName: map['full_name'],
+      avatarUrl: map['avatar_url'],
+      businessName: map['businessName'],
+      postText: map['post_text'] ?? '',
+      postPhotoUrl: map['photo_url'],
+      timestamp: map['timestamp'],
+      numLikes: map['num_likes']?.toInt() ?? 0,
+      numReplies: 0,
+      isFollowing: false,
     );
   }
 
@@ -84,8 +94,12 @@ class Post {
   factory Post.fromJson(String source) => Post.fromMap(json.decode(source));
 
   Post copyWith({
-    String? id,
-    Author? author,
+    String? postId,
+    String? userId,
+    String? username,
+    String? fullname,
+    String? avatarUrl,
+    String? businessName,
     String? content,
     String? image,
     String? timestamp,
@@ -94,87 +108,17 @@ class Post {
     bool? isFollowing,
   }) {
     return Post(
-      id: id ?? this.id,
-      author: author ?? this.author,
-      content: content ?? this.content,
-      image: image ?? this.image,
-      timestamp: timestamp ?? this.timestamp,
-      initialLikes: initialLikes ?? this.initialLikes,
-      initialReplies: initialReplies ?? this.initialReplies,
-      isFollowing: isFollowing ?? this.isFollowing,
-    );
-  }
-}
-
-class PostReal {
-  final String id;
-  final String userId;
-  final String content;
-  final String? image;
-  final String timestamp;
-  final int initialLikes;
-  final int initialReplies;
-  final bool isFollowing;
-
-  PostReal({
-    required this.id,
-    required this.userId,
-    required this.content,
-    this.image,
-    required this.timestamp,
-    required this.initialLikes,
-    required this.initialReplies,
-    required this.isFollowing,
-  });
-
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'userId': userId,
-      'content': content,
-      'image': image,
-      'timestamp': timestamp,
-      'initialLikes': initialLikes,
-      'initialReplies': initialReplies,
-      'isFollowing': isFollowing,
-    };
-  }
-
-  factory PostReal.fromMap(Map<String, dynamic> map) {
-    return PostReal(
-      id: map['id'] ?? '',
-      userId: map['userId'] ?? '',
-      content: map['content'] ?? '',
-      image: map['image'],
-      timestamp: map['timestamp'] ?? '',
-      initialLikes: map['initialLikes']?.toInt() ?? 0,
-      initialReplies: map['initialReplies']?.toInt() ?? 0,
-      isFollowing: map['isFollowing'] ?? false,
-    );
-  }
-
-  String toJson() => json.encode(toMap());
-
-  factory PostReal.fromJson(String source) => PostReal.fromMap(json.decode(source));
-
-  PostReal copyWith({
-    String? id,
-    String? userId,
-    String? content,
-    String? image,
-    String? timestamp,
-    int? initialLikes,
-    int? initialReplies,
-    bool? isFollowing,
-  }) {
-    return PostReal(
-      id: id ?? this.id,
+      postId: postId ?? this.postId,
       userId: userId ?? this.userId,
-      content: content ?? this.content,
-      image: image ?? this.image,
+      username: username ?? this.username,
+      fullName: fullname ?? this.fullName,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      businessName: businessName ?? this.businessName,
+      postText: content ?? this.postText,
+      postPhotoUrl: image ?? this.postPhotoUrl,
       timestamp: timestamp ?? this.timestamp,
-      initialLikes: initialLikes ?? this.initialLikes,
-      initialReplies: initialReplies ?? this.initialReplies,
+      numLikes: initialLikes ?? this.numLikes,
+      numReplies: initialReplies ?? this.numReplies,
       isFollowing: isFollowing ?? this.isFollowing,
     );
   }
