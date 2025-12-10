@@ -20,7 +20,7 @@ class ActivityFeedPostService {
       bucket = _resolveBucket(isTest);
 
   static String _resolveTable(bool isTest) {
-    return String.fromEnvironment('ACTIVITY_FEED_POST_TABLE');
+    return String.fromEnvironment('ACTIVITY_FEED_TABLE_PROD');
     // if (isTest) {
     //   return dotenv.env["BUSINESS_PROFILE_TABLE_STAGING"] ?? '';
     // }

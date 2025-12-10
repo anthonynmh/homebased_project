@@ -25,23 +25,19 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
   bool showImageField = false;
 
   void handlePost() {
-    final author = Author(
-      name: profile_data.fullName,
-      username: "@${profile_data.username}",
-      avatar: profile_data.profileImagePath ??
-          "https://images.unsplash.com/photo-1592849902530-cbabb686381d",
-    );
     final content = contentController.text.trim();
     if (content.isEmpty) return;
     debugPrint('Posting: $content, Image: ${imageController.text}');
     final newPost = Post(
-      id: DateTime.now().toIso8601String(),
-      author: author,
-      content: content,
-      image: showImageField ? imageController.text.trim() : null,
-      timestamp: "Just now",
-      initialLikes: 0,
-      initialReplies: 0,
+      postId: DateTime.now().toIso8601String(),
+      userId: authService.currentUserId!,
+      fullName: profile_data.fullName,
+      username: profile_data.username,
+      postText: content,
+      postPhotoUrl: showImageField ? imageController.text.trim() : null,
+      timestamp: DateTime.now().toIso8601String(),
+      numLikes: 0,
+      numReplies: 0,
       isFollowing: false,
     );  
 

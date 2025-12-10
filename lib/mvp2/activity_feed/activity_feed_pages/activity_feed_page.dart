@@ -17,19 +17,18 @@ class _FeedPageState extends State<ActivityFeedPage> {
 
   final List<Post> posts = [
     Post(
-      id: "1", 
-      author: Author.fromMap({
-        "name": "Sarah Johnson",
-        "username": "sarahj",
-        "avatar":
-            "https://images.unsplash.com/photo-1592849902530-cbabb686381d",
-        "businessName": "Creative Studio Co.",
-      }), 
-      content: "Just launched our new product today! 🚀 So excited to share this with everyone. What do you think?", 
-      image: "https://images.unsplash.com/photo-1524758631624-e2822e304c36",
+      postId: "1",
+      userId: "8123084712834718257981247958123740850", 
+      username: "sarahj",
+      fullName: "Sarah Johnson",
+      avatarUrl:
+          "https://images.unsplash.com/photo-1592849902530-cbabb686381d",
+      businessName: "Creative Studio Co.",
+      postText: "Just launched our new product today! 🚀 So excited to share this with everyone. What do you think?", 
+      postPhotoUrl: "https://images.unsplash.com/photo-1524758631624-e2822e304c36",
       timestamp: "2h", 
-      initialLikes: 142, 
-      initialReplies: 23, 
+      numLikes: 142, 
+      numReplies: 23, 
       isFollowing: true
     )
   ];
@@ -47,8 +46,8 @@ class _FeedPageState extends State<ActivityFeedPage> {
     bool wasLiked = likes[index]['isLiked'];
     Post updatedPost = oldPost.copyWith(
       initialLikes: wasLiked ? 
-        oldPost.initialLikes - 1 : 
-        oldPost.initialLikes + 1,
+        oldPost.numLikes - 1 : 
+        oldPost.numLikes + 1,
     );
     setState(() {
       posts[index] = updatedPost;
@@ -59,7 +58,7 @@ class _FeedPageState extends State<ActivityFeedPage> {
   void incrementReply(int index) {
     Post oldPost = posts[index];
     Post updatedPost = oldPost.copyWith(
-      initialReplies: oldPost.initialReplies + 1,
+      initialReplies: oldPost.numReplies + 1,
     );
     setState(() {
       posts[index] = updatedPost;
@@ -145,7 +144,7 @@ class _FeedPageState extends State<ActivityFeedPage> {
               onClose: () => setState(() => _isDialogOpen = false),
               onPost: (newPost) => setState(() {
                 posts.insert(0, newPost);
-                likes.insert(0, {"id": newPost.id, "isLiked": false});
+                likes.insert(0, {"id": newPost.postId, "isLiked": false});
                 _isDialogOpen = false;
               }),
             )
