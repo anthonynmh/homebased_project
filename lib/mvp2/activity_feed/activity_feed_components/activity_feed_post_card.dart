@@ -54,25 +54,44 @@ class PostCard extends StatelessWidget {
                         : (post.username ?? ''),
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
-                      if (post.businessName != null)
-                        Container(
-                          margin: const EdgeInsets.only(top: 2),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFA366).withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            post.businessName!,
-                            style: const TextStyle(
-                              color: Color(0xFFD97A3D),
-                              fontSize: 11,
+                      post.businessName != null 
+                        ? Container(
+                            margin: const EdgeInsets.only(top: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFA366).withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              post.businessName!,
+                              style: const TextStyle(
+                                color: Color(0xFFD97A3D),
+                                fontSize: 11,
+                              ),
+                            ),
+                          )
+                        : Container(
+                            margin: const EdgeInsets.only(top: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color.fromARGB(255, 130, 102, 255).withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              "Customer",
+                              style: const TextStyle(
+                                color: Color.fromARGB(255, 131, 44, 218),
+                                fontSize: 11,
+                              ),
                             ),
                           ),
-                        ),
+
                       Text(
                         post.timestamp,
                         style: const TextStyle(
