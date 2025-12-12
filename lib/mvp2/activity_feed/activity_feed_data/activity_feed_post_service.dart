@@ -16,17 +16,11 @@ class ActivityFeedPostService {
   final bool isTest;
   final String activityTable;
   final String activityBucket;
-  final String userTable;
-  final String userBucket;
-  final String storefrontTable;
 
   ActivityFeedPostService({SupabaseClient? client, this.isTest = false})
     : _supabase = client ?? Supabase.instance.client,
       activityTable = _resolveActivityTable(isTest),
-      activityBucket = _resolveActivityBucket(isTest),
-      userTable = _resolveUserTable(isTest),
-      userBucket = _resolveUserBucket(isTest),
-      storefrontTable = _resolveStorefrontTable(isTest);
+      activityBucket = _resolveActivityBucket(isTest);
 
   static String _resolveActivityTable(bool isTest) {
     const prodTable = String.fromEnvironment('ACTIVITY_FEED_TABLE_PROD');
@@ -56,44 +50,13 @@ class ActivityFeedPostService {
     //     : dotenv.env["BUSINESS_PROFILE_BUCKET_PROD"] ?? '';
   }
 
-  static String _resolveUserTable(bool isTest) {
-    if (isTest) {
-      return dotenv.env["USER_PROFILE_TABLE_STAGING"] ?? '';
-    }
-    const prodTable = String.fromEnvironment('USER_PROFILE_TABLE_PROD');
-    return prodTable.isNotEmpty
-        ? prodTable
-        : dotenv.env["USER_PROFILE_TABLE_PROD"] ?? '';
-  }
-
-  static String _resolveUserBucket(bool isTest) {
-    if (isTest) {
-      return dotenv.env["USER_PROFILE_BUCKET_STAGING"] ?? '';
-    }
-    const prodBucket = String.fromEnvironment('USER_PROFILE_BUCKET_PROD');
-    return prodBucket.isNotEmpty
-        ? prodBucket
-        : dotenv.env["USER_PROFILE_BUCKET_PROD"] ?? '';
-  }
-
-  static String _resolveStorefrontTable(bool isTest) {
-    if (isTest) {
-      return dotenv.env["BUSINESS_PROFILE_TABLE_STAGING"] ?? '';
-    }
-    const prodTable = String.fromEnvironment('BUSINESS_PROFILE_TABLE_PROD');
-    return prodTable.isNotEmpty
-        ? prodTable
-        : dotenv.env["BUSINESS_PROFILE_TABLE_PROD"] ?? '';
-  }
-
   Future<List<Post>> getAllPosts() async {
     try {
       final res = await _supabase
-          .from(activityTable)
-          .select('*, $userTable(username, full_name, avatar_url, $storefrontTable(business_name))')
+          .from('complete_posts')
+          .select('*')
           .order('created_at', ascending: false);
-      print(res);
-      final posts = (res as List).map((e) => Post.fromMap(e, userTable, storefrontTable)).toList();
+      final posts = (res as List).map((e) => Post.fromMap(e)).toList();
       return posts;
     } catch (e) {
       print('Get posts error: $e');
@@ -103,7 +66,9 @@ class ActivityFeedPostService {
 
   Future<void> insertPost(Post post) async {
     try {
-      return await _supabase.from(activityTable).insert(post.toMap());
+      return await _supabase
+          .from(activityTable)
+          .insert(post.toMap());
     } catch (e) {
       print('Insert post error: $e');
       throw Exception('Failed to insert post');
