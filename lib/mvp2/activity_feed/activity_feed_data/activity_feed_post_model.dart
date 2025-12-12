@@ -68,18 +68,28 @@ class Post {
       'post_text': postText,
       'photo_url': postPhotoUrl,
       'created_at': timestamp,
-      'num_Likes': numLikes,
+      'num_likes': numLikes,
     };
   }
 
-  factory Post.fromMap(Map<String, dynamic> map) {
+  Map<String, dynamic> toMapWithAuthor() {
+    return {
+      ...toMap(),
+      'username': username,
+      'full_name': fullName,
+      'avatar_url': avatarUrl,
+      'business_name': businessName,
+    };
+  }
+
+  factory Post.fromMap(Map<String, dynamic> map, String userTable, String businessTable) {
     return Post(
-      postId: map['id'],
+      postId: map['post_id'],
       userId: map['user_id'],
-      username: map['username'],
-      fullName: map['full_name'],
-      avatarUrl: map['avatar_url'],
-      businessName: map['businessName'],
+      username: map[userTable]['username'],
+      fullName: map[userTable]['full_name'],
+      avatarUrl: map[userTable]['avatar_url'].trim(),
+      businessName: map[userTable][businessTable]['business_name'],
       postText: map['post_text'] ?? '',
       postPhotoUrl: map['photo_url'],
       timestamp: map['timestamp'],
@@ -91,7 +101,7 @@ class Post {
 
   String toJson() => json.encode(toMap());
 
-  factory Post.fromJson(String source) => Post.fromMap(json.decode(source));
+  factory Post.fromJson(String source, String userTable, String businessTable) => Post.fromMap(json.decode(source), userTable, businessTable);
 
   Post copyWith({
     String? postId,

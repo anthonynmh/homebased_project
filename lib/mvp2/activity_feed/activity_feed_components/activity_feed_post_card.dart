@@ -38,7 +38,7 @@ class PostCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CircleAvatar(
-                  backgroundImage: post.avatarUrl != null 
+                  backgroundImage: post.avatarUrl != null && post.avatarUrl != ""
                     ? NetworkImage(post.avatarUrl!) 
                     : AssetImage('assets/defaultUser.png'),
                   radius: 20,
@@ -49,7 +49,9 @@ class PostCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        post.fullName ?? (post.username ?? ''),
+                        post.fullName != null && post.fullName != "" 
+                        ? post.fullName!
+                        : (post.username ?? ''),
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                       if (post.businessName != null)
