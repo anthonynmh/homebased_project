@@ -74,4 +74,31 @@ class ActivityFeedPostService {
       throw Exception('Failed to insert post');
     }
   }
+
+  Future<void> insertLike(String postId, String userId) async {
+    try {
+      return await _supabase
+          .from('post-likes')
+          .insert({
+            'post_id': postId,
+            'liker_id': userId,
+          });
+    } catch (e) {
+      print('Insert like error: $e');
+      throw Exception('Failed to insert like');
+    }
+  }
+
+  Future<void> removeLike(String postId, String userId) async {
+    try {
+      return await _supabase
+          .from('post-likes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('liker_id', userId);
+    } catch (e) {
+      print('Remove like error: $e');
+      throw Exception('Failed to remove like');
+    }
+  }
 }

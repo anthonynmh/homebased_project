@@ -40,9 +40,9 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
       postText: content,
       postPhotoUrl: showImageField ? imageController.text.trim() : null,
       timestamp: DateTime.now().toIso8601String(),
-      numLikes: 0,
+      likeCount: 0,
       numReplies: 0,
-      isFollowing: false,
+      isLiked: false,
     );  
 
     widget.onPost(newPost);
