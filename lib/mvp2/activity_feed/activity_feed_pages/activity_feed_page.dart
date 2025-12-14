@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/mvp2/activity_feed/activity_feed_data/activity_feed_post_model.dart';
 import 'package:homebased_project/mvp2/activity_feed/activity_feed_data/activity_feed_post_service.dart';
 import 'package:homebased_project/mvp2/app_components/app_page.dart';
@@ -17,31 +18,21 @@ class _FeedPageState extends State<ActivityFeedPage> {
 
   late Future<List<Post>> futurePosts;
 
-  late Future<List<Map<String, dynamic>>> futureLikeStatuses;
+  late Future<Map<String, bool>> futureLikeStatuses;
 
   // --- functions for post card ---
-  void toggleLike(int index) {
-    // Post oldPost = posts[index];
-    // bool wasLiked = likes[index]['isLiked'];
-    // Post updatedPost = oldPost.copyWith(
-    //   initialLikes: wasLiked ? 
-    //     oldPost.numLikes - 1 : 
-    //     oldPost.numLikes + 1,
-    // );
-    // setState(() {
-    //   posts[index] = updatedPost;
-    //   likes[index]['isLiked'] = !wasLiked;
-    // });
+  void toggleLikeEntry(Post post) {
+    if (post.isLiked) {
+      // unlike
+      ActivityFeedPostService().removeLike(post.postId, authService.currentUserId!);
+    } else {
+      // like
+      ActivityFeedPostService().insertLike(post.postId, authService.currentUserId!);
+    }
   }
 
   void incrementReply(int index) {
-    // Post oldPost = posts[index];
-    // Post updatedPost = oldPost.copyWith(
-    //   initialReplies: oldPost.numReplies + 1,
-    // );
-    // setState(() {
-    //   posts[index] = updatedPost;
-    // });
+    
   }
 
   Future<List<Post>> fetchPosts() async {
@@ -51,11 +42,21 @@ class _FeedPageState extends State<ActivityFeedPage> {
   Future<List<Post>> addTempPost(Post cachedPost) async {
     final list = await futurePosts;
     if (list.any((post) => post.postId == cachedPost.postId)) {
+      print("Post already exists in list");
       return list;
     }
+    print("Adding post locally.");
     list.add(cachedPost);
     return list;
   }
+
+  // Future<List<Post>> toggleTempLike(int index, Post tempPost) async {
+  //   final posts = await futurePosts;
+  //   setState(() {
+  //     posts[index] = tempPost;
+  //   });
+  //   return posts;
+  // }
 
   @override
   void initState() {
@@ -131,15 +132,23 @@ class _FeedPageState extends State<ActivityFeedPage> {
               child: Text('Error: ${snapshot.error}'),
             );
           } else {
-            List<Post> data = snapshot.data!;
+            List<Post> postData = snapshot.data!;
             // Use the loaded data to build your widget
             return ListView.builder(
               padding: const EdgeInsets.all(12),
-              itemCount: data.length,
+              itemCount: postData.length,
               itemBuilder: (context, index) => PostCard(
-                post: data[index], 
-                isLiked: false, 
-                toggleLike: () => toggleLike(index), 
+                post: postData[index], 
+                isLiked: postData[index].isLiked, //likeStatuses[postData[index].postId] ?? false, 
+                toggleLike: () => setState(() {
+                  toggleLikeEntry(postData[index]);
+                  postData[index] = postData[index].copyWith(
+                    isLiked: !postData[index].isLiked,
+                    likeCount: postData[index].isLiked
+                      ? postData[index].likeCount - 1
+                      : postData[index].likeCount + 1,
+                  );
+                }), //toggleLike(postData[index].postId, likeStatuses), 
                 incrementReply: () => incrementReply(index),
               ),
             );

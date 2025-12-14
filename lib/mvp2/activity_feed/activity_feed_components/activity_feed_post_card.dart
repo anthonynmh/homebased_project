@@ -18,7 +18,7 @@ class PostCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final likes = post.numLikes;
+    final likes = post.likeCount;
     final replies = post.numReplies;
 
     return AppCard(

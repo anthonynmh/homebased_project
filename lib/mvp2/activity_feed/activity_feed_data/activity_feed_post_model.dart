@@ -42,9 +42,9 @@ class Post {
   final String postText;
   final String? postPhotoUrl;
   final String timestamp;
-  final int numLikes;
+  final int likeCount;
   final int numReplies;
-  final bool isFollowing;
+  final bool isLiked;
 
   Post({
     required this.postId,
@@ -56,9 +56,9 @@ class Post {
     required this.postText,
     this.postPhotoUrl,
     required this.timestamp,
-    required this.numLikes,
+    required this.likeCount,
     required this.numReplies,
-    required this.isFollowing,
+    required this.isLiked,
   });
 
   Map<String, dynamic> toMap() { // Should 
@@ -92,9 +92,9 @@ class Post {
       postText: map['post_text'] ?? '',
       postPhotoUrl: map['photo_url'],
       timestamp: map['timestamp'],
-      numLikes: map['num_likes']?.toInt() ?? 0,
+      likeCount: map['like_count']?.toInt() ?? 0,
       numReplies: 0,
-      isFollowing: false,
+      isLiked: map['liked_by_user'] ?? false,
     );
   }
 
@@ -106,29 +106,29 @@ class Post {
     String? postId,
     String? userId,
     String? username,
-    String? fullname,
+    String? fullName,
     String? avatarUrl,
     String? businessName,
-    String? content,
-    String? image,
+    String? postText,
+    String? postPhotoUrl,
     String? timestamp,
-    int? initialLikes,
-    int? initialReplies,
-    bool? isFollowing,
+    int? likeCount,
+    int? numReplies,
+    bool? isLiked,
   }) {
     return Post(
       postId: postId ?? this.postId,
       userId: userId ?? this.userId,
       username: username ?? this.username,
-      fullName: fullname ?? this.fullName,
+      fullName: fullName ?? this.fullName,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       businessName: businessName ?? this.businessName,
-      postText: content ?? this.postText,
-      postPhotoUrl: image ?? this.postPhotoUrl,
+      postText: postText ?? this.postText,
+      postPhotoUrl: postPhotoUrl ?? this.postPhotoUrl,
       timestamp: timestamp ?? this.timestamp,
-      numLikes: initialLikes ?? this.numLikes,
-      numReplies: initialReplies ?? this.numReplies,
-      isFollowing: isFollowing ?? this.isFollowing,
+      likeCount: likeCount ?? this.likeCount,
+      numReplies: numReplies ?? this.numReplies,
+      isLiked: isLiked ?? this.isLiked,
     );
   }
 }
