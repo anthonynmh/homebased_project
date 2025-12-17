@@ -26,5 +26,7 @@
       --dart-define=BUSINESS_PROFILE_TABLE_PROD=$BUSINESS_PROFILE_TABLE_PROD \
       --dart-define=BUSINESS_PROFILE_BUCKET_PROD=$BUSINESS_PROFILE_BUCKET_PROD \
       --dart-define=MENU_TABLE_PROD=$MENU_TABLE_PROD \
-      --dart-define=MENU_BUCKET_PROD=$MENU_BUCKET_PROD
+      --dart-define=MENU_BUCKET_PROD=$MENU_BUCKET_PROD \
+      --dart-define=ACTIVITY_FEED_TABLE_PROD=posts \
+      --dart-define=ACTIVITY_FEED_BUCKET_PROD=posts
   """
