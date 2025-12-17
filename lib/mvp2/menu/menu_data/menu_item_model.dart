@@ -8,6 +8,7 @@ class MenuItem {
   String? description;
   int? quantity;
   double? price;
+  String? photoPath;
 
   MenuItem({
     required this.userId,
@@ -17,6 +18,7 @@ class MenuItem {
     this.description,
     this.quantity,
     this.price,
+    this.photoPath,
   });
 
   Map<String, dynamic> toMap() {
@@ -28,6 +30,7 @@ class MenuItem {
       'item_description': description,
       'item_quantity': quantity,
       'item_price': price,
+      'photo_url': photoPath,
     };
 
     return map;
@@ -42,6 +45,7 @@ class MenuItem {
       description: map['item_description'] ?? '',
       quantity: map['item_quantity']?.toInt() ?? 0,
       price: map['item_price']?.toDouble() ?? 0.0,
+      photoPath: map['photo_url'] as String?,
     );
   }
 
@@ -51,22 +55,24 @@ class MenuItem {
       MenuItem.fromMap(json.decode(source));
 
   MenuItem copyWith({
-    required String userId,
-    required String createdAt,
-    required String updatedAt,
-    required String name,
+    String? userId,
+    String? createdAt,
+    String? updatedAt,
+    String? name,
     String? description,
     int? quantity,
     double? price,
+    String? photoPath,
   }) {
     return MenuItem(
-      userId: this.userId,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
-      name: this.name,
+      userId: userId ?? this.userId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      name: name ?? this.name,
       description: description ?? this.description,
       quantity: quantity ?? this.quantity,
       price: price ?? this.price,
+      photoPath: photoPath ?? this.photoPath,
     );
   }
 
