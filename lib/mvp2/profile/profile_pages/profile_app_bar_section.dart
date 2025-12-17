@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:homebased_project/mvp2/activity_feed/activity_feed_data/profile_data.dart' as profile_data;
 
 import 'package:homebased_project/data/notifiers.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
@@ -48,6 +49,12 @@ class _ProfileAppBarSectionState extends State<ProfileAppBarSection> {
       await profileService.insertCurrentUserProfile(newProfile);
       profile = newProfile;
     }
+
+    profile_data.username = profile.username ?? 'Guest';
+    profile_data.fullName = (profile.fullName != null && profile.fullName!.isNotEmpty)
+        ? profile.fullName
+        : null;
+    profile_data.profileImagePath = profile.avatarUrl;
 
     String? signedUrl;
     if (profile.avatarUrl != null) {
