@@ -1,13 +1,6 @@
-import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
-import 'package:homebased_project/models/business_profile.dart';
 import 'package:homebased_project/mvp2/activity_feed/activity_feed_data/activity_feed_post_model.dart';
-import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_service.dart';
-import 'package:path/path.dart' as path;
-import 'package:image_picker/image_picker.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_model.dart';
 
 final activityFeedPostService = ActivityFeedPostService();
 

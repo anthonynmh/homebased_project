@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:homebased_project/mvp2/activity_feed/activity_feed_data/profile_data.dart' as profile_data;
-import 'package:homebased_project/backend/user_profile_api/user_profile_service.dart';
 import 'package:homebased_project/mvp2/activity_feed/activity_feed_data/activity_feed_post_model.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/mvp2/app_components/app_card.dart';
 import 'package:uuid/uuid.dart';
-import 'package:uuid/v4.dart';
 
 class CreatePostDialog extends StatefulWidget {
   final VoidCallback onClose;
