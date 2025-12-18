@@ -5,11 +5,11 @@ import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/mvp2/main/main_components/main_snackbar_widget.dart';
 import 'package:homebased_project/mvp2/app_components/app_page.dart';
 import 'package:homebased_project/mvp2/app_components/app_form_button.dart';
-import 'package:homebased_project/mvp2/storefront/storefront_components/storefront_prompt_card.dart';
-import 'package:homebased_project/mvp2/storefront/storefront_components/storefront_info_card.dart';
-import 'package:homebased_project/mvp2/storefront/storefront_components/storefront_logo_card.dart';
-import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_model.dart';
-import 'package:homebased_project/mvp2/storefront/storefront_data/storefront_service.dart';
+import 'package:homebased_project/mvp2/storefront_seller/storefront_components/storefront_prompt_card.dart';
+import 'package:homebased_project/mvp2/storefront_seller/storefront_components/storefront_info_card.dart';
+import 'package:homebased_project/mvp2/storefront_seller/storefront_components/storefront_logo_card.dart';
+import 'package:homebased_project/mvp2/storefront_seller/storefront_data/storefront_model.dart';
+import 'package:homebased_project/mvp2/storefront_seller/storefront_data/storefront_service.dart';
 
 class StorefrontPage extends StatefulWidget {
   final void Function(String message)? onBroadcast;
