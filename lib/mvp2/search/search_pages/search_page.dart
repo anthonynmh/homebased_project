@@ -92,76 +92,79 @@ class _SearchPageState extends State<SearchPage> {
               itemBuilder: (context, index) {
                 final s = _stores[index];
 
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            StorefrontUserPage(storefrontUserId: s.id),
-                      ),
-                    );
-                  },
-                  child: AppCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Store Name
-                        Text(
-                          s.businessName ?? 'Unknown',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                return MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              StorefrontUserPage(storefrontUserId: s.id),
                         ),
-
-                        // Description
-                        if ((s.description ?? '').isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 6),
-                            child: Text(
-                              s.description!,
-                              style: const TextStyle(fontSize: 14),
+                      );
+                    },
+                    child: AppCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Store Name
+                          Text(
+                            s.businessName ?? 'Unknown',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
 
-                        // Postal Code
-                        if (s.postalCode != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 6),
-                            child: Text(
-                              'Postal Code: ${s.postalCode}',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
+                          // Description
+                          if ((s.description ?? '').isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Text(
+                                s.description!,
+                                style: const TextStyle(fontSize: 14),
                               ),
                             ),
-                          ),
 
-                        // Logo preview if exists
-                        if (s.logoUrl != null && s.logoUrl!.isNotEmpty)
-                          FutureBuilder<String?>(
-                            future: storefrontService
-                                .getStorefrontLogoSignedUrl(s.id),
-                            builder: (context, snapshot) {
-                              if (!snapshot.hasData) {
-                                return const SizedBox.shrink();
-                              }
-
-                              return Padding(
-                                padding: const EdgeInsets.only(top: 12),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    snapshot.data!,
-                                    height: 80,
-                                    width: 80,
-                                    fit: BoxFit.cover,
-                                  ),
+                          // Postal Code
+                          if (s.postalCode != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 6),
+                              child: Text(
+                                'Postal Code: ${s.postalCode}',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
                                 ),
-                              );
-                            },
-                          ),
-                      ],
+                              ),
+                            ),
+
+                          // Logo preview if exists
+                          if (s.logoUrl != null && s.logoUrl!.isNotEmpty)
+                            FutureBuilder<String?>(
+                              future: storefrontService
+                                  .getStorefrontLogoSignedUrl(s.id),
+                              builder: (context, snapshot) {
+                                if (!snapshot.hasData) {
+                                  return const SizedBox.shrink();
+                                }
+
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 12),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      snapshot.data!,
+                                      height: 80,
+                                      width: 80,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 );
