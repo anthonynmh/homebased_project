@@ -10,6 +10,7 @@ class V2ListingMap extends StatefulWidget {
   final LatLng currentLocation;
   final List<V2Listing> listings;
   final V2Listing? selectedListing;
+  final bool Function(String listingId) isSubscribed;
   final void Function(String listingId) onListingSelected;
 
   const V2ListingMap({
@@ -17,6 +18,7 @@ class V2ListingMap extends StatefulWidget {
     required this.currentLocation,
     required this.listings,
     required this.selectedListing,
+    required this.isSubscribed,
     required this.onListingSelected,
   });
 
@@ -38,13 +40,17 @@ class _V2ListingMapState extends State<V2ListingMap> {
   void didUpdateWidget(covariant V2ListingMap oldWidget) {
     super.didUpdateWidget(oldWidget);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) unawaited(_syncAnnotations());
+      if (!mounted) return;
+      unawaited(_syncAnnotations());
+      if (oldWidget.selectedListing?.id != widget.selectedListing?.id) {
+        unawaited(_easeToSelectedListing());
+      }
     });
   }
 
   @override
   void dispose() {
-    _mapController?.onSymbolTapped.remove(_handleSymbolTapped);
+    _mapController?.onCircleTapped.remove(_handleCircleTapped);
     super.dispose();
   }
 
@@ -69,7 +75,7 @@ class _V2ListingMapState extends State<V2ListingMap> {
           ],
           onMapCreated: (controller) {
             _mapController = controller;
-            controller.onSymbolTapped.add(_handleSymbolTapped);
+            controller.onCircleTapped.add(_handleCircleTapped);
           },
           onStyleLoadedCallback: () {
             setState(() => _styleLoaded = true);
@@ -134,9 +140,6 @@ class _V2ListingMapState extends State<V2ListingMap> {
       await controller.clearFills();
       await controller.clearLines();
       await controller.clearCircles();
-      await controller.clearSymbols();
-      await controller.setSymbolTextAllowOverlap(true);
-      await controller.setSymbolTextIgnorePlacement(true);
 
       final radius = V2Geo.circlePolygon(
         widget.currentLocation,
@@ -147,7 +150,7 @@ class _V2ListingMapState extends State<V2ListingMap> {
         FillOptions(
           geometry: [radius],
           fillColor: '#176B87',
-          fillOpacity: 0.09,
+          fillOpacity: 0.07,
           fillOutlineColor: '#176B87',
         ),
       );
@@ -155,8 +158,8 @@ class _V2ListingMapState extends State<V2ListingMap> {
         LineOptions(
           geometry: radius,
           lineColor: '#176B87',
-          lineOpacity: 0.7,
-          lineWidth: 2.2,
+          lineOpacity: 0.62,
+          lineWidth: 1.8,
         ),
       );
       await controller.addCircle(
@@ -171,33 +174,44 @@ class _V2ListingMapState extends State<V2ListingMap> {
         ),
       );
 
-      final symbols = <SymbolOptions>[];
-      final symbolData = <Map<String, Object>>[];
-      for (final listing in widget.listings) {
+      final listingCircles = <CircleOptions>[];
+      final circleData = <Map<String, Object>>[];
+      final orderedListings = [
+        ...widget.listings.where(
+          (listing) => listing.id != widget.selectedListing?.id,
+        ),
+        ...widget.listings.where(
+          (listing) => listing.id == widget.selectedListing?.id,
+        ),
+      ];
+
+      for (final listing in orderedListings) {
         final isSelected = listing.id == widget.selectedListing?.id;
+        final isSubscribed = widget.isSubscribed(listing.id);
         final color = listing.ownedByCurrentLister
             ? '#D97706'
             : isSelected
             ? '#E11D48'
+            : isSubscribed
+            ? '#6D28D9'
             : '#176B87';
 
-        symbols.add(
-          SymbolOptions(
+        listingCircles.add(
+          CircleOptions(
             geometry: listing.location,
-            textField: '●',
-            textColor: color,
-            textSize: isSelected ? 34 : 28,
-            textHaloColor: '#FFFFFF',
-            textHaloWidth: 3,
-            textAnchor: 'center',
-            zIndex: isSelected ? 20 : 10,
+            circleRadius: isSelected ? 13 : 10,
+            circleColor: color,
+            circleOpacity: 0.98,
+            circleStrokeColor: '#FFFFFF',
+            circleStrokeWidth: isSelected ? 4 : 3,
+            circleStrokeOpacity: 1,
           ),
         );
-        symbolData.add({'listingId': listing.id});
+        circleData.add({'listingId': listing.id});
       }
 
-      if (symbols.isNotEmpty) {
-        await controller.addSymbols(symbols, symbolData);
+      if (listingCircles.isNotEmpty) {
+        await controller.addCircles(listingCircles, circleData);
       }
 
       _lastFingerprint = fingerprint;
@@ -223,14 +237,25 @@ class _V2ListingMapState extends State<V2ListingMap> {
         .map(
           (listing) =>
               '${listing.id}:${listing.interestCount}:'
-              '${listing.ownedByCurrentLister}',
+              '${listing.ownedByCurrentLister}:'
+              '${widget.isSubscribed(listing.id)}',
         )
         .join('|');
     return '$selectedId|$listingState';
   }
 
-  void _handleSymbolTapped(Symbol symbol) {
-    final listingId = symbol.data?['listingId'] as String?;
+  Future<void> _easeToSelectedListing() async {
+    final controller = _mapController;
+    final selected = widget.selectedListing;
+    if (!_styleLoaded || controller == null || selected == null) return;
+
+    await controller.animateCamera(
+      CameraUpdate.newLatLngZoom(selected.location, 14.55),
+    );
+  }
+
+  void _handleCircleTapped(Circle circle) {
+    final listingId = circle.data?['listingId'] as String?;
     if (listingId == null) return;
     widget.onListingSelected(listingId);
   }
