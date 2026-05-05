@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:homebased_project/mvp2/activity_feed/activity_feed_data/profile_data.dart' as profile_data;
+import 'package:homebased_project/mvp2/activity_feed/activity_feed_data/profile_data.dart'
+    as profile_data;
 import 'package:homebased_project/mvp2/activity_feed/activity_feed_data/activity_feed_post_model.dart';
 import 'package:homebased_project/backend/auth_api/auth_service.dart';
 import 'package:homebased_project/mvp2/app_components/app_card.dart';
@@ -10,10 +11,10 @@ class CreatePostDialog extends StatefulWidget {
   final ValueChanged<Post> onPost;
 
   const CreatePostDialog({
-    Key? key, 
+    super.key,
     required this.onClose,
     required this.onPost,
-  }) : super(key: key);
+  });
 
   @override
   State<CreatePostDialog> createState() => _CreatePostDialogState();
@@ -25,12 +26,6 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
   bool showImageField = false;
 
   void handlePost() {
-    final author = Author(
-      name: profile_data.fullName,
-      username: "@${profile_data.username}",
-      avatar: profile_data.profileImagePath ??
-          "https://images.unsplash.com/photo-1592849902530-cbabb686381d",
-    );
     final content = contentController.text.trim();
     final uuid = Uuid();
     if (content.isEmpty) return;
@@ -46,7 +41,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
       likeCount: 0,
       numReplies: 0,
       isLiked: false,
-    );  
+    );
 
     widget.onPost(newPost);
   }

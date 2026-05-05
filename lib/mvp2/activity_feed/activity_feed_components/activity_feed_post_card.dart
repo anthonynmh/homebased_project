@@ -9,7 +9,7 @@ class PostCard extends StatelessWidget {
   final bool isLiked;
 
   const PostCard({
-    super.key, 
+    super.key,
     required this.post,
     required this.toggleLike,
     required this.incrementReply,
@@ -38,9 +38,10 @@ class PostCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CircleAvatar(
-                  backgroundImage: post.avatarUrl != null && post.avatarUrl != ""
-                    ? NetworkImage(post.avatarUrl!) 
-                    : AssetImage('assets/defaultUser.png'),
+                  backgroundImage:
+                      post.avatarUrl != null && post.avatarUrl != ""
+                      ? NetworkImage(post.avatarUrl!)
+                      : AssetImage('assets/defaultUser.png'),
                   radius: 20,
                 ),
                 const SizedBox(width: 8),
@@ -49,48 +50,55 @@ class PostCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        post.fullName != null && post.fullName != "" 
-                        ? post.fullName!
-                        : (post.username ?? ''),
+                        post.fullName != null && post.fullName != ""
+                            ? post.fullName!
+                            : post.username,
                         style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
-                      post.businessName != null 
-                        ? Container(
-                            margin: const EdgeInsets.only(top: 2),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFFA366).withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              post.businessName!,
-                              style: const TextStyle(
-                                color: Color(0xFFD97A3D),
-                                fontSize: 11,
+                      post.businessName != null
+                          ? Container(
+                              margin: const EdgeInsets.only(top: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(
+                                  0xFFFFA366,
+                                ).withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                post.businessName!,
+                                style: const TextStyle(
+                                  color: Color(0xFFD97A3D),
+                                  fontSize: 11,
+                                ),
+                              ),
+                            )
+                          : Container(
+                              margin: const EdgeInsets.only(top: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color.fromARGB(
+                                  255,
+                                  130,
+                                  102,
+                                  255,
+                                ).withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                "Customer",
+                                style: const TextStyle(
+                                  color: Color.fromARGB(255, 131, 44, 218),
+                                  fontSize: 11,
+                                ),
                               ),
                             ),
-                          )
-                        : Container(
-                            margin: const EdgeInsets.only(top: 2),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color.fromARGB(255, 130, 102, 255).withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              "Customer",
-                              style: const TextStyle(
-                                color: Color.fromARGB(255, 131, 44, 218),
-                                fontSize: 11,
-                              ),
-                            ),
-                          ),
 
                       Text(
                         post.timestamp,

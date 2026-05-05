@@ -18,7 +18,7 @@ class WidgetTree extends StatelessWidget {
         builder: (context, mode, _) {
           return ValueListenableBuilder<int>(
             valueListenable: selectedPageNotifier,
-            builder: (context, selectedIndex, __) {
+            builder: (context, selectedIndex, child) {
               final pages = mode == "Seller" ? sellerPages : defaultUserPages;
               return pages.elementAt(selectedIndex);
             },
