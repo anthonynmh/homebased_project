@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:homebased_project/v2/screens/v2_account_screen.dart';
+import 'package:homebased_project/v2/screens/v2_auth_screen.dart';
 import 'package:homebased_project/v2/screens/v2_listings_screen.dart';
 import 'package:homebased_project/v2/screens/v2_map_screen.dart';
 import 'package:homebased_project/v2/state/v2_app_controller.dart';
@@ -33,6 +34,10 @@ class _V2HomeShellState extends State<V2HomeShell> {
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, _) {
+        if (!_controller.isLoggedIn) {
+          return V2AuthScreen(controller: _controller);
+        }
+
         return Scaffold(
           body: IndexedStack(
             index: _selectedIndex,
@@ -51,12 +56,12 @@ class _V2HomeShellState extends State<V2HomeShell> {
               NavigationDestination(
                 icon: Icon(Icons.map_outlined),
                 selectedIcon: Icon(Icons.map),
-                label: 'Map',
+                label: 'Nearby',
               ),
               NavigationDestination(
                 icon: Icon(Icons.inventory_2_outlined),
                 selectedIcon: Icon(Icons.inventory_2),
-                label: 'Listings',
+                label: 'Storefronts',
               ),
               NavigationDestination(
                 icon: Icon(Icons.person_outline),

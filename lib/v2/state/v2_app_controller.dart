@@ -2,194 +2,354 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import 'package:homebased_project/v2/data/v2_mock_data.dart';
-import 'package:homebased_project/v2/models/v2_listing.dart';
+import 'package:homebased_project/v2/models/v2_marketplace.dart';
 import 'package:homebased_project/v2/utils/v2_geo.dart';
 
 class V2AppController extends ChangeNotifier {
-  final List<V2Listing> _listings = buildV2MockListings();
-  final Set<String> _subscribedListingIds = {};
-  final Set<String> _rejectedListingIds = {};
+  final Map<String, String> _userNamesById = buildV2MockUserNames();
+  final List<V2Storefront> _storefronts = buildV2MockStorefronts();
+  final List<V2CatalogItem> _catalogItems = buildV2MockCatalogItems();
+  final List<V2Subscription> _subscriptions = buildV2MockSubscriptions();
+  final List<V2Comment> _comments = buildV2MockComments();
 
-  V2UserMode _mode = V2UserMode.casual;
-  String? _selectedListingId = 'cake-001';
-  int _createdListings = 0;
+  V2CurrentUser? _currentUser;
+  String? _selectedStorefrontId = 'sf-mika-bakes';
+  int _createdStorefronts = 0;
+  int _createdCatalogItems = 0;
+  int _createdComments = 0;
+  int _createdSubscriptions = 0;
 
-  V2UserMode get mode => _mode;
-  LatLng get currentLocation => V2Geo.singaporeCenter;
+  V2CurrentUser? get currentUser => _currentUser;
+  bool get isLoggedIn => _currentUser != null;
+  V2UserType get userType => _currentUser?.userType ?? V2UserType.casual;
+  LatLng get currentLocation => _currentUser?.location ?? V2Geo.singaporeCenter;
   double get radiusKm => V2Geo.radiusKm;
 
-  List<V2Listing> get allListings => List.unmodifiable(_listings);
+  List<V2Storefront> get allStorefronts => List.unmodifiable(_storefronts);
 
-  List<V2Listing> get nearbyListings {
-    final listings = _listings
-        .where((listing) => distanceFromCurrentKm(listing) <= radiusKm)
-        .where(
-          (listing) =>
-              _mode == V2UserMode.lister ||
-              !_rejectedListingIds.contains(listing.id),
-        )
+  List<V2Storefront> get nearbyStorefronts {
+    final storefronts = _storefronts
+        .where((storefront) => distanceFromCurrentKm(storefront) <= radiusKm)
         .toList();
 
-    listings.sort(
+    storefronts.sort(
       (a, b) => distanceFromCurrentKm(a).compareTo(distanceFromCurrentKm(b)),
     );
 
-    return listings;
+    return storefronts;
   }
 
-  List<V2Listing> get ownedListings {
-    return _listings
-        .where((listing) => listing.ownedByCurrentLister)
+  List<V2Storefront> get ownedStorefronts {
+    final userId = _currentUser?.id;
+    if (userId == null) return const [];
+
+    return _storefronts
+        .where((storefront) => storefront.ownerId == userId)
         .toList(growable: false);
   }
 
-  V2Listing? get selectedListing {
-    if (_selectedListingId == null) return _firstNearbyOrNull();
+  V2Storefront? get selectedStorefront {
+    if (_selectedStorefrontId == null) return _firstNearbyOrNull();
+    return storefrontById(_selectedStorefrontId!) ?? _firstNearbyOrNull();
+  }
 
-    for (final listing in _listings) {
-      if (listing.id == _selectedListingId) return listing;
+  int get subscribedCount {
+    final userId = _currentUser?.id;
+    if (userId == null) return 0;
+    return _subscriptions
+        .where((subscription) => subscription.userId == userId)
+        .length;
+  }
+
+  int get catalogItemCount => _catalogItems.length;
+
+  V2Storefront? storefrontById(String storefrontId) {
+    for (final storefront in _storefronts) {
+      if (storefront.id == storefrontId) return storefront;
     }
-
-    return _firstNearbyOrNull();
+    return null;
   }
 
-  int get subscribedCount => _subscribedListingIds.length;
-  int get rejectedCount => _rejectedListingIds.length;
-
-  bool isSubscribed(String listingId) =>
-      _subscribedListingIds.contains(listingId);
-
-  bool isRejected(String listingId) => _rejectedListingIds.contains(listingId);
-
-  double distanceFromCurrentKm(V2Listing listing) {
-    return V2Geo.distanceKm(currentLocation, listing.location);
+  List<V2CatalogItem> catalogFor(String storefrontId) {
+    return _catalogItems
+        .where((item) => item.storefrontId == storefrontId)
+        .toList(growable: false);
   }
 
-  void setMode(V2UserMode mode) {
-    if (_mode == mode) return;
-    _mode = mode;
-    notifyListeners();
+  List<V2Comment> commentsFor(String storefrontId) {
+    final comments = _comments
+        .where((comment) => comment.storefrontId == storefrontId)
+        .toList();
+    comments.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    return comments;
   }
 
-  void selectListing(String listingId) {
-    _selectedListingId = listingId;
-    notifyListeners();
+  List<V2Subscription> subscriptionsFor(String storefrontId) {
+    return _subscriptions
+        .where((subscription) => subscription.storefrontId == storefrontId)
+        .toList(growable: false);
   }
 
-  void subscribe(String listingId) {
-    _subscribedListingIds.add(listingId);
-    _rejectedListingIds.remove(listingId);
+  int subscriberCountFor(String storefrontId) {
+    return subscriptionsFor(storefrontId).length;
+  }
 
-    final index = _listings.indexWhere((listing) => listing.id == listingId);
-    if (index == -1) return;
+  bool isSubscribed(String storefrontId) {
+    final userId = _currentUser?.id;
+    if (userId == null) return false;
 
-    final listing = _listings[index];
-    final alreadyInThread = listing.subscriptions.any(
-      (subscription) => subscription.id == 'sub-you',
+    return _subscriptions.any(
+      (subscription) =>
+          subscription.userId == userId &&
+          subscription.storefrontId == storefrontId,
     );
-
-    if (!alreadyInThread) {
-      _listings[index] = listing.copyWith(
-        subscriptions: [
-          ...listing.subscriptions,
-          const V2Subscription(
-            id: 'sub-you',
-            userName: 'You',
-            note: 'Subscribed from the v2 prototype.',
-            status: 'Interested',
-          ),
-        ],
-        threadMessages: [
-          ...listing.threadMessages,
-          const V2ThreadMessage(
-            author: 'You',
-            message: 'I am interested. Please keep me updated.',
-            timeLabel: 'Now',
-            fromLister: false,
-          ),
-        ],
-      );
-    }
-
-    _selectedListingId = listingId;
-    notifyListeners();
   }
 
-  void reject(String listingId) {
-    _rejectedListingIds.add(listingId);
-    _subscribedListingIds.remove(listingId);
-
-    if (_selectedListingId == listingId) {
-      _selectedListingId = _firstNearbyOrNull()?.id;
-    }
-
-    notifyListeners();
+  bool canManage(String storefrontId) {
+    final user = _currentUser;
+    if (user == null || user.userType != V2UserType.owner) return false;
+    final storefront = storefrontById(storefrontId);
+    return storefront?.ownerId == user.id;
   }
 
-  void createListing({
-    required String title,
-    required String category,
-    required String description,
-    required String priceLabel,
-    required int availableWithinDays,
+  bool canComment(String storefrontId) {
+    return canManage(storefrontId) || isSubscribed(storefrontId);
+  }
+
+  String displayNameFor(String userId) {
+    return _userNamesById[userId] ?? 'Neighbour';
+  }
+
+  double distanceFromCurrentKm(V2Storefront storefront) {
+    return V2Geo.distanceKm(currentLocation, storefront.location);
+  }
+
+  void simulateLogin({
+    required String displayName,
+    V2UserType userType = V2UserType.casual,
   }) {
-    _createdListings += 1;
-    final location = V2Geo.offsetFromCenter(
-      northMeters: 180 + (_createdListings * 90),
-      eastMeters: -160 + (_createdListings * 110),
-    );
-    final now = DateTime.now();
-    final listing = V2Listing(
-      id: 'created-$_createdListings',
-      title: title.trim(),
-      category: category.trim().isEmpty ? 'Home bake' : category.trim(),
-      description: description.trim(),
-      listerName: 'Your test kitchen',
-      pickupArea: 'Near you',
-      priceLabel: priceLabel.trim().isEmpty ? 'Price TBD' : priceLabel.trim(),
-      availableFrom: now.add(const Duration(days: 1)),
-      availableUntil: now.add(Duration(days: availableWithinDays)),
-      location: location,
-      ownedByCurrentLister: true,
-      subscriptions: const [],
-      threadMessages: const [
-        V2ThreadMessage(
-          author: 'Your test kitchen',
-          message: 'New interest-check listing created.',
-          timeLabel: 'Now',
-          fromLister: true,
-        ),
-      ],
-    );
+    _setDemoUser(displayName: displayName, userType: userType);
+  }
 
-    _listings.insert(0, listing);
-    _selectedListingId = listing.id;
-    _mode = V2UserMode.lister;
+  void simulateSignup({
+    required String displayName,
+    V2UserType userType = V2UserType.casual,
+  }) {
+    _setDemoUser(displayName: displayName, userType: userType);
+  }
+
+  void logout() {
+    _currentUser = null;
     notifyListeners();
   }
 
-  void postOwnerUpdate(String listingId) {
-    final index = _listings.indexWhere((listing) => listing.id == listingId);
+  void updateDisplayName(String displayName) {
+    final user = _currentUser;
+    final trimmed = displayName.trim();
+    if (user == null || trimmed.isEmpty) return;
+
+    _currentUser = user.copyWith(displayName: trimmed);
+    _userNamesById[user.id] = trimmed;
+    notifyListeners();
+  }
+
+  void setUserType(V2UserType userType) {
+    final user = _currentUser;
+    if (user == null || user.userType == userType) return;
+
+    _currentUser = user.copyWith(userType: userType);
+    notifyListeners();
+  }
+
+  void selectStorefront(String storefrontId) {
+    _selectedStorefrontId = storefrontId;
+    notifyListeners();
+  }
+
+  void subscribe(String storefrontId) {
+    final user = _currentUser;
+    if (user == null || isSubscribed(storefrontId)) return;
+
+    _createdSubscriptions += 1;
+    _subscriptions.add(
+      V2Subscription(
+        id: 'sub-local-$_createdSubscriptions',
+        userId: user.id,
+        storefrontId: storefrontId,
+      ),
+    );
+    _selectedStorefrontId = storefrontId;
+    notifyListeners();
+  }
+
+  void unsubscribe(String storefrontId) {
+    final userId = _currentUser?.id;
+    if (userId == null) return;
+
+    _subscriptions.removeWhere(
+      (subscription) =>
+          subscription.userId == userId &&
+          subscription.storefrontId == storefrontId,
+    );
+    notifyListeners();
+  }
+
+  void createStorefront({
+    required String name,
+    required String description,
+    required String pickupArea,
+  }) {
+    final user = _currentUser;
+    if (user == null) return;
+
+    _createdStorefronts += 1;
+    final location = V2Geo.offsetFromCenter(
+      northMeters: 160 + (_createdStorefronts * 80),
+      eastMeters: -130 + (_createdStorefronts * 95),
+    );
+    final storefrontId = 'sf-local-$_createdStorefronts';
+    final storefront = V2Storefront(
+      id: storefrontId,
+      ownerId: user.id,
+      name: name.trim().isEmpty ? 'New home kitchen' : name.trim(),
+      description: description.trim().isEmpty
+          ? 'A new frontend-only storefront.'
+          : description.trim(),
+      pickupArea: pickupArea.trim().isEmpty ? 'Near you' : pickupArea.trim(),
+      location: location,
+    );
+
+    _storefronts.insert(0, storefront);
+    addCatalogItem(
+      storefrontId: storefrontId,
+      name: 'Sample food item',
+      description: 'Edit this item to preview catalog management.',
+      price: 12,
+      availability: V2Availability.preorder,
+      notify: false,
+    );
+    _selectedStorefrontId = storefrontId;
+    _currentUser = user.copyWith(userType: V2UserType.owner);
+    notifyListeners();
+  }
+
+  void updateStorefront({
+    required String storefrontId,
+    required String name,
+    required String description,
+    required String pickupArea,
+  }) {
+    if (!canManage(storefrontId)) return;
+
+    final index = _storefronts.indexWhere(
+      (storefront) => storefront.id == storefrontId,
+    );
     if (index == -1) return;
 
-    final listing = _listings[index];
-    _listings[index] = listing.copyWith(
-      threadMessages: [
-        ...listing.threadMessages,
-        const V2ThreadMessage(
-          author: 'Your test kitchen',
-          message: 'Thanks for the interest. I will confirm the batch soon.',
-          timeLabel: 'Now',
-          fromLister: true,
-        ),
-      ],
+    final storefront = _storefronts[index];
+    _storefronts[index] = storefront.copyWith(
+      name: name.trim().isEmpty ? storefront.name : name.trim(),
+      description: description.trim().isEmpty
+          ? storefront.description
+          : description.trim(),
+      pickupArea: pickupArea.trim().isEmpty
+          ? storefront.pickupArea
+          : pickupArea.trim(),
     );
-
     notifyListeners();
   }
 
-  V2Listing? _firstNearbyOrNull() {
-    final listings = nearbyListings;
-    return listings.isEmpty ? null : listings.first;
+  void addCatalogItem({
+    required String storefrontId,
+    required String name,
+    required String description,
+    required double price,
+    required String availability,
+    bool notify = true,
+  }) {
+    if (notify && !canManage(storefrontId)) return;
+
+    _createdCatalogItems += 1;
+    _catalogItems.add(
+      V2CatalogItem(
+        id: 'item-local-$_createdCatalogItems',
+        storefrontId: storefrontId,
+        name: name.trim().isEmpty ? 'New food item' : name.trim(),
+        description: description.trim().isEmpty
+            ? 'A frontend-only catalog item.'
+            : description.trim(),
+        price: price < 0 ? 0 : price,
+        availability: availability,
+      ),
+    );
+
+    if (notify) notifyListeners();
+  }
+
+  void updateCatalogItem({
+    required String itemId,
+    required String name,
+    required String description,
+    required double price,
+    required String availability,
+  }) {
+    final index = _catalogItems.indexWhere((item) => item.id == itemId);
+    if (index == -1) return;
+
+    final item = _catalogItems[index];
+    if (!canManage(item.storefrontId)) return;
+
+    _catalogItems[index] = item.copyWith(
+      name: name.trim().isEmpty ? item.name : name.trim(),
+      description: description.trim().isEmpty
+          ? item.description
+          : description.trim(),
+      price: price < 0 ? item.price : price,
+      availability: availability,
+    );
+    notifyListeners();
+  }
+
+  bool postComment({required String storefrontId, required String body}) {
+    final user = _currentUser;
+    final trimmed = body.trim();
+    if (user == null || trimmed.isEmpty || !canComment(storefrontId)) {
+      return false;
+    }
+
+    _createdComments += 1;
+    _comments.add(
+      V2Comment(
+        id: 'comment-local-$_createdComments',
+        storefrontId: storefrontId,
+        userId: user.id,
+        body: trimmed,
+        createdAt: DateTime.now(),
+      ),
+    );
+    notifyListeners();
+    return true;
+  }
+
+  void _setDemoUser({
+    required String displayName,
+    required V2UserType userType,
+  }) {
+    final trimmed = displayName.trim().isEmpty
+        ? 'Demo user'
+        : displayName.trim();
+    _currentUser = V2CurrentUser(
+      id: v2DemoUserId,
+      displayName: trimmed,
+      userType: userType,
+      location: V2Geo.singaporeCenter,
+    );
+    _userNamesById[v2DemoUserId] = trimmed;
+    notifyListeners();
+  }
+
+  V2Storefront? _firstNearbyOrNull() {
+    final storefronts = nearbyStorefronts;
+    return storefronts.isEmpty ? null : storefronts.first;
   }
 }

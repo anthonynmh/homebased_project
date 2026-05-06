@@ -1,55 +1,63 @@
 # Homebased V2
 
-V2 is the new direction for Homebased: a mobile-first marketplace for future
-listings. Listers can post products they may sell soon, and casual users can
-discover nearby listings, subscribe to interest checks, or reject what is not
-relevant.
+V2 is the active frontend-only prototype for a small-seller storefront
+experience. It focuses on food storefront discovery, subscriptions, catalog
+browsing, owner management, and a simple storefront thread.
 
-## Product Direction
+## Product Slice
 
-- **Primary surface:** map-first browsing on mobile phones.
-- **Casual users:** view listings within a 2KM radius, subscribe to listings,
-  and reject listings from their local feed.
-- **Listers:** create listings and preview interested subscribers/community
-  thread activity.
-- **Listings:** products that may become available in a specified future window,
-  used to gauge demand before the lister buys ingredients or inventory.
+- **Casual users:** use simulated login/signup, view storefronts inside a 2KM
+  radius, subscribe or unsubscribe, open storefront details, browse food catalog
+  items, and comment after subscribing.
+- **Storefront owners:** switch to owner mode, create storefronts, edit basic
+  storefront details, add or edit food catalog items, and post in the storefront
+  thread.
+- **Account:** update display name, switch user type, and perform simulated
+  logout.
 
 ## Prototype Constraints
 
 - Frontend-only prototype.
-- No Supabase, auth, storage, or backend calls.
-- All v2 state is in memory and resets on app restart.
-- Location is mocked to a Singapore center point.
-- Listing data is hardcoded for visualization and UX exploration.
+- No Supabase, auth service, storage, database, API calls, migrations, payments,
+  delivery, or production persistence.
+- Simulated auth stores only an in-memory demo user.
+- Storefronts, catalog items, subscriptions, and comments are hardcoded or kept
+  in memory through `V2AppController`.
+- State resets when the app restarts.
+- Location is mocked to a Singapore center point and filtered with a simple 2KM
+  Haversine calculation.
+- Ownership and commenting rules are UI-only prototype checks, not security.
 
-## Map Stack
+## Frontend Stack
 
-- Renderer: `maplibre_gl`
-- Style: OpenFreeMap Positron
-- Style URL: `https://tiles.openfreemap.org/styles/positron`
+- Flutter and Dart.
+- Material 3 components through Flutter's built-in Material library.
+- `ChangeNotifier` for the v2 in-memory controller.
+- `maplibre_gl` for the nearby storefront map.
+- OpenFreeMap Positron map style:
+  `https://tiles.openfreemap.org/styles/positron`
+- `intl` remains available for formatting where needed.
 
-The map screen uses native MapLibre circle annotations for listing locations so
-markers remain visible and tappable on web and mobile.
+No new packages are required for this prototype. The repository still contains
+older Supabase-backed `mvp2` code, but `main.dart` boots directly into `V2App`.
+
+On Flutter desktop targets where `maplibre_gl` does not support the platform,
+the Nearby tab uses a lightweight storefront fallback surface instead of
+constructing the native map widget. Web, iOS, and Android continue to use the
+interactive map.
 
 ## Structure
 
 - `v2_app.dart`: v2 app root and theme.
-- `models/`: frontend-only listing, subscription, thread, and user-mode types.
-- `data/`: hardcoded placeholder listing data.
-- `state/`: in-memory app controller.
-- `screens/`: map, listings, account, and shell screens.
-- `widgets/`: reusable v2 UI widgets, including the MapLibre map and floating
-  listing cards.
+- `models/`: storefront, catalog item, subscription, comment, and user types.
+- `data/`: hardcoded mock storefront/catalog/subscription/comment seed data.
+- `state/`: `V2AppController`, the in-memory prototype store.
+- `screens/`: auth gate, map, storefront list/manage, storefront detail,
+  account, and shell screens.
+- `widgets/`: reusable storefront cards, MapLibre map widget, and edit forms.
 - `utils/`: small helpers, including distance and radius calculations.
 
-## Deployment
-
-`main.dart` boots directly into `V2App`, so Netlify builds and serves v2 by
-default. The Netlify build does not require `.env` or Supabase environment
-variables.
-
-Before merging deployment changes, verify:
+## Development
 
 ```bash
 flutter pub get
@@ -63,3 +71,6 @@ For local static preview:
 bash local_deployment/build_local.sh
 bash local_deployment/deploy_local.sh
 ```
+
+The Netlify build and local deployment scripts do not require `.env` files or
+Supabase dart defines for v2.

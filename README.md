@@ -12,6 +12,16 @@ Fret not, homebased is the go-to platform for you to start monetizing fast!
 
 No prior business knowledge required. You should do what you do best -- making good food :D
 
+## Active Prototype
+
+The active app entrypoint boots into `lib/v2`, a frontend-only Flutter prototype
+for nearby food storefront discovery. It uses mock users, mock storefronts,
+mock food catalog items, mock subscriptions, and in-memory comments to
+demonstrate the casual-user and storefront-owner flows.
+
+The v2 prototype intentionally does not implement real backend, database, auth,
+API, storage, payments, delivery, or production persistence behavior.
+
 ## Other Documentation
 
 - [Developer Guide](./documentation/developer_guide.md)
