@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'package:homebased_project/v2/models/v2_listing.dart';
+import 'package:homebased_project/v2/models/v2_marketplace.dart';
+import 'package:homebased_project/v2/screens/v2_storefront_detail_screen.dart';
 import 'package:homebased_project/v2/state/v2_app_controller.dart';
-import 'package:homebased_project/v2/widgets/v2_floating_listing_card.dart';
-import 'package:homebased_project/v2/widgets/v2_listing_map.dart';
+import 'package:homebased_project/v2/widgets/v2_floating_storefront_card.dart';
+import 'package:homebased_project/v2/widgets/v2_storefront_map.dart';
 
 class V2MapScreen extends StatefulWidget {
   final V2AppController controller;
@@ -19,7 +21,7 @@ class V2MapScreen extends StatefulWidget {
 
 class _V2MapScreenState extends State<V2MapScreen> {
   late final PageController _pageController;
-  String? _lastSyncedListingId;
+  String? _lastSyncedStorefrontId;
 
   @override
   void initState() {
@@ -46,25 +48,35 @@ class _V2MapScreenState extends State<V2MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final listings = widget.controller.nearbyListings;
-    final selected = _selectedVisibleListing(listings);
+    final storefronts = widget.controller.nearbyStorefronts;
+    final selected = _selectedVisibleStorefront(storefronts);
+    final supportsInteractiveMap = _supportsInteractiveMap;
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final isWide = constraints.maxWidth >= 620;
-        final cardWidth = math.min(constraints.maxWidth, 520.0);
+        final cardWidth = math.min(constraints.maxWidth, 540.0);
         final cardHeight = _cardHeightFor(constraints.maxHeight);
 
         return Stack(
           children: [
             Positioned.fill(
-              child: V2ListingMap(
-                currentLocation: widget.controller.currentLocation,
-                listings: listings,
-                selectedListing: selected,
-                isSubscribed: widget.controller.isSubscribed,
-                onListingSelected: widget.controller.selectListing,
-              ),
+              child: supportsInteractiveMap
+                  ? V2StorefrontMap(
+                      currentLocation: widget.controller.currentLocation,
+                      storefronts: storefronts,
+                      selectedStorefront: selected,
+                      isSubscribed: widget.controller.isSubscribed,
+                      canManage: widget.controller.canManage,
+                      onStorefrontSelected: widget.controller.selectStorefront,
+                    )
+                  : _MapFallbackSurface(
+                      controller: widget.controller,
+                      storefronts: storefronts,
+                      selectedStorefront: selected,
+                      onSelect: widget.controller.selectStorefront,
+                      onOpen: _openStorefront,
+                    ),
             ),
             Positioned(
               left: 12,
@@ -75,11 +87,11 @@ class _V2MapScreenState extends State<V2MapScreen> {
                 child: Center(
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
-                      maxWidth: isWide ? 520 : double.infinity,
+                      maxWidth: isWide ? 540 : double.infinity,
                     ),
                     child: _MapTopOverlay(
-                      mode: widget.controller.mode,
-                      listingCount: listings.length,
+                      userType: widget.controller.userType,
+                      storefrontCount: storefronts.length,
                       radiusKm: widget.controller.radiusKm,
                     ),
                   ),
@@ -97,21 +109,22 @@ class _V2MapScreenState extends State<V2MapScreen> {
                   child: SizedBox(
                     width: cardWidth,
                     height: cardHeight,
-                    child: listings.isEmpty
+                    child: storefronts.isEmpty
                         ? const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 16),
                             child: _EmptyFloatingCard(),
                           )
-                        : _ListingCarousel(
+                        : _StorefrontCarousel(
                             controller: widget.controller,
                             pageController: _pageController,
-                            listings: listings,
+                            storefronts: storefronts,
+                            onOpen: _openStorefront,
                             onPageChanged: (index) {
-                              if (index < 0 || index >= listings.length) {
+                              if (index < 0 || index >= storefronts.length) {
                                 return;
                               }
-                              widget.controller.selectListing(
-                                listings[index].id,
+                              widget.controller.selectStorefront(
+                                storefronts[index].id,
                               );
                             },
                           ),
@@ -126,20 +139,44 @@ class _V2MapScreenState extends State<V2MapScreen> {
   }
 
   double _cardHeightFor(double screenHeight) {
-    if (screenHeight < 590) return 164;
-    if (screenHeight < 720) return 176;
-    return 188;
+    if (screenHeight < 590) return 170;
+    if (screenHeight < 720) return 184;
+    return 196;
   }
 
-  V2Listing? _selectedVisibleListing(List<V2Listing> listings) {
-    if (listings.isEmpty) return null;
+  bool get _supportsInteractiveMap {
+    if (kIsWeb) return true;
 
-    final selectedId = widget.controller.selectedListing?.id;
-    for (final listing in listings) {
-      if (listing.id == selectedId) return listing;
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.android || TargetPlatform.iOS => true,
+      TargetPlatform.fuchsia ||
+      TargetPlatform.linux ||
+      TargetPlatform.macOS ||
+      TargetPlatform.windows => false,
+    };
+  }
+
+  V2Storefront? _selectedVisibleStorefront(List<V2Storefront> storefronts) {
+    if (storefronts.isEmpty) return null;
+
+    final selectedId = widget.controller.selectedStorefront?.id;
+    for (final storefront in storefronts) {
+      if (storefront.id == selectedId) return storefront;
     }
 
-    return listings.first;
+    return storefronts.first;
+  }
+
+  void _openStorefront(V2Storefront storefront) {
+    widget.controller.selectStorefront(storefront.id);
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => V2StorefrontDetailScreen(
+          controller: widget.controller,
+          storefrontId: storefront.id,
+        ),
+      ),
+    );
   }
 
   void _handleControllerChanged() {
@@ -150,14 +187,16 @@ class _V2MapScreenState extends State<V2MapScreen> {
   }
 
   void _syncPageToSelected() {
-    final listings = widget.controller.nearbyListings;
-    final selected = _selectedVisibleListing(listings);
-    if (selected == null || selected.id == _lastSyncedListingId) return;
+    final storefronts = widget.controller.nearbyStorefronts;
+    final selected = _selectedVisibleStorefront(storefronts);
+    if (selected == null || selected.id == _lastSyncedStorefrontId) return;
 
-    final index = listings.indexWhere((listing) => listing.id == selected.id);
+    final index = storefronts.indexWhere(
+      (storefront) => storefront.id == selected.id,
+    );
     if (index == -1 || !_pageController.hasClients) return;
 
-    _lastSyncedListingId = selected.id;
+    _lastSyncedStorefrontId = selected.id;
     final currentPage =
         _pageController.page?.round() ?? _pageController.initialPage;
 
@@ -173,17 +212,19 @@ class _V2MapScreenState extends State<V2MapScreen> {
   }
 }
 
-class _ListingCarousel extends StatelessWidget {
+class _StorefrontCarousel extends StatelessWidget {
   final V2AppController controller;
   final PageController pageController;
-  final List<V2Listing> listings;
+  final List<V2Storefront> storefronts;
   final ValueChanged<int> onPageChanged;
+  final ValueChanged<V2Storefront> onOpen;
 
-  const _ListingCarousel({
+  const _StorefrontCarousel({
     required this.controller,
     required this.pageController,
-    required this.listings,
+    required this.storefronts,
     required this.onPageChanged,
+    required this.onOpen,
   });
 
   @override
@@ -192,20 +233,30 @@ class _ListingCarousel extends StatelessWidget {
       controller: pageController,
       clipBehavior: Clip.none,
       physics: const BouncingScrollPhysics(),
-      itemCount: listings.length,
+      itemCount: storefronts.length,
       onPageChanged: onPageChanged,
       itemBuilder: (context, index) {
-        final listing = listings[index];
+        final storefront = storefronts[index];
+        final subscribed = controller.isSubscribed(storefront.id);
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 5),
-          child: V2FloatingListingCard(
-            listing: listing,
-            distanceKm: controller.distanceFromCurrentKm(listing),
-            subscribed: controller.isSubscribed(listing.id),
-            casualMode: controller.mode == V2UserMode.casual,
-            onSubscribe: () => controller.subscribe(listing.id),
-            onReject: () => controller.reject(listing.id),
+          child: V2FloatingStorefrontCard(
+            storefront: storefront,
+            distanceKm: controller.distanceFromCurrentKm(storefront),
+            catalogCount: controller.catalogFor(storefront.id).length,
+            subscriberCount: controller.subscriberCountFor(storefront.id),
+            subscribed: subscribed,
+            owned: controller.canManage(storefront.id),
+            casualMode: controller.userType == V2UserType.casual,
+            onOpen: () => onOpen(storefront),
+            onToggleSubscription: () {
+              if (subscribed) {
+                controller.unsubscribe(storefront.id);
+              } else {
+                controller.subscribe(storefront.id);
+              }
+            },
           ),
         );
       },
@@ -213,20 +264,251 @@ class _ListingCarousel extends StatelessWidget {
   }
 }
 
+class _MapFallbackSurface extends StatelessWidget {
+  final V2AppController controller;
+  final List<V2Storefront> storefronts;
+  final V2Storefront? selectedStorefront;
+  final ValueChanged<String> onSelect;
+  final ValueChanged<V2Storefront> onOpen;
+
+  const _MapFallbackSurface({
+    required this.controller,
+    required this.storefronts,
+    required this.selectedStorefront,
+    required this.onSelect,
+    required this.onOpen,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(color: Color(0xFFEAF1EF)),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 82, 16, 220),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const _FallbackLocationCard(),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: storefronts.isEmpty
+                        ? const Center(child: _FallbackEmptyState())
+                        : ListView.separated(
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: storefronts.length,
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(height: 8),
+                            itemBuilder: (context, index) {
+                              final storefront = storefronts[index];
+                              final selected =
+                                  storefront.id == selectedStorefront?.id;
+                              return _FallbackStorefrontRow(
+                                storefront: storefront,
+                                distanceKm: controller.distanceFromCurrentKm(
+                                  storefront,
+                                ),
+                                selected: selected,
+                                subscribed: controller.isSubscribed(
+                                  storefront.id,
+                                ),
+                                owned: controller.canManage(storefront.id),
+                                onTap: () => onSelect(storefront.id),
+                                onOpen: () => onOpen(storefront),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FallbackLocationCard extends StatelessWidget {
+  const _FallbackLocationCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.88),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFD6E1DB)),
+      ),
+      child: const Padding(
+        padding: EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Icon(Icons.my_location_outlined, color: Color(0xFF176B87)),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Mock location · Singapore center',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Color(0xFF17201D),
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FallbackStorefrontRow extends StatelessWidget {
+  final V2Storefront storefront;
+  final double distanceKm;
+  final bool selected;
+  final bool subscribed;
+  final bool owned;
+  final VoidCallback onTap;
+  final VoidCallback onOpen;
+
+  const _FallbackStorefrontRow({
+    required this.storefront,
+    required this.distanceKm,
+    required this.selected,
+    required this.subscribed,
+    required this.owned,
+    required this.onTap,
+    required this.onOpen,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = owned
+        ? const Color(0xFFD97706)
+        : selected
+        ? const Color(0xFFE11D48)
+        : subscribed
+        ? const Color(0xFF6D28D9)
+        : const Color(0xFF176B87);
+
+    return Material(
+      color: Colors.white.withValues(alpha: selected ? 0.98 : 0.84),
+      borderRadius: BorderRadius.circular(8),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Container(
+                width: selected ? 18 : 14,
+                height: selected ? 18 : 14,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 3),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x22000000),
+                      blurRadius: 8,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      storefront.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF17201D),
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${storefront.pickupArea} · '
+                      '${distanceKm.toStringAsFixed(1)} km',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF647067),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: 'Open storefront',
+                onPressed: onOpen,
+                icon: const Icon(Icons.chevron_right),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FallbackEmptyState extends StatelessWidget {
+  const _FallbackEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.88),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: const Padding(
+        padding: EdgeInsets.all(16),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.search_off, color: Color(0xFF647067)),
+            SizedBox(width: 10),
+            Text(
+              'No storefronts nearby.',
+              style: TextStyle(
+                color: Color(0xFF39433E),
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _MapTopOverlay extends StatelessWidget {
-  final V2UserMode mode;
-  final int listingCount;
+  final V2UserType userType;
+  final int storefrontCount;
   final double radiusKm;
 
   const _MapTopOverlay({
-    required this.mode,
-    required this.listingCount,
+    required this.userType,
+    required this.storefrontCount,
     required this.radiusKm,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isLister = mode == V2UserMode.lister;
+    final isOwner = userType == V2UserType.owner;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -246,19 +528,19 @@ class _MapTopOverlay extends StatelessWidget {
         child: Row(
           children: [
             _CompactPill(
-              icon: isLister ? Icons.storefront : Icons.explore,
-              label: mode.label,
-              color: isLister
+              icon: isOwner ? Icons.storefront : Icons.explore,
+              label: userType.label,
+              color: isOwner
                   ? const Color(0xFFFFF7ED)
                   : const Color(0xFFEFF6FF),
-              textColor: isLister
+              textColor: isOwner
                   ? const Color(0xFF9A3412)
                   : const Color(0xFF1D4ED8),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                '$listingCount nearby listings',
+                '$storefrontCount nearby storefronts',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -342,7 +624,7 @@ class _EmptyFloatingCard extends StatelessWidget {
             SizedBox(width: 10),
             Expanded(
               child: Text(
-                'No visible listings nearby. Switch modes or create a listing to keep exploring.',
+                'No storefronts nearby. Create one from owner mode to keep exploring.',
                 style: TextStyle(
                   color: Color(0xFF39433E),
                   fontWeight: FontWeight.w800,

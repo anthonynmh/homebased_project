@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:homebased_project/v2/models/v2_listing.dart';
+import 'package:homebased_project/v2/models/v2_marketplace.dart';
 import 'package:homebased_project/v2/state/v2_app_controller.dart';
 
 class V2AccountScreen extends StatelessWidget {
@@ -10,6 +10,8 @@ class V2AccountScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = controller.currentUser;
+
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -23,30 +25,60 @@ class V2AccountScreen extends StatelessWidget {
           ),
           const SizedBox(height: 3),
           Text(
-            'Switch roles and review prototype state.',
+            user?.userType.description ?? 'Prototype account',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: const Color(0xFF647067),
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 16),
-          _AccountPanel(controller: controller),
+          if (user != null) _AccountPanel(controller: controller, user: user),
           const SizedBox(height: 12),
           _ModePanel(controller: controller),
           const SizedBox(height: 12),
           _StatsPanel(controller: controller),
           const SizedBox(height: 12),
-          const _PrototypePanel(),
+          _PrototypePanel(onLogout: controller.logout),
         ],
       ),
     );
   }
 }
 
-class _AccountPanel extends StatelessWidget {
+class _AccountPanel extends StatefulWidget {
   final V2AppController controller;
+  final V2CurrentUser user;
 
-  const _AccountPanel({required this.controller});
+  const _AccountPanel({required this.controller, required this.user});
+
+  @override
+  State<_AccountPanel> createState() => _AccountPanelState();
+}
+
+class _AccountPanelState extends State<_AccountPanel> {
+  late final TextEditingController _displayNameController;
+
+  @override
+  void initState() {
+    super.initState();
+    _displayNameController = TextEditingController(
+      text: widget.user.displayName,
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _AccountPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.user.displayName != widget.user.displayName) {
+      _displayNameController.text = widget.user.displayName;
+    }
+  }
+
+  @override
+  void dispose() {
+    _displayNameController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,43 +89,77 @@ class _AccountPanel extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CircleAvatar(
-              radius: 28,
-              backgroundColor: const Color(0xFF176B87).withValues(alpha: 0.13),
-              child: const Icon(
-                Icons.person,
-                color: Color(0xFF176B87),
-                size: 30,
-              ),
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 28,
+                  backgroundColor: const Color(
+                    0xFF176B87,
+                  ).withValues(alpha: 0.13),
+                  child: const Icon(
+                    Icons.person,
+                    color: Color(0xFF176B87),
+                    size: 30,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.user.displayName,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w900),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.user.userType.accountLabel,
+                        style: const TextStyle(
+                          color: Color(0xFF647067),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Demo user',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
+            const SizedBox(height: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _displayNameController,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _save(),
+                    decoration: const InputDecoration(
+                      labelText: 'Display name',
+                      border: OutlineInputBorder(),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    controller.mode.description,
-                    style: const TextStyle(
-                      color: Color(0xFF647067),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 10),
+                IconButton.filled(
+                  tooltip: 'Save display name',
+                  onPressed: _save,
+                  icon: const Icon(Icons.check),
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  void _save() {
+    widget.controller.updateDisplayName(_displayNameController.text);
+    FocusScope.of(context).unfocus();
   }
 }
 
@@ -115,7 +181,7 @@ class _ModePanel extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Role',
+              'User type',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
@@ -123,22 +189,22 @@ class _ModePanel extends StatelessWidget {
             const SizedBox(height: 10),
             SizedBox(
               width: double.infinity,
-              child: SegmentedButton<V2UserMode>(
+              child: SegmentedButton<V2UserType>(
                 segments: const [
                   ButtonSegment(
-                    value: V2UserMode.casual,
+                    value: V2UserType.casual,
                     icon: Icon(Icons.explore_outlined),
                     label: Text('Casual'),
                   ),
                   ButtonSegment(
-                    value: V2UserMode.lister,
+                    value: V2UserType.owner,
                     icon: Icon(Icons.storefront_outlined),
-                    label: Text('Lister'),
+                    label: Text('Owner'),
                   ),
                 ],
-                selected: {controller.mode},
+                selected: {controller.userType},
                 onSelectionChanged: (selection) {
-                  controller.setMode(selection.first);
+                  controller.setUserType(selection.first);
                 },
               ),
             ),
@@ -180,7 +246,7 @@ class _StatsPanel extends StatelessWidget {
                 _StatTile(
                   icon: Icons.location_on_outlined,
                   label: 'Nearby',
-                  value: '${controller.nearbyListings.length}',
+                  value: '${controller.nearbyStorefronts.length}',
                 ),
                 _StatTile(
                   icon: Icons.notifications_active_outlined,
@@ -188,14 +254,14 @@ class _StatsPanel extends StatelessWidget {
                   value: '${controller.subscribedCount}',
                 ),
                 _StatTile(
-                  icon: Icons.visibility_off_outlined,
-                  label: 'Rejected',
-                  value: '${controller.rejectedCount}',
-                ),
-                _StatTile(
                   icon: Icons.storefront_outlined,
                   label: 'Owned',
-                  value: '${controller.ownedListings.length}',
+                  value: '${controller.ownedStorefronts.length}',
+                ),
+                _StatTile(
+                  icon: Icons.restaurant_menu_outlined,
+                  label: 'Food items',
+                  value: '${controller.catalogItemCount}',
                 ),
               ],
             ),
@@ -266,7 +332,9 @@ class _StatTile extends StatelessWidget {
 }
 
 class _PrototypePanel extends StatelessWidget {
-  const _PrototypePanel();
+  final VoidCallback onLogout;
+
+  const _PrototypePanel({required this.onLogout});
 
   @override
   Widget build(BuildContext context) {
@@ -275,35 +343,39 @@ class _PrototypePanel extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: const Padding(
-        padding: EdgeInsets.all(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Prototype settings',
               style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
             ),
-            SizedBox(height: 12),
-            _SettingRow(
-              icon: Icons.map_outlined,
-              label: 'Map',
-              value: 'MapLibre GL with OpenFreeMap Positron',
-            ),
-            _SettingRow(
+            const SizedBox(height: 12),
+            const _SettingRow(
               icon: Icons.my_location_outlined,
               label: 'Location',
               value: 'Mocked Singapore center',
             ),
-            _SettingRow(
+            const _SettingRow(
               icon: Icons.radio_button_checked,
               label: 'Radius',
-              value: '2KM interest-check area',
+              value: '2KM storefront area',
             ),
-            _SettingRow(
+            const _SettingRow(
               icon: Icons.cloud_off_outlined,
               label: 'Backend',
               value: 'Disconnected, in-memory only',
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: onLogout,
+                icon: const Icon(Icons.logout),
+                label: const Text('Logout'),
+              ),
             ),
           ],
         ),
@@ -330,13 +402,13 @@ class _SettingRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: Color(0xFF176B87)),
-          SizedBox(width: 10),
+          Icon(icon, size: 18, color: const Color(0xFF176B87)),
+          const SizedBox(width: 10),
           SizedBox(
             width: 76,
             child: Text(
               label,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Color(0xFF647067),
                 fontWeight: FontWeight.w800,
               ),
@@ -345,7 +417,7 @@ class _SettingRow extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Color(0xFF17201D),
                 fontWeight: FontWeight.w700,
               ),
