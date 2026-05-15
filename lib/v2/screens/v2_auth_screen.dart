@@ -13,13 +13,15 @@ class V2AuthScreen extends StatefulWidget {
 }
 
 class _V2AuthScreenState extends State<V2AuthScreen> {
-  final _displayNameController = TextEditingController(text: 'Demo user');
+  final _emailController = TextEditingController(text: 'demo@communitii.test');
+  final _passwordController = TextEditingController(text: 'password');
   bool _signingUp = false;
   V2UserType _userType = V2UserType.casual;
 
   @override
   void dispose() {
-    _displayNameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -62,7 +64,7 @@ class _V2AuthScreenState extends State<V2AuthScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Food n Friends',
+                                  "Food 'n Friends",
                                   style: Theme.of(context)
                                       .textTheme
                                       .headlineSmall
@@ -70,7 +72,7 @@ class _V2AuthScreenState extends State<V2AuthScreen> {
                                 ),
                                 const SizedBox(height: 2),
                                 const Text(
-                                  'Storefront prototype',
+                                  'Storefront discovery prototype',
                                   style: TextStyle(
                                     color: Color(0xFF647067),
                                     fontWeight: FontWeight.w700,
@@ -105,11 +107,22 @@ class _V2AuthScreenState extends State<V2AuthScreen> {
                       ),
                       const SizedBox(height: 14),
                       TextField(
-                        controller: _displayNameController,
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      TextField(
+                        controller: _passwordController,
+                        obscureText: true,
                         textInputAction: TextInputAction.done,
                         onSubmitted: (_) => _continue(),
                         decoration: const InputDecoration(
-                          labelText: 'Display name',
+                          labelText: 'Password',
                           border: OutlineInputBorder(),
                         ),
                       ),
@@ -121,7 +134,7 @@ class _V2AuthScreenState extends State<V2AuthScreen> {
                             ButtonSegment(
                               value: V2UserType.casual,
                               icon: Icon(Icons.explore_outlined),
-                              label: Text('Casual'),
+                              label: Text('Casual user'),
                             ),
                             ButtonSegment(
                               value: V2UserType.owner,
@@ -146,6 +159,15 @@ class _V2AuthScreenState extends State<V2AuthScreen> {
                           label: Text(_signingUp ? 'Sign up' : 'Log in'),
                         ),
                       ),
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: _continueWithGoogle,
+                          icon: const Icon(Icons.account_circle_outlined),
+                          label: const Text('Continue with Google'),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -158,17 +180,43 @@ class _V2AuthScreenState extends State<V2AuthScreen> {
   }
 
   void _continue() {
-    final displayName = _displayNameController.text;
+    if (!_validate()) return;
+    final displayName = _emailController.text.trim().split('@').first;
     if (_signingUp) {
       widget.controller.simulateSignup(
         displayName: displayName,
+        email: _emailController.text,
         userType: _userType,
       );
     } else {
       widget.controller.simulateLogin(
         displayName: displayName,
+        email: _emailController.text,
         userType: _userType,
       );
     }
+  }
+
+  void _continueWithGoogle() {
+    final email = _emailController.text.trim().isEmpty
+        ? 'google-demo@communitii.test'
+        : _emailController.text;
+    widget.controller.simulateLogin(
+      displayName: 'Google demo',
+      email: email,
+      userType: _userType,
+    );
+  }
+
+  bool _validate() {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    if (!email.contains('@') || password.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Add an email and password first.')),
+      );
+      return false;
+    }
+    return true;
   }
 }

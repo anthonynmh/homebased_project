@@ -5,8 +5,13 @@ import 'package:homebased_project/v2/state/v2_app_controller.dart';
 
 class V2AccountScreen extends StatelessWidget {
   final V2AppController controller;
+  final VoidCallback onModeChanged;
 
-  const V2AccountScreen({super.key, required this.controller});
+  const V2AccountScreen({
+    super.key,
+    required this.controller,
+    required this.onModeChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -34,11 +39,11 @@ class V2AccountScreen extends StatelessWidget {
           const SizedBox(height: 16),
           if (user != null) _AccountPanel(controller: controller, user: user),
           const SizedBox(height: 12),
-          _ModePanel(controller: controller),
+          _ModePanel(controller: controller, onModeChanged: onModeChanged),
           const SizedBox(height: 12),
           _StatsPanel(controller: controller),
           const SizedBox(height: 12),
-          _PrototypePanel(onLogout: controller.logout),
+          _PrototypePanel(controller: controller),
         ],
       ),
     );
@@ -117,7 +122,8 @@ class _AccountPanelState extends State<_AccountPanel> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        widget.user.userType.accountLabel,
+                        '${widget.user.email} · ${widget.user.userType.accountLabel}',
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: Color(0xFF647067),
                           fontWeight: FontWeight.w600,
@@ -165,8 +171,9 @@ class _AccountPanelState extends State<_AccountPanel> {
 
 class _ModePanel extends StatelessWidget {
   final V2AppController controller;
+  final VoidCallback onModeChanged;
 
-  const _ModePanel({required this.controller});
+  const _ModePanel({required this.controller, required this.onModeChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -181,7 +188,7 @@ class _ModePanel extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'User type',
+              'Mode',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
@@ -194,7 +201,7 @@ class _ModePanel extends StatelessWidget {
                   ButtonSegment(
                     value: V2UserType.casual,
                     icon: Icon(Icons.explore_outlined),
-                    label: Text('Casual'),
+                    label: Text('Casual user'),
                   ),
                   ButtonSegment(
                     value: V2UserType.owner,
@@ -205,6 +212,7 @@ class _ModePanel extends StatelessWidget {
                 selected: {controller.userType},
                 onSelectionChanged: (selection) {
                   controller.setUserType(selection.first);
+                  onModeChanged();
                 },
               ),
             ),
@@ -222,6 +230,7 @@ class _StatsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ownerStore = controller.ownerStorefront;
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -229,41 +238,26 @@ class _StatsPanel extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Wrap(
+          spacing: 10,
+          runSpacing: 10,
           children: [
-            Text(
-              'Local state',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+            _StatTile(
+              icon: Icons.storefront_outlined,
+              label: 'Subscribed',
+              value: '${controller.subscribedCount}',
             ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                _StatTile(
-                  icon: Icons.location_on_outlined,
-                  label: 'Nearby',
-                  value: '${controller.nearbyStorefronts.length}',
-                ),
-                _StatTile(
-                  icon: Icons.notifications_active_outlined,
-                  label: 'Subscribed',
-                  value: '${controller.subscribedCount}',
-                ),
-                _StatTile(
-                  icon: Icons.storefront_outlined,
-                  label: 'Owned',
-                  value: '${controller.ownedStorefronts.length}',
-                ),
-                _StatTile(
-                  icon: Icons.restaurant_menu_outlined,
-                  label: 'Food items',
-                  value: '${controller.catalogItemCount}',
-                ),
-              ],
+            _StatTile(
+              icon: Icons.inventory_2_outlined,
+              label: 'Products',
+              value: ownerStore == null
+                  ? '${controller.catalogItemCount}'
+                  : '${controller.catalogFor(ownerStore.id).length}',
+            ),
+            _StatTile(
+              icon: Icons.notifications_none,
+              label: 'Unread',
+              value: '${controller.unreadNotificationCount}',
             ),
           ],
         ),
@@ -286,7 +280,7 @@ class _StatTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 150,
+      width: 148,
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: const Color(0xFFF6F7F4),
@@ -308,7 +302,6 @@ class _StatTile extends StatelessWidget {
                       style: const TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 18,
-                        color: Color(0xFF17201D),
                       ),
                     ),
                     Text(
@@ -332,9 +325,9 @@ class _StatTile extends StatelessWidget {
 }
 
 class _PrototypePanel extends StatelessWidget {
-  final VoidCallback onLogout;
+  final V2AppController controller;
 
-  const _PrototypePanel({required this.onLogout});
+  const _PrototypePanel({required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -356,31 +349,63 @@ class _PrototypePanel extends StatelessWidget {
             const _SettingRow(
               icon: Icons.my_location_outlined,
               label: 'Location',
-              value: 'Mocked Singapore center',
-            ),
-            const _SettingRow(
-              icon: Icons.radio_button_checked,
-              label: 'Radius',
-              value: '2KM storefront area',
+              value: 'Mocked neighborhood',
             ),
             const _SettingRow(
               icon: Icons.cloud_off_outlined,
               label: 'Backend',
-              value: 'Disconnected, in-memory only',
+              value: 'Frontend-only, locally persisted',
             ),
             const SizedBox(height: 8),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: onLogout,
+                onPressed: controller.logout,
                 icon: const Icon(Icons.logout),
                 label: const Text('Logout'),
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _confirmDelete(context),
+                icon: const Icon(Icons.delete_outline),
+                label: const Text('Delete mock account'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFB42318),
+                ),
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete mock account?'),
+        content: const Text(
+          'This clears locally saved prototype state and returns to login.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await controller.deleteMockAccount();
+    }
   }
 }
 
@@ -400,25 +425,24 @@ class _SettingRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: const Color(0xFF176B87)),
+          Icon(icon, color: const Color(0xFF176B87), size: 20),
           const SizedBox(width: 10),
-          SizedBox(
-            width: 76,
+          Expanded(
             child: Text(
               label,
               style: const TextStyle(
-                color: Color(0xFF647067),
+                color: Color(0xFF39433E),
                 fontWeight: FontWeight.w800,
               ),
             ),
           ),
-          Expanded(
+          Flexible(
             child: Text(
               value,
+              textAlign: TextAlign.end,
               style: const TextStyle(
-                color: Color(0xFF17201D),
+                color: Color(0xFF647067),
                 fontWeight: FontWeight.w700,
               ),
             ),
