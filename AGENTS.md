@@ -9,8 +9,7 @@ accurate assumptions.
 
 ## Project Snapshot
 
-This is a Flutter/Dart app for Food 'n Friends (aka 'communitii'), a storefront platform for home-based businesses.
-prototype.
+This is a Flutter/Dart app for Food 'n Friends (aka 'communitii'), a storefront platform for home-based businesses prototype.
 
 The active app entrypoint is `lib/main.dart`, which boots into the frontend-only
 prototype in `lib/v2`. The v2 app uses mock data and in-memory state for nearby
