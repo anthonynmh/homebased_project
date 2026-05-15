@@ -4,6 +4,7 @@ import 'package:homebased_project/v2/models/v2_marketplace.dart';
 import 'package:homebased_project/v2/screens/v2_storefront_detail_screen.dart';
 import 'package:homebased_project/v2/state/v2_app_controller.dart';
 import 'package:homebased_project/v2/widgets/v2_storefront_card.dart';
+import 'package:homebased_project/v2/widgets/v2_ui.dart';
 
 class V2DiscoverScreen extends StatefulWidget {
   final V2AppController controller;
@@ -16,6 +17,9 @@ class V2DiscoverScreen extends StatefulWidget {
 
 class _V2DiscoverScreenState extends State<V2DiscoverScreen> {
   final _searchController = TextEditingController();
+  String _category = 'All';
+  bool _nearbyOnly = false;
+  bool _popularOnly = false;
 
   @override
   void dispose() {
@@ -28,75 +32,136 @@ class _V2DiscoverScreenState extends State<V2DiscoverScreen> {
     return AnimatedBuilder(
       animation: widget.controller,
       builder: (context, _) {
-        final storefronts = _filteredStorefronts();
+        final storefronts = widget.controller.discoverStorefronts(
+          query: _searchController.text,
+          category: _category,
+          nearbyOnly: _nearbyOnly,
+          popularOnly: _popularOnly,
+        );
 
-        return SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            children: [
-              _Header(count: storefronts.length),
-              const SizedBox(height: 14),
-              TextField(
-                controller: _searchController,
-                onChanged: (_) => setState(() {}),
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.search),
-                  labelText: 'Search storefront name',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Storefront locations',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
-              ),
-              const SizedBox(height: 10),
-              if (storefronts.isEmpty)
-                const _EmptyPanel(
-                  icon: Icons.search_off,
-                  label: 'No storefronts match that name.',
-                )
-              else
-                ...storefronts.map(
-                  (storefront) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: V2StorefrontCard(
-                      storefront: storefront,
-                      distanceKm: widget.controller.distanceFromCurrentKm(
-                        storefront,
-                      ),
-                      catalogCount: widget.controller
-                          .catalogFor(storefront.id)
-                          .length,
-                      subscriberCount: widget.controller.subscriberCountFor(
-                        storefront.id,
-                      ),
-                      subscribed: widget.controller.isSubscribed(storefront.id),
-                      owned: widget.controller.canManage(storefront.id),
-                      showSubscriptionAction: true,
-                      onOpen: () => _openStorefront(storefront),
-                      onToggleSubscription: () =>
-                          _toggleSubscription(storefront.id),
-                    ),
+        return V2Page(
+          children: [
+            V2PageHeader(
+              title: 'Discover',
+              subtitle:
+                  'Find storefronts, follow what is available, and help shape what sellers make next.',
+              action: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  V2MetricChip(
+                    icon: Icons.storefront_outlined,
+                    label: 'storefronts',
+                    value: '${storefronts.length}',
                   ),
+                  V2MetricChip(
+                    icon: Icons.radio_button_checked,
+                    label: 'radius',
+                    value:
+                        '${widget.controller.radiusKm.toStringAsFixed(0)} km',
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _searchController,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                labelText: 'Search storefronts, products, or categories',
+                border: const OutlineInputBorder(),
+                suffixIcon: _searchController.text.trim().isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: 'Clear search',
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {});
+                        },
+                        icon: const Icon(Icons.close),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _DiscoverFilters(
+              categories: widget.controller.storefrontCategories,
+              selectedCategory: _category,
+              nearbyOnly: _nearbyOnly,
+              popularOnly: _popularOnly,
+              onCategorySelected: (category) {
+                setState(() => _category = category);
+              },
+              onNearbyChanged: (value) {
+                setState(() {
+                  _nearbyOnly = value;
+                  if (value) _popularOnly = false;
+                });
+              },
+              onPopularChanged: (value) {
+                setState(() {
+                  _popularOnly = value;
+                  if (value) _nearbyOnly = false;
+                });
+              },
+            ),
+            const SizedBox(height: 18),
+            V2SectionHeader(
+              title: _popularOnly ? 'Popular storefronts' : 'Storefronts',
+              subtitle:
+                  'Browse live listings, upcoming ideas, and customer updates.',
+            ),
+            const SizedBox(height: 10),
+            if (storefronts.isEmpty)
+              V2EmptyState(
+                icon: Icons.search_off,
+                title: 'No storefronts found',
+                body:
+                    'Try another search or clear filters to see more local sellers.',
+                action: OutlinedButton.icon(
+                  onPressed: _clearFilters,
+                  icon: const Icon(Icons.tune_outlined),
+                  label: const Text('Clear filters'),
                 ),
-            ],
-          ),
+              )
+            else
+              V2ResponsiveGrid(
+                itemCount: storefronts.length,
+                itemBuilder: (context, index) {
+                  final storefront = storefronts[index];
+                  return V2StorefrontCard(
+                    storefront: storefront,
+                    distanceKm: widget.controller.distanceFromCurrentKm(
+                      storefront,
+                    ),
+                    catalogCount: widget.controller
+                        .catalogFor(storefront.id)
+                        .length,
+                    subscriberCount: widget.controller.subscriberCountFor(
+                      storefront.id,
+                    ),
+                    subscribed: widget.controller.isSubscribed(storefront.id),
+                    owned: widget.controller.canManage(storefront.id),
+                    showSubscriptionAction: true,
+                    onOpen: () => _openStorefront(storefront),
+                    onToggleSubscription: () =>
+                        _toggleSubscription(storefront.id),
+                  );
+                },
+              ),
+          ],
         );
       },
     );
   }
 
-  List<V2Storefront> _filteredStorefronts() {
-    final query = _searchController.text.trim().toLowerCase();
-    final storefronts = widget.controller.allStorefronts.where((storefront) {
-      if (query.isEmpty) return true;
-      return storefront.name.toLowerCase().contains(query);
-    }).toList();
-    storefronts.sort((a, b) => a.name.compareTo(b.name));
-    return storefronts;
+  void _clearFilters() {
+    _searchController.clear();
+    setState(() {
+      _category = 'All';
+      _nearbyOnly = false;
+      _popularOnly = false;
+    });
   }
 
   void _openStorefront(V2Storefront storefront) {
@@ -120,66 +185,56 @@ class _V2DiscoverScreenState extends State<V2DiscoverScreen> {
   }
 }
 
-class _Header extends StatelessWidget {
-  final int count;
+class _DiscoverFilters extends StatelessWidget {
+  final List<String> categories;
+  final String selectedCategory;
+  final bool nearbyOnly;
+  final bool popularOnly;
+  final ValueChanged<String> onCategorySelected;
+  final ValueChanged<bool> onNearbyChanged;
+  final ValueChanged<bool> onPopularChanged;
 
-  const _Header({required this.count});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Discover',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w900,
-            color: const Color(0xFF17201D),
-          ),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          '$count storefronts listed by pickup location',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: const Color(0xFF647067),
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _EmptyPanel extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _EmptyPanel({required this.icon, required this.label});
+  const _DiscoverFilters({
+    required this.categories,
+    required this.selectedCategory,
+    required this.nearbyOnly,
+    required this.popularOnly,
+    required this.onCategorySelected,
+    required this.onNearbyChanged,
+    required this.onPopularChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          children: [
-            Icon(icon, color: const Color(0xFF647067)),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  color: Color(0xFF39433E),
-                  fontWeight: FontWeight.w900,
-                ),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          FilterChip(
+            avatar: const Icon(Icons.place_outlined, size: 18),
+            label: const Text('Nearby'),
+            selected: nearbyOnly,
+            onSelected: onNearbyChanged,
+          ),
+          const SizedBox(width: 8),
+          FilterChip(
+            avatar: const Icon(Icons.trending_up, size: 18),
+            label: const Text('Popular'),
+            selected: popularOnly,
+            onSelected: onPopularChanged,
+          ),
+          const SizedBox(width: 8),
+          ...categories.map(
+            (category) => Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                label: Text(category),
+                selected: selectedCategory == category,
+                onSelected: (_) => onCategorySelected(category),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

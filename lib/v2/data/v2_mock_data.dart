@@ -1,5 +1,3 @@
-import 'package:maplibre_gl/maplibre_gl.dart';
-
 import 'package:homebased_project/v2/models/v2_marketplace.dart';
 
 const v2DemoUserId = 'user-you';
@@ -32,7 +30,7 @@ List<V2Storefront> buildV2MockStorefronts() {
           'Small-batch pandan cakes, cookies, and celebration bakes from a home kitchen.',
       category: 'Bakery',
       pickupArea: 'River Valley',
-      location: LatLng(1.3002, 103.8399),
+      location: V2GeoPoint(1.3002, 103.8399),
     ),
     const V2Storefront(
       id: 'sf-nora-kitchen',
@@ -42,7 +40,7 @@ List<V2Storefront> buildV2MockStorefronts() {
           'Traditional kueh boxes and coconut desserts prepared for nearby pickups.',
       category: 'Desserts',
       pickupArea: 'Somerset',
-      location: LatLng(1.3046, 103.8328),
+      location: V2GeoPoint(1.3046, 103.8328),
     ),
     const V2Storefront(
       id: 'sf-loaf-lab',
@@ -52,7 +50,7 @@ List<V2Storefront> buildV2MockStorefronts() {
           'Your mock storefront for breads and savoury bakes. Owner controls are local only.',
       category: 'Breads',
       pickupArea: 'Dhoby Ghaut',
-      location: LatLng(1.2962, 103.8454),
+      location: V2GeoPoint(1.2962, 103.8454),
     ),
     const V2Storefront(
       id: 'sf-cream-corner',
@@ -62,7 +60,7 @@ List<V2Storefront> buildV2MockStorefronts() {
           'Chilled pastries and filled puffs released in limited weekend batches.',
       category: 'Pastries',
       pickupArea: 'Orchard',
-      location: LatLng(1.3091, 103.8458),
+      location: V2GeoPoint(1.3091, 103.8458),
     ),
     const V2Storefront(
       id: 'sf-morning-jar',
@@ -72,7 +70,7 @@ List<V2Storefront> buildV2MockStorefronts() {
           'Granola, nut mixes, and breakfast jars deliberately placed outside the 2km radius.',
       category: 'Pantry',
       pickupArea: 'Tiong Bahru',
-      location: LatLng(1.2852, 103.8268),
+      location: V2GeoPoint(1.2852, 103.8268),
     ),
   ];
 }

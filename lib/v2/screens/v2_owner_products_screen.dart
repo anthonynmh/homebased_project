@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:homebased_project/v2/models/v2_marketplace.dart';
 import 'package:homebased_project/v2/state/v2_app_controller.dart';
 import 'package:homebased_project/v2/widgets/v2_marketplace_forms.dart';
-import 'package:homebased_project/v2/widgets/v2_owner_widgets.dart';
+import 'package:homebased_project/v2/widgets/v2_storefront_card.dart';
+import 'package:homebased_project/v2/widgets/v2_ui.dart';
 
 class V2OwnerProductsScreen extends StatefulWidget {
   final V2AppController controller;
@@ -41,9 +42,9 @@ class _V2OwnerProductsScreenState extends State<V2OwnerProductsScreen> {
           V2ProductStatus.upcoming,
         );
 
-        return V2OwnerPage(
+        return V2Page(
           children: [
-            V2OwnerHeader(
+            V2PageHeader(
               title: 'Products',
               subtitle:
                   'Manage live products, upcoming drops, and ideas you are testing.',
@@ -75,7 +76,7 @@ class _V2OwnerProductsScreenState extends State<V2OwnerProductsScreen> {
             ),
             const SizedBox(height: 16),
             if (storefronts.isEmpty)
-              const V2OwnerEmptyState(
+              const V2EmptyState(
                 icon: Icons.storefront_outlined,
                 title: 'Create a storefront first',
                 body:
@@ -243,12 +244,12 @@ class _DemandValidationSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return V2OwnerCard(
+    return V2Card(
       color: const Color(0xFFFFF8EF),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          V2OwnerSectionHeader(
+          V2SectionHeader(
             title: 'Testing the market',
             subtitle:
                 'Use replies, subscribers, and interest signals to decide what to make, restock, or launch next.',
@@ -260,7 +261,7 @@ class _DemandValidationSection extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           if (products.isEmpty)
-            V2OwnerEmptyState(
+            V2EmptyState(
               icon: Icons.lightbulb_outline,
               title: 'Test demand before you commit',
               body:
@@ -272,7 +273,7 @@ class _DemandValidationSection extends StatelessWidget {
               ),
             )
           else
-            _ResponsiveGrid(
+            V2ResponsiveGrid(
               itemCount: products.length,
               itemBuilder: (context, index) {
                 final product = products[index];
@@ -312,7 +313,7 @@ class _LiveProductsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        V2OwnerSectionHeader(
+        V2SectionHeader(
           title: 'Ready to sell',
           subtitle: 'Listings customers can act on now.',
           trailing: TextButton.icon(
@@ -323,7 +324,7 @@ class _LiveProductsSection extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         if (products.isEmpty)
-          V2OwnerEmptyState(
+          V2EmptyState(
             icon: Icons.inventory_2_outlined,
             title: 'No live products yet',
             body: 'Add a product when you are ready to take orders.',
@@ -334,7 +335,7 @@ class _LiveProductsSection extends StatelessWidget {
             ),
           )
         else
-          _ResponsiveGrid(
+          V2ResponsiveGrid(
             itemCount: products.length,
             itemBuilder: (context, index) {
               final product = products[index];
@@ -366,119 +367,34 @@ class _ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return V2OwnerCard(
-      color: Colors.white,
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return V2CatalogItemCard(
+      product: product,
+      storefrontName: controller.storefrontNameFor(product.storefrontId),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: 92,
-            child: V2ProductImage(imageUrl: product.imageUrl),
+          IconButton.filledTonal(
+            tooltip: 'Edit product',
+            onPressed: onEdit,
+            icon: const Icon(Icons.edit_outlined, size: 18),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        product.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: v2OwnerInk,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 16,
-                          height: 1.1,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      product.priceLabel,
-                      style: const TextStyle(
-                        color: v2OwnerTeal,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ],
+          PopupMenuButton<_ProductAction>(
+            tooltip: 'More product actions',
+            onSelected: (action) {
+              switch (action) {
+                case _ProductAction.delete:
+                  onDelete();
+              }
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: _ProductAction.delete,
+                child: ListTile(
+                  leading: Icon(Icons.delete_outline, color: Color(0xFFB42318)),
+                  title: Text('Delete product'),
                 ),
-                const SizedBox(height: 7),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: [
-                    V2StatusChip(
-                      label: controller.storefrontNameFor(product.storefrontId),
-                      color: const Color(0xFFEAF3EF),
-                      textColor: v2OwnerTeal,
-                    ),
-                    const V2StatusChip(
-                      label: 'Live',
-                      icon: Icons.check_circle_outline,
-                      color: Color(0xFFECFDF5),
-                      textColor: Color(0xFF047857),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  product.description,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFF39433E),
-                    fontWeight: FontWeight.w600,
-                    height: 1.3,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        product.category,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: v2OwnerMuted,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    IconButton.filledTonal(
-                      tooltip: 'Edit product',
-                      onPressed: onEdit,
-                      icon: const Icon(Icons.edit_outlined, size: 18),
-                    ),
-                    PopupMenuButton<_ProductAction>(
-                      tooltip: 'More product actions',
-                      onSelected: (action) {
-                        switch (action) {
-                          case _ProductAction.delete:
-                            onDelete();
-                        }
-                      },
-                      itemBuilder: (context) => const [
-                        PopupMenuItem(
-                          value: _ProductAction.delete,
-                          child: ListTile(
-                            leading: Icon(
-                              Icons.delete_outline,
-                              color: Color(0xFFB42318),
-                            ),
-                            title: Text('Delete product'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
@@ -512,140 +428,33 @@ class _InterestCheckCard extends StatelessWidget {
     final subscribers = controller.subscriberCountFor(product.storefrontId);
     final signals = replies + subscribers;
 
-    return V2OwnerCard(
-      color: const Color(0xFFFFFCF7),
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return V2CatalogItemCard(
+      product: product,
+      storefrontName: controller.storefrontNameFor(product.storefrontId),
+      interestCheck: true,
+      signalCount: signals,
+      replyCount: replies,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 82,
-                child: V2ProductImage(
-                  imageUrl: product.imageUrl,
-                  icon: Icons.lightbulb_outline,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const V2StatusChip(
-                      label: 'Testing demand',
-                      icon: Icons.lightbulb_outline,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      product.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: v2OwnerInk,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 16,
-                        height: 1.1,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      '${controller.storefrontNameFor(product.storefrontId)} · ${product.priceLabel}',
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: v2OwnerMuted,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          V2MetricChip(
+            icon: Icons.people_alt_outlined,
+            label: 'subscribers',
+            value: '$subscribers',
           ),
-          const SizedBox(height: 10),
-          Text(
-            product.description,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Color(0xFF39433E),
-              fontWeight: FontWeight.w600,
-              height: 1.3,
-            ),
+          IconButton.filledTonal(
+            tooltip: 'Manage interest check',
+            onPressed: onEdit,
+            icon: const Icon(Icons.edit_outlined, size: 18),
           ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              V2MetricChip(
-                icon: Icons.trending_up,
-                label: 'signals',
-                value: '$signals',
-              ),
-              V2MetricChip(
-                icon: Icons.chat_bubble_outline,
-                label: 'replies',
-                value: '$replies',
-              ),
-              V2MetricChip(
-                icon: Icons.people_alt_outlined,
-                label: 'subscribers',
-                value: '$subscribers',
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: onEdit,
-                  icon: const Icon(Icons.visibility_outlined, size: 18),
-                  label: const Text('Manage check'),
-                ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                tooltip: 'Delete interest check',
-                onPressed: onDelete,
-                icon: const Icon(Icons.delete_outline),
-                color: const Color(0xFFB42318),
-              ),
-            ],
+          IconButton(
+            tooltip: 'Delete interest check',
+            onPressed: onDelete,
+            icon: const Icon(Icons.delete_outline),
+            color: const Color(0xFFB42318),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ResponsiveGrid extends StatelessWidget {
-  final int itemCount;
-  final Widget Function(BuildContext context, int index) itemBuilder;
-
-  const _ResponsiveGrid({required this.itemCount, required this.itemBuilder});
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final twoColumns = constraints.maxWidth >= 720;
-        final width = twoColumns
-            ? (constraints.maxWidth - 12) / 2
-            : constraints.maxWidth;
-        return Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: List.generate(
-            itemCount,
-            (index) =>
-                SizedBox(width: width, child: itemBuilder(context, index)),
-          ),
-        );
-      },
     );
   }
 }

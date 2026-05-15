@@ -4,7 +4,7 @@ import 'package:homebased_project/v2/models/v2_marketplace.dart';
 import 'package:homebased_project/v2/screens/v2_storefront_detail_screen.dart';
 import 'package:homebased_project/v2/state/v2_app_controller.dart';
 import 'package:homebased_project/v2/widgets/v2_marketplace_forms.dart';
-import 'package:homebased_project/v2/widgets/v2_owner_widgets.dart';
+import 'package:homebased_project/v2/widgets/v2_ui.dart';
 import 'package:homebased_project/v2/widgets/v2_storefront_card.dart';
 
 class V2OwnerStoreScreen extends StatelessWidget {
@@ -19,9 +19,9 @@ class V2OwnerStoreScreen extends StatelessWidget {
       builder: (context, _) {
         final storefronts = controller.ownedStorefronts;
 
-        return V2OwnerPage(
+        return V2Page(
           children: [
-            V2OwnerHeader(
+            V2PageHeader(
               title: 'My Stores',
               subtitle:
                   'Manage your storefronts, listings, and customer updates.',
@@ -51,7 +51,7 @@ class V2OwnerStoreScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             if (storefronts.isEmpty)
-              V2OwnerEmptyState(
+              V2EmptyState(
                 icon: Icons.storefront_outlined,
                 title: 'Create your first storefront',
                 body:
@@ -68,7 +68,7 @@ class V2OwnerStoreScreen extends StatelessWidget {
                 storefronts: storefronts,
               ),
               const SizedBox(height: 16),
-              const V2OwnerSectionHeader(
+              const V2SectionHeader(
                 title: 'Storefronts',
                 subtitle:
                     'Choose a storefront to manage details and preview it.',
@@ -93,7 +93,7 @@ class V2OwnerStoreScreen extends StatelessWidget {
                 controller: controller,
               ),
               const SizedBox(height: 16),
-              V2OwnerSectionHeader(
+              V2SectionHeader(
                 title: 'Public preview',
                 subtitle: 'How customers see this storefront.',
                 trailing: TextButton.icon(
@@ -246,7 +246,7 @@ class _PortfolioSummary extends StatelessWidget {
           total + controller.threadsForStorefront(storefront.id).length,
     );
 
-    return V2OwnerCard(
+    return V2Card(
       color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,7 +254,7 @@ class _PortfolioSummary extends StatelessWidget {
           const Text(
             'Business hub',
             style: TextStyle(
-              color: v2OwnerInk,
+              color: v2Ink,
               fontWeight: FontWeight.w900,
               fontSize: 16,
             ),
@@ -263,7 +263,7 @@ class _PortfolioSummary extends StatelessWidget {
           const Text(
             'Track what is live, what customers are asking about, and where to act next.',
             style: TextStyle(
-              color: v2OwnerMuted,
+              color: v2Muted,
               fontWeight: FontWeight.w600,
               height: 1.3,
             ),
@@ -328,7 +328,7 @@ class _StorefrontManagementCard extends StatelessWidget {
     );
     final threads = controller.threadsForStorefront(storefront.id);
 
-    return V2OwnerCard(
+    return V2Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -350,7 +350,7 @@ class _StorefrontManagementCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(
-                                  color: v2OwnerInk,
+                                  color: v2Ink,
                                   fontWeight: FontWeight.w900,
                                   height: 1.05,
                                 ),
@@ -368,7 +368,7 @@ class _StorefrontManagementCard extends StatelessWidget {
                     Text(
                       '${storefront.category} · ${storefront.pickupArea}',
                       style: const TextStyle(
-                        color: v2OwnerMuted,
+                        color: v2Muted,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -460,12 +460,12 @@ class _SetupGuide extends StatelessWidget {
         .isNotEmpty;
     final hasThread = controller.threadsForStorefront(storefront.id).isNotEmpty;
 
-    return V2OwnerCard(
+    return V2Card(
       color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const V2OwnerSectionHeader(
+          const V2SectionHeader(
             title: 'Storefront setup',
             subtitle: 'A simple guide for turning a page into a business hub.',
           ),
@@ -511,7 +511,7 @@ class _ChecklistRow extends StatelessWidget {
         children: [
           Icon(
             complete ? Icons.check_circle : Icons.radio_button_unchecked,
-            color: complete ? const Color(0xFF047857) : v2OwnerMuted,
+            color: complete ? const Color(0xFF047857) : v2Muted,
             size: 19,
           ),
           const SizedBox(width: 9),
@@ -519,7 +519,7 @@ class _ChecklistRow extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                color: complete ? v2OwnerInk : v2OwnerMuted,
+                color: complete ? v2Ink : v2Muted,
                 fontWeight: FontWeight.w700,
               ),
             ),

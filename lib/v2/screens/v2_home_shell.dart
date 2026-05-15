@@ -59,11 +59,18 @@ class _V2HomeShellState extends State<V2HomeShell> {
               ]
             : [
                 V2DiscoverScreen(controller: _controller),
-                V2SubscribedScreen(controller: _controller),
-                V2ActivityScreen(controller: _controller),
+                V2SubscribedScreen(
+                  controller: _controller,
+                  onExplore: _openDiscover,
+                ),
+                V2ActivityScreen(
+                  controller: _controller,
+                  onExplore: _openDiscover,
+                ),
                 V2AccountScreen(
                   controller: _controller,
                   onModeChanged: _resetTab,
+                  onExplore: _openDiscover,
                 ),
               ];
 
@@ -137,6 +144,10 @@ class _V2HomeShellState extends State<V2HomeShell> {
   }
 
   void _resetTab() {
+    if (mounted) setState(() => _selectedIndex = 0);
+  }
+
+  void _openDiscover() {
     if (mounted) setState(() => _selectedIndex = 0);
   }
 }

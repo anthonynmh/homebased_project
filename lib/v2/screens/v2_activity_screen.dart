@@ -2,11 +2,17 @@ import 'package:flutter/material.dart';
 
 import 'package:homebased_project/v2/models/v2_marketplace.dart';
 import 'package:homebased_project/v2/state/v2_app_controller.dart';
+import 'package:homebased_project/v2/widgets/v2_ui.dart';
 
 class V2ActivityScreen extends StatelessWidget {
   final V2AppController controller;
+  final VoidCallback onExplore;
 
-  const V2ActivityScreen({super.key, required this.controller});
+  const V2ActivityScreen({
+    super.key,
+    required this.controller,
+    required this.onExplore,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -14,161 +20,150 @@ class V2ActivityScreen extends StatelessWidget {
       animation: controller,
       builder: (context, _) {
         final notifications = controller.notifications;
+        final unread = controller.unreadNotificationCount;
 
-        return SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            children: [
-              Row(
+        return V2Page(
+          children: [
+            V2PageHeader(
+              title: 'Activity',
+              subtitle:
+                  'Product updates, replies, and demand signals from storefronts you follow.',
+              action: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Activity',
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                color: const Color(0xFF17201D),
-                              ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          '${controller.unreadNotificationCount} unread updates',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: const Color(0xFF647067),
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ],
-                    ),
+                  V2MetricChip(
+                    icon: Icons.notifications_none,
+                    label: 'unread',
+                    value: '$unread',
                   ),
                   TextButton.icon(
                     onPressed: notifications.isEmpty
                         ? null
                         : controller.markAllNotificationsRead,
-                    icon: const Icon(Icons.done_all),
+                    icon: const Icon(Icons.done_all, size: 18),
                     label: const Text('Mark all read'),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              if (notifications.isEmpty)
-                const _EmptyPanel()
-              else
-                ...notifications.map(
-                  (notification) => _NotificationTile(
+            ),
+            const SizedBox(height: 16),
+            if (notifications.isEmpty)
+              V2EmptyState(
+                icon: Icons.notifications_none,
+                title: 'No activity yet',
+                body:
+                    'Subscribe to storefronts to see product drops, replies, and upcoming ideas here.',
+                action: FilledButton.icon(
+                  onPressed: onExplore,
+                  icon: const Icon(Icons.explore_outlined),
+                  label: const Text('Explore storefronts'),
+                ),
+              )
+            else
+              ...notifications.map(
+                (notification) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _NotificationCard(
                     notification: notification,
                     storeName: controller.storefrontNameFor(
                       notification.storefrontId,
                     ),
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         );
       },
     );
   }
 }
 
-class _NotificationTile extends StatelessWidget {
+class _NotificationCard extends StatelessWidget {
   final V2NotificationItem notification;
   final String storeName;
 
-  const _NotificationTile({
+  const _NotificationCard({
     required this.notification,
     required this.storeName,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: notification.read
-              ? null
-              : Border.all(color: const Color(0xFF176B87), width: 1.2),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CircleAvatar(
-                radius: 22,
-                backgroundColor: _color.withValues(alpha: 0.13),
-                child: Icon(_icon, color: _color),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
+    return V2Card(
+      color: Colors.white,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 23,
+            backgroundColor: _color.withValues(alpha: 0.13),
+            child: Icon(_icon, color: _color),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            notification.title,
-                            style: const TextStyle(
-                              color: Color(0xFF17201D),
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
+                    Expanded(
+                      child: Text(
+                        notification.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: v2Ink,
+                          fontWeight: FontWeight.w900,
                         ),
-                        if (!notification.read)
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF176B87),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '$storeName · ${_timeLabel(notification.createdAt)}',
-                      style: const TextStyle(
-                        color: Color(0xFF647067),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      notification.body,
-                      style: const TextStyle(
-                        color: Color(0xFF39433E),
-                        height: 1.3,
+                    if (!notification.read)
+                      const V2StatusChip(
+                        label: 'New',
+                        color: Color(0xFFFFF4E8),
+                        textColor: Color(0xFF9A4F1F),
                       ),
-                    ),
                   ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 5),
+                Text(
+                  '$storeName · ${_timeLabel(notification.createdAt)}',
+                  style: const TextStyle(
+                    color: v2Muted,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                Text(
+                  notification.body,
+                  style: const TextStyle(
+                    color: Color(0xFF39433E),
+                    height: 1.3,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
   IconData get _icon => switch (notification.type) {
-    'new_product' => Icons.restaurant_menu_outlined,
-    'upcoming_product' => Icons.event_outlined,
+    'new_product' => Icons.inventory_2_outlined,
+    'upcoming_product' => Icons.lightbulb_outline,
     'discussion_reply' => Icons.forum_outlined,
     _ => Icons.storefront_outlined,
   };
 
   Color get _color => switch (notification.type) {
-    'new_product' => const Color(0xFF1D4ED8),
-    'upcoming_product' => const Color(0xFFD97706),
+    'new_product' => v2Teal,
+    'upcoming_product' => v2Warm,
     'discussion_reply' => const Color(0xFF6D28D9),
     _ => const Color(0xFF047857),
   };
@@ -180,37 +175,5 @@ class _NotificationTile extends StatelessWidget {
     if (diff.inDays < 1) return '${diff.inHours}h';
     if (diff.inDays == 1) return 'Yesterday';
     return '${diff.inDays}d';
-  }
-}
-
-class _EmptyPanel extends StatelessWidget {
-  const _EmptyPanel();
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: const Padding(
-        padding: EdgeInsets.all(18),
-        child: Row(
-          children: [
-            Icon(Icons.notifications_none, color: Color(0xFF647067)),
-            SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'No activity yet.',
-                style: TextStyle(
-                  color: Color(0xFF39433E),
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

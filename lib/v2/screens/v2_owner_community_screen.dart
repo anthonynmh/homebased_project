@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:homebased_project/v2/models/v2_marketplace.dart';
 import 'package:homebased_project/v2/screens/v2_thread_detail_screen.dart';
 import 'package:homebased_project/v2/state/v2_app_controller.dart';
-import 'package:homebased_project/v2/widgets/v2_owner_widgets.dart';
+import 'package:homebased_project/v2/widgets/v2_storefront_card.dart';
+import 'package:homebased_project/v2/widgets/v2_ui.dart';
 
 class V2OwnerCommunityScreen extends StatefulWidget {
   final V2AppController controller;
@@ -42,9 +43,9 @@ class _V2OwnerCommunityScreenState extends State<V2OwnerCommunityScreen> {
             )
             .toList(growable: false);
 
-        return V2OwnerPage(
+        return V2Page(
           children: [
-            V2OwnerHeader(
+            V2PageHeader(
               title: 'Community',
               subtitle:
                   'Post updates, answer customer questions, and turn replies into product decisions.',
@@ -61,7 +62,7 @@ class _V2OwnerCommunityScreenState extends State<V2OwnerCommunityScreen> {
             ),
             const SizedBox(height: 16),
             if (storefronts.isEmpty)
-              const V2OwnerEmptyState(
+              const V2EmptyState(
                 icon: Icons.storefront_outlined,
                 title: 'Create a storefront first',
                 body:
@@ -81,7 +82,7 @@ class _V2OwnerCommunityScreenState extends State<V2OwnerCommunityScreen> {
                 storefronts: visibleStorefronts,
               ),
               const SizedBox(height: 16),
-              V2OwnerSectionHeader(
+              V2SectionHeader(
                 title: 'Customer conversations',
                 subtitle:
                     'Use replies and questions as demand signals, not just chatter.',
@@ -96,7 +97,7 @@ class _V2OwnerCommunityScreenState extends State<V2OwnerCommunityScreen> {
               ),
               const SizedBox(height: 10),
               if (threads.isEmpty)
-                V2OwnerEmptyState(
+                V2EmptyState(
                   icon: Icons.forum_outlined,
                   title: 'Start a conversation',
                   body:
@@ -187,12 +188,12 @@ class _CommunitySummary extends StatelessWidget {
           total + controller.subscriberCountFor(storefront.id),
     );
 
-    return V2OwnerCard(
+    return V2Card(
       color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const V2OwnerSectionHeader(
+          const V2SectionHeader(
             title: 'Demand signals',
             subtitle:
                 'Compact signals from customers who subscribe, ask, or reply.',
@@ -241,97 +242,15 @@ class _ThreadCard extends StatelessWidget {
     final comments = controller.commentsForThread(thread.id);
     final latest = comments.isEmpty ? null : comments.last;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onOpen,
-        child: V2OwnerCard(
-          color: Colors.white,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEAF3EF),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(Icons.forum_outlined, color: v2OwnerTeal),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        V2StatusChip(
-                          label: controller.storefrontNameFor(
-                            thread.storefrontId,
-                          ),
-                          color: const Color(0xFFFFF4E8),
-                          textColor: const Color(0xFF9A4F1F),
-                        ),
-                        V2StatusChip(
-                          label: thread.relatedLabel,
-                          color: const Color(0xFFEAF3EF),
-                          textColor: v2OwnerTeal,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      thread.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: v2OwnerInk,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 16,
-                        height: 1.1,
-                      ),
-                    ),
-                    const SizedBox(height: 7),
-                    Text(
-                      latest == null
-                          ? 'No replies yet. Ask a question or share an update.'
-                          : '${controller.displayNameFor(latest.userId)}: ${latest.body}',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF39433E),
-                        height: 1.3,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        V2MetricChip(
-                          icon: Icons.chat_bubble_outline,
-                          label: 'replies',
-                          value: '${comments.length}',
-                        ),
-                        const Spacer(),
-                        IconButton.filledTonal(
-                          tooltip: 'Open thread',
-                          onPressed: onOpen,
-                          icon: const Icon(Icons.chevron_right),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    return V2ThreadCard(
+      title: thread.title,
+      storefrontName: controller.storefrontNameFor(thread.storefrontId),
+      relatedLabel: thread.relatedLabel,
+      preview: latest == null
+          ? 'No replies yet. Ask a question or share an update.'
+          : '${controller.displayNameFor(latest.userId)}: ${latest.body}',
+      replyCount: comments.length,
+      onOpen: onOpen,
     );
   }
 }
@@ -411,7 +330,7 @@ class _ThreadFormSheetState extends State<_ThreadFormSheet> {
             Text(
               widget.storefront.name,
               style: const TextStyle(
-                color: v2OwnerMuted,
+                color: v2Muted,
                 fontWeight: FontWeight.w700,
               ),
             ),

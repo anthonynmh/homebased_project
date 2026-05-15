@@ -1,6 +1,11 @@
-import 'package:maplibre_gl/maplibre_gl.dart';
-
 enum V2UserType { casual, owner }
+
+class V2GeoPoint {
+  final double latitude;
+  final double longitude;
+
+  const V2GeoPoint(this.latitude, this.longitude);
+}
 
 extension V2UserTypeLabel on V2UserType {
   String get label => switch (this) {
@@ -47,7 +52,7 @@ class V2CurrentUser {
   final String displayName;
   final String email;
   final V2UserType userType;
-  final LatLng location;
+  final V2GeoPoint location;
 
   const V2CurrentUser({
     required this.id,
@@ -62,7 +67,7 @@ class V2CurrentUser {
     String? displayName,
     String? email,
     V2UserType? userType,
-    LatLng? location,
+    V2GeoPoint? location,
   }) {
     return V2CurrentUser(
       id: id ?? this.id,
@@ -81,7 +86,7 @@ class V2Storefront {
   final String description;
   final String category;
   final String pickupArea;
-  final LatLng location;
+  final V2GeoPoint location;
 
   const V2Storefront({
     required this.id,
@@ -100,7 +105,7 @@ class V2Storefront {
     String? description,
     String? category,
     String? pickupArea,
-    LatLng? location,
+    V2GeoPoint? location,
   }) {
     return V2Storefront(
       id: id ?? this.id,

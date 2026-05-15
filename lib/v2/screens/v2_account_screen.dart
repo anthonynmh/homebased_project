@@ -4,16 +4,19 @@ import 'package:homebased_project/v2/models/v2_marketplace.dart';
 import 'package:homebased_project/v2/screens/v2_storefront_detail_screen.dart';
 import 'package:homebased_project/v2/state/v2_app_controller.dart';
 import 'package:homebased_project/v2/widgets/v2_marketplace_forms.dart';
-import 'package:homebased_project/v2/widgets/v2_owner_widgets.dart';
+import 'package:homebased_project/v2/widgets/v2_storefront_card.dart';
+import 'package:homebased_project/v2/widgets/v2_ui.dart';
 
 class V2AccountScreen extends StatefulWidget {
   final V2AppController controller;
   final VoidCallback onModeChanged;
+  final VoidCallback? onExplore;
 
   const V2AccountScreen({
     super.key,
     required this.controller,
     required this.onModeChanged,
+    this.onExplore,
   });
 
   @override
@@ -49,9 +52,9 @@ class _V2AccountScreenState extends State<V2AccountScreen> {
         }
         final ownerMode = widget.controller.userType == V2UserType.owner;
 
-        return V2OwnerPage(
+        return V2Page(
           children: [
-            V2OwnerHeader(
+            V2PageHeader(
               title: 'Account',
               subtitle: ownerMode
                   ? 'Manage your profile, storefronts, and owner settings.'
@@ -85,6 +88,13 @@ class _V2AccountScreenState extends State<V2AccountScreen> {
               _StorefrontsPanel(
                 controller: widget.controller,
                 onCreate: () => _openCreateStorefront(context),
+                onOpen: (storefront) => _openStorefront(context, storefront),
+              ),
+            ] else ...[
+              const SizedBox(height: 16),
+              _FollowingPanel(
+                controller: widget.controller,
+                onExplore: widget.onExplore,
                 onOpen: (storefront) => _openStorefront(context, storefront),
               ),
             ],
@@ -189,14 +199,14 @@ class _ProfilePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return V2OwnerCard(
+    return V2Card(
       color: Colors.white,
       child: Row(
         children: [
           CircleAvatar(
             radius: 30,
-            backgroundColor: v2OwnerTeal.withValues(alpha: 0.12),
-            child: const Icon(Icons.person, color: v2OwnerTeal, size: 30),
+            backgroundColor: v2Teal.withValues(alpha: 0.12),
+            child: const Icon(Icons.person, color: v2Teal, size: 30),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -208,7 +218,7 @@ class _ProfilePanel extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: v2OwnerInk,
+                    color: v2Ink,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -218,7 +228,7 @@ class _ProfilePanel extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: v2OwnerMuted,
+                    color: v2Muted,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -226,7 +236,7 @@ class _ProfilePanel extends StatelessWidget {
                 V2StatusChip(
                   label: user.userType.accountLabel,
                   color: const Color(0xFFEAF3EF),
-                  textColor: v2OwnerTeal,
+                  textColor: v2Teal,
                 ),
               ],
             ),
@@ -250,7 +260,7 @@ class _EditNamePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return V2OwnerCard(
+    return V2Card(
       color: Colors.white,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,7 +298,7 @@ class _StatsPanel extends StatelessWidget {
           total + controller.catalogFor(storefront.id).length,
     );
 
-    return V2OwnerCard(
+    return V2Card(
       color: Colors.white,
       child: Wrap(
         spacing: 8,
@@ -339,7 +349,7 @@ class _StorefrontsPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        V2OwnerSectionHeader(
+        V2SectionHeader(
           title: 'Your storefronts',
           subtitle: 'Manage the business hubs attached to this account.',
           trailing: TextButton.icon(
@@ -350,7 +360,7 @@ class _StorefrontsPanel extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         if (storefronts.isEmpty)
-          V2OwnerEmptyState(
+          V2EmptyState(
             icon: Icons.add_business_outlined,
             title: 'Create your first storefront',
             body: 'Set up a storefront to list products and collect interest.',
@@ -369,7 +379,7 @@ class _StorefrontsPanel extends StatelessWidget {
                 child: InkWell(
                   borderRadius: BorderRadius.circular(14),
                   onTap: () => onOpen(storefront),
-                  child: V2OwnerCard(
+                  child: V2Card(
                     padding: const EdgeInsets.all(14),
                     color: Colors.white,
                     child: Row(
@@ -385,7 +395,7 @@ class _StorefrontsPanel extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
-                                  color: v2OwnerInk,
+                                  color: v2Ink,
                                   fontWeight: FontWeight.w900,
                                 ),
                               ),
@@ -393,7 +403,7 @@ class _StorefrontsPanel extends StatelessWidget {
                               Text(
                                 '${storefront.category} · ${controller.catalogFor(storefront.id).length} listings',
                                 style: const TextStyle(
-                                  color: v2OwnerMuted,
+                                  color: v2Muted,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -417,6 +427,68 @@ class _StorefrontsPanel extends StatelessWidget {
   }
 }
 
+class _FollowingPanel extends StatelessWidget {
+  final V2AppController controller;
+  final VoidCallback? onExplore;
+  final ValueChanged<V2Storefront> onOpen;
+
+  const _FollowingPanel({
+    required this.controller,
+    required this.onExplore,
+    required this.onOpen,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final storefronts = controller.subscribedStorefronts();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        V2SectionHeader(
+          title: 'Following',
+          subtitle: 'Storefronts whose products and updates you care about.',
+          trailing: TextButton.icon(
+            onPressed: onExplore,
+            icon: const Icon(Icons.explore_outlined, size: 18),
+            label: const Text('Explore'),
+          ),
+        ),
+        const SizedBox(height: 10),
+        if (storefronts.isEmpty)
+          V2EmptyState(
+            icon: Icons.notifications_none,
+            title: 'No storefronts followed yet',
+            body:
+                'Follow sellers to see new products, interest checks, and replies in one place.',
+            action: FilledButton.icon(
+              onPressed: onExplore,
+              icon: const Icon(Icons.explore_outlined),
+              label: const Text('Explore storefronts'),
+            ),
+          )
+        else
+          V2ResponsiveGrid(
+            itemCount: storefronts.length,
+            itemBuilder: (context, index) {
+              final storefront = storefronts[index];
+              return V2StorefrontCard(
+                storefront: storefront,
+                distanceKm: controller.distanceFromCurrentKm(storefront),
+                catalogCount: controller.catalogFor(storefront.id).length,
+                subscriberCount: controller.subscriberCountFor(storefront.id),
+                subscribed: true,
+                owned: controller.canManage(storefront.id),
+                compact: true,
+                onOpen: () => onOpen(storefront),
+              );
+            },
+          ),
+      ],
+    );
+  }
+}
+
 class _SettingsPanel extends StatelessWidget {
   final V2AppController controller;
   final VoidCallback onEditProfile;
@@ -432,7 +504,7 @@ class _SettingsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return V2OwnerCard(
+    return V2Card(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Column(
@@ -496,19 +568,16 @@ class _SettingsTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       minLeadingWidth: 28,
-      leading: Icon(icon, color: v2OwnerTeal),
+      leading: Icon(icon, color: v2Teal),
       title: Text(
         title,
-        style: const TextStyle(color: v2OwnerInk, fontWeight: FontWeight.w900),
+        style: const TextStyle(color: v2Ink, fontWeight: FontWeight.w900),
       ),
       subtitle: Text(
         subtitle,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
-          color: v2OwnerMuted,
-          fontWeight: FontWeight.w600,
-        ),
+        style: const TextStyle(color: v2Muted, fontWeight: FontWeight.w600),
       ),
       trailing: onTap == null ? null : const Icon(Icons.chevron_right),
       onTap: onTap,

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:homebased_project/v2/data/v2_mock_data.dart';
@@ -38,7 +37,8 @@ class V2AppController extends ChangeNotifier {
   V2CurrentUser? get currentUser => _currentUser;
   bool get isLoggedIn => _currentUser != null;
   V2UserType get userType => _currentUser?.userType ?? V2UserType.casual;
-  LatLng get currentLocation => _currentUser?.location ?? V2Geo.singaporeCenter;
+  V2GeoPoint get currentLocation =>
+      _currentUser?.location ?? V2Geo.singaporeCenter;
   double get radiusKm => V2Geo.radiusKm;
 
   List<V2Storefront> get allStorefronts => List.unmodifiable(_storefronts);
@@ -831,7 +831,7 @@ class V2AppController extends ChangeNotifier {
       displayName: _stringValue(json['displayName'], 'Demo user'),
       email: _stringValue(json['email'], 'demo@communitii.test'),
       userType: _userTypeFromName(_stringValue(json['userType'], 'casual')),
-      location: LatLng(
+      location: V2GeoPoint(
         _doubleValue(json['lat'], V2Geo.singaporeCenter.latitude),
         _doubleValue(json['lng'], V2Geo.singaporeCenter.longitude),
       ),
@@ -846,7 +846,7 @@ class V2AppController extends ChangeNotifier {
       description: _stringValue(json['description'], 'Frontend-only store.'),
       category: _stringValue(json['category'], 'Food'),
       pickupArea: _stringValue(json['pickupArea'], 'Near you'),
-      location: LatLng(
+      location: V2GeoPoint(
         _doubleValue(json['lat'], V2Geo.singaporeCenter.latitude),
         _doubleValue(json['lng'], V2Geo.singaporeCenter.longitude),
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:homebased_project/v2/models/v2_marketplace.dart';
 import 'package:homebased_project/v2/state/v2_app_controller.dart';
+import 'package:homebased_project/v2/widgets/v2_ui.dart';
 
 class V2ThreadDetailScreen extends StatelessWidget {
   final V2AppController controller;
@@ -30,81 +31,88 @@ class V2ThreadDetailScreen extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(title: Text(thread.title)),
-          body: SafeArea(
-            top: false,
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              children: [
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          body: V2Page(
+            children: [
+              V2Card(
+                color: Colors.white,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      spacing: 7,
+                      runSpacing: 7,
                       children: [
-                        Text(
-                          thread.title,
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.w900),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${controller.storefrontNameFor(thread.storefrontId)} · ${thread.relatedLabel}',
-                          style: const TextStyle(
-                            color: Color(0xFF647067),
-                            fontWeight: FontWeight.w700,
+                        V2StatusChip(
+                          label: controller.storefrontNameFor(
+                            thread.storefrontId,
                           ),
+                          color: const Color(0xFFFFF4E8),
+                          textColor: const Color(0xFF9A4F1F),
+                        ),
+                        V2StatusChip(
+                          label: thread.relatedLabel,
+                          color: const Color(0xFFEAF3EF),
+                          textColor: v2Teal,
                         ),
                       ],
                     ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Replies',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w900),
-                        ),
-                        const SizedBox(height: 12),
-                        if (comments.isEmpty)
-                          const _EmptyStrip(
-                            icon: Icons.forum_outlined,
-                            label: 'No replies yet.',
-                          )
-                        else
-                          ...comments.map(
-                            (comment) => _ReplyBubble(
-                              author: controller.displayNameFor(comment.userId),
-                              comment: comment,
-                            ),
-                          ),
-                        const SizedBox(height: 10),
-                        if (canReply)
-                          _ReplyComposer(controller: controller, thread: thread)
-                        else
-                          const _EmptyStrip(
-                            icon: Icons.notifications_none,
-                            label: 'Subscribe to reply.',
-                          ),
-                      ],
+                    const SizedBox(height: 10),
+                    Text(
+                      thread.title,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(color: v2Ink, fontWeight: FontWeight.w900),
                     ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Replies help this storefront understand what customers want next.',
+                      style: TextStyle(
+                        color: v2Muted,
+                        fontWeight: FontWeight.w600,
+                        height: 1.3,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    V2MetricChip(
+                      icon: Icons.chat_bubble_outline,
+                      label: 'customer replies',
+                      value: '${comments.length}',
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const V2SectionHeader(
+                title: 'Replies',
+                subtitle: 'Customer questions, intent, and seller updates.',
+              ),
+              const SizedBox(height: 10),
+              if (comments.isEmpty)
+                const V2EmptyState(
+                  icon: Icons.forum_outlined,
+                  title: 'No replies yet',
+                  body: 'Start the conversation with a question or update.',
+                )
+              else
+                ...comments.map(
+                  (comment) => _ReplyBubble(
+                    author: controller.displayNameFor(comment.userId),
+                    comment: comment,
                   ),
                 ),
-              ],
-            ),
+              const SizedBox(height: 4),
+              if (canReply)
+                V2Card(
+                  color: Colors.white,
+                  child: _ReplyComposer(controller: controller, thread: thread),
+                )
+              else
+                const V2EmptyState(
+                  icon: Icons.notifications_none,
+                  title: 'Subscribe to reply',
+                  body:
+                      'Follow this storefront to ask questions and show interest.',
+                ),
+            ],
           ),
         );
       },
@@ -142,7 +150,7 @@ class _ReplyComposerState extends State<_ReplyComposer> {
             minLines: 1,
             maxLines: 3,
             decoration: const InputDecoration(
-              labelText: 'Reply',
+              labelText: 'Reply with a question or interest signal',
               border: OutlineInputBorder(),
             ),
           ),
@@ -182,33 +190,45 @@ class _ReplyBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.person_outline, size: 18, color: Color(0xFF176B87)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$author · ${_timeLabel(comment.createdAt)}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 12,
-                    color: Color(0xFF39433E),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  comment.body,
-                  style: const TextStyle(color: Color(0xFF647067), height: 1.3),
-                ),
-              ],
+      padding: const EdgeInsets.only(bottom: 10),
+      child: V2Card(
+        color: Colors.white,
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const CircleAvatar(
+              radius: 18,
+              backgroundColor: Color(0xFFEAF3EF),
+              child: Icon(Icons.person_outline, size: 19, color: v2Teal),
             ),
-          ),
-        ],
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$author · ${_timeLabel(comment.createdAt)}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 12,
+                      color: Color(0xFF39433E),
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    comment.body,
+                    style: const TextStyle(
+                      color: v2Muted,
+                      height: 1.3,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -220,40 +240,5 @@ class _ReplyBubble extends StatelessWidget {
     if (diff.inDays < 1) return '${diff.inHours}h';
     if (diff.inDays == 1) return 'Yesterday';
     return '${diff.inDays}d';
-  }
-}
-
-class _EmptyStrip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _EmptyStrip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Icon(icon, size: 18, color: const Color(0xFF1D4ED8)),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  color: Color(0xFF1D4ED8),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

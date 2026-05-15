@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:homebased_project/v2/models/v2_marketplace.dart';
 import 'package:homebased_project/v2/screens/v2_thread_detail_screen.dart';
 import 'package:homebased_project/v2/state/v2_app_controller.dart';
+import 'package:homebased_project/v2/widgets/v2_storefront_card.dart';
+import 'package:homebased_project/v2/widgets/v2_ui.dart';
 
 class V2StorefrontDetailScreen extends StatelessWidget {
   final V2AppController controller;
@@ -41,40 +43,134 @@ class V2StorefrontDetailScreen extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(title: Text(storefront.name)),
-          body: SafeArea(
-            top: false,
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              children: [
-                _StorefrontHero(
-                  controller: controller,
-                  storefront: storefront,
-                  owned: owned,
-                  subscribed: subscribed,
+          body: V2Page(
+            children: [
+              _StorefrontHero(
+                controller: controller,
+                storefront: storefront,
+                owned: owned,
+                subscribed: subscribed,
+              ),
+              const SizedBox(height: 16),
+              V2SectionHeader(
+                title: 'Available now',
+                subtitle: 'Listings customers can act on today.',
+                trailing: V2MetricChip(
+                  icon: Icons.inventory_2_outlined,
+                  label: 'live',
+                  value: '${liveProducts.length}',
                 ),
-                const SizedBox(height: 12),
-                _ProductSection(
-                  title: 'Products',
-                  emptyLabel: 'No live products yet.',
-                  products: liveProducts,
+              ),
+              const SizedBox(height: 10),
+              if (liveProducts.isEmpty)
+                const V2EmptyState(
+                  icon: Icons.inventory_2_outlined,
+                  title: 'No live products yet',
+                  body:
+                      'This storefront has not posted anything available right now.',
+                )
+              else
+                V2ResponsiveGrid(
+                  itemCount: liveProducts.length,
+                  itemBuilder: (context, index) {
+                    final product = liveProducts[index];
+                    return V2CatalogItemCard(
+                      product: product,
+                      storefrontName: storefront.name,
+                    );
+                  },
                 ),
-                const SizedBox(height: 12),
-                _ProductSection(
-                  title: 'Upcoming products',
-                  emptyLabel: 'No upcoming products yet.',
-                  products: upcomingProducts,
+              const SizedBox(height: 16),
+              V2SectionHeader(
+                title: 'Testing demand',
+                subtitle:
+                    'Future products and restocks shaped by customer interest.',
+                trailing: V2MetricChip(
+                  icon: Icons.lightbulb_outline,
+                  label: 'ideas',
+                  value: '${upcomingProducts.length}',
                 ),
-                const SizedBox(height: 12),
-                _DiscussionPreview(
-                  controller: controller,
-                  threads: threads,
-                  storefront: storefront,
+              ),
+              const SizedBox(height: 10),
+              if (upcomingProducts.isEmpty)
+                const V2EmptyState(
+                  icon: Icons.lightbulb_outline,
+                  title: 'No interest checks yet',
+                  body:
+                      'When this seller tests a future product, it will appear here.',
+                )
+              else
+                V2ResponsiveGrid(
+                  itemCount: upcomingProducts.length,
+                  itemBuilder: (context, index) {
+                    final product = upcomingProducts[index];
+                    final replies = _replyCountFor(product);
+                    final signals =
+                        replies + controller.subscriberCountFor(storefront.id);
+                    return V2CatalogItemCard(
+                      product: product,
+                      storefrontName: storefront.name,
+                      interestCheck: true,
+                      replyCount: replies,
+                      signalCount: signals,
+                    );
+                  },
                 ),
-              ],
-            ),
+              const SizedBox(height: 16),
+              V2SectionHeader(
+                title: 'Community',
+                subtitle:
+                    'Questions, updates, and signals customers can add to.',
+                trailing: V2MetricChip(
+                  icon: Icons.forum_outlined,
+                  label: 'threads',
+                  value: '${threads.length}',
+                ),
+              ),
+              const SizedBox(height: 10),
+              if (threads.isEmpty)
+                const V2EmptyState(
+                  icon: Icons.forum_outlined,
+                  title: 'No conversations yet',
+                  body:
+                      'Customer questions and storefront updates will show up here.',
+                )
+              else
+                ...threads
+                    .take(4)
+                    .map(
+                      (thread) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _ThreadPreview(
+                          controller: controller,
+                          thread: thread,
+                          onOpen: () => _openThread(context, thread),
+                        ),
+                      ),
+                    ),
+            ],
           ),
         );
       },
+    );
+  }
+
+  int _replyCountFor(V2CatalogItem product) {
+    final threads = controller
+        .threadsForStorefront(product.storefrontId)
+        .where((thread) => thread.relatedLabel == product.name);
+    return threads.fold<int>(
+      0,
+      (total, thread) => total + controller.commentsForThread(thread.id).length,
+    );
+  }
+
+  void _openThread(BuildContext context, V2DiscussionThread thread) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            V2ThreadDetailScreen(controller: controller, threadId: thread.id),
+      ),
     );
   }
 }
@@ -94,504 +190,130 @@ class _StorefrontHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CircleAvatar(
-                  radius: 26,
-                  backgroundColor: owned
-                      ? const Color(0xFFFFF7ED)
-                      : const Color(0xFFEFF6FF),
-                  child: Icon(
-                    Icons.storefront,
-                    color: owned
-                        ? const Color(0xFF9A3412)
-                        : const Color(0xFF1D4ED8),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        storefront.name,
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.w900),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${storefront.category} · ${storefront.pickupArea} · '
-                        '${controller.distanceFromCurrentKm(storefront).toStringAsFixed(1)} km away',
-                        style: const TextStyle(
-                          color: Color(0xFF647067),
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              storefront.description,
-              style: const TextStyle(
-                color: Color(0xFF39433E),
-                height: 1.35,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 14),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _TinyPill(
-                  icon: Icons.restaurant_menu_outlined,
-                  label:
-                      '${controller.catalogFor(storefront.id).length} products',
-                  color: const Color(0xFFEFF6FF),
-                  textColor: const Color(0xFF1D4ED8),
-                ),
-                _TinyPill(
-                  icon: Icons.people_alt_outlined,
-                  label:
-                      '${controller.subscriberCountFor(storefront.id)} subscribers',
-                  color: const Color(0xFFF5F3FF),
-                  textColor: const Color(0xFF6D28D9),
-                ),
-                if (owned)
-                  const _TinyPill(
-                    icon: Icons.admin_panel_settings_outlined,
-                    label: 'Your storefront',
-                    color: Color(0xFFFFF7ED),
-                    textColor: Color(0xFF9A3412),
-                  )
-                else if (subscribed)
-                  const _TinyPill(
-                    icon: Icons.notifications_active_outlined,
-                    label: 'Subscribed',
-                    color: Color(0xFFECFDF5),
-                    textColor: Color(0xFF047857),
-                  ),
-              ],
-            ),
-            if (!owned) ...[
-              const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                child: subscribed
-                    ? OutlinedButton.icon(
-                        onPressed: () => controller.unsubscribe(storefront.id),
-                        icon: const Icon(Icons.notifications_off_outlined),
-                        label: const Text('Unsubscribe'),
-                      )
-                    : FilledButton.icon(
-                        onPressed: () => controller.subscribe(storefront.id),
-                        icon: const Icon(Icons.notifications_none),
-                        label: const Text('Subscribe'),
-                      ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ProductSection extends StatelessWidget {
-  final String title;
-  final String emptyLabel;
-  final List<V2CatalogItem> products;
-
-  const _ProductSection({
-    required this.title,
-    required this.emptyLabel,
-    required this.products,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 10),
-            if (products.isEmpty)
-              _EmptyStrip(
-                icon: Icons.restaurant_menu_outlined,
-                label: emptyLabel,
-              )
-            else
-              ...products.map((product) => _ProductTile(product: product)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ProductTile extends StatelessWidget {
-  final V2CatalogItem product;
-
-  const _ProductTile({required this.product});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF6F7F4),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFE2E8E2)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
+    return V2Card(
+      color: Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _ProductThumb(imageUrl: product.imageUrl),
+              V2StorefrontAvatar(storefront: storefront, size: 64),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            product.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w900,
-                              color: Color(0xFF17201D),
-                            ),
-                          ),
-                        ),
-                        Text(
-                          product.priceLabel,
-                          style: const TextStyle(
-                            color: Color(0xFF176B87),
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
                     Text(
-                      product.description,
-                      style: const TextStyle(
-                        color: Color(0xFF647067),
-                        height: 1.3,
-                      ),
+                      storefront.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
+                            color: v2Ink,
+                            fontWeight: FontWeight.w900,
+                            height: 1.05,
+                          ),
                     ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _TinyPill(
-                          icon: Icons.category_outlined,
-                          label: product.category,
-                          color: const Color(0xFFFFFBEB),
-                          textColor: const Color(0xFF92400E),
-                        ),
-                        _TinyPill(
-                          icon: Icons.event_available_outlined,
-                          label: product.statusLabel,
-                          color: const Color(0xFFECFDF5),
-                          textColor: const Color(0xFF047857),
-                        ),
-                      ],
+                    const SizedBox(height: 5),
+                    Text(
+                      '${storefront.category} · ${storefront.pickupArea} · '
+                      '${controller.distanceFromCurrentKm(storefront).toStringAsFixed(1)} km away',
+                      style: const TextStyle(
+                        color: v2Muted,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ProductThumb extends StatelessWidget {
-  final String? imageUrl;
-
-  const _ProductThumb({this.imageUrl});
-
-  @override
-  Widget build(BuildContext context) {
-    final url = imageUrl;
-    if (url != null && url.isNotEmpty) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.network(
-          url,
-          width: 58,
-          height: 58,
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => const _PlaceholderThumb(),
-        ),
-      );
-    }
-    return const _PlaceholderThumb();
-  }
-}
-
-class _PlaceholderThumb extends StatelessWidget {
-  const _PlaceholderThumb();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 58,
-      height: 58,
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: const Icon(Icons.restaurant_menu, color: Color(0xFF1D4ED8)),
-    );
-  }
-}
-
-class _DiscussionPreview extends StatelessWidget {
-  final V2AppController controller;
-  final V2Storefront storefront;
-  final List<V2DiscussionThread> threads;
-
-  const _DiscussionPreview({
-    required this.controller,
-    required this.storefront,
-    required this.threads,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Discussions',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-                if (threads.isNotEmpty)
-                  TextButton.icon(
-                    onPressed: () => _openThread(context, threads.first),
-                    icon: const Icon(Icons.forum_outlined),
-                    label: const Text('View all'),
-                  ),
-              ],
+          const SizedBox(height: 12),
+          Text(
+            storefront.description,
+            style: const TextStyle(
+              color: Color(0xFF39433E),
+              height: 1.35,
+              fontWeight: FontWeight.w600,
             ),
-            const SizedBox(height: 10),
-            if (threads.isEmpty)
-              const _EmptyStrip(
-                icon: Icons.forum_outlined,
-                label: 'No discussions yet.',
-              )
-            else
-              ...threads
-                  .take(3)
-                  .map(
-                    (thread) => _ThreadRow(
-                      controller: controller,
-                      thread: thread,
-                      onTap: () => _openThread(context, thread),
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              V2MetricChip(
+                icon: Icons.inventory_2_outlined,
+                label: 'listings',
+                value: '${controller.catalogFor(storefront.id).length}',
+              ),
+              V2MetricChip(
+                icon: Icons.people_alt_outlined,
+                label: 'interested',
+                value: '${controller.subscriberCountFor(storefront.id)}',
+              ),
+              if (owned)
+                const V2StatusChip(
+                  icon: Icons.admin_panel_settings_outlined,
+                  label: 'Your storefront',
+                )
+              else if (subscribed)
+                const V2StatusChip(
+                  icon: Icons.notifications_active_outlined,
+                  label: 'Subscribed',
+                  color: Color(0xFFECFDF5),
+                  textColor: Color(0xFF047857),
+                ),
+            ],
+          ),
+          if (!owned) ...[
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: subscribed
+                  ? OutlinedButton.icon(
+                      onPressed: () => controller.unsubscribe(storefront.id),
+                      icon: const Icon(Icons.notifications_off_outlined),
+                      label: const Text('Unsubscribe'),
+                    )
+                  : FilledButton.icon(
+                      onPressed: () => controller.subscribe(storefront.id),
+                      icon: const Icon(Icons.notifications_none),
+                      label: const Text('Subscribe for updates'),
                     ),
-                  ),
+            ),
           ],
-        ),
-      ),
-    );
-  }
-
-  void _openThread(BuildContext context, V2DiscussionThread thread) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            V2ThreadDetailScreen(controller: controller, threadId: thread.id),
+        ],
       ),
     );
   }
 }
 
-class _ThreadRow extends StatelessWidget {
+class _ThreadPreview extends StatelessWidget {
   final V2AppController controller;
   final V2DiscussionThread thread;
-  final VoidCallback onTap;
+  final VoidCallback onOpen;
 
-  const _ThreadRow({
+  const _ThreadPreview({
     required this.controller,
     required this.thread,
-    required this.onTap,
+    required this.onOpen,
   });
 
   @override
   Widget build(BuildContext context) {
     final comments = controller.commentsForThread(thread.id);
     final latest = comments.isEmpty ? null : comments.last;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: const Color(0xFFF6F7F4),
-        borderRadius: BorderRadius.circular(8),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                const Icon(Icons.forum_outlined, color: Color(0xFF176B87)),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        thread.title,
-                        style: const TextStyle(fontWeight: FontWeight.w900),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        latest == null
-                            ? thread.relatedLabel
-                            : '${controller.displayNameFor(latest.userId)}: ${latest.body}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Color(0xFF647067),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '${comments.length}',
-                  style: const TextStyle(fontWeight: FontWeight.w900),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _EmptyStrip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _EmptyStrip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Icon(icon, size: 18, color: const Color(0xFF1D4ED8)),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  color: Color(0xFF1D4ED8),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TinyPill extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final Color textColor;
-
-  const _TinyPill({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.textColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: textColor),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: TextStyle(
-                color: textColor,
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return V2ThreadCard(
+      title: thread.title,
+      storefrontName: controller.storefrontNameFor(thread.storefrontId),
+      relatedLabel: thread.relatedLabel,
+      preview: latest == null
+          ? 'No replies yet. Be the first to ask or show interest.'
+          : '${controller.displayNameFor(latest.userId)}: ${latest.body}',
+      replyCount: comments.length,
+      onOpen: onOpen,
     );
   }
 }

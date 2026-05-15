@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 
 import 'package:homebased_project/v2/models/v2_marketplace.dart';
 
-const v2OwnerInk = Color(0xFF17201D);
-const v2OwnerMuted = Color(0xFF647067);
-const v2OwnerLine = Color(0xFFE5DED4);
-const v2OwnerWarm = Color(0xFFC46A35);
-const v2OwnerTeal = Color(0xFF176B87);
-const v2OwnerCard = Color(0xFFFFFCF7);
-const v2OwnerSurface = Color(0xFFFAF7F1);
+const v2Ink = Color(0xFF17201D);
+const v2Muted = Color(0xFF647067);
+const v2Line = Color(0xFFE5DED4);
+const v2Warm = Color(0xFFC46A35);
+const v2Teal = Color(0xFF176B87);
+const v2Card = Color(0xFFFFFCF7);
+const v2Surface = Color(0xFFFAF7F1);
 
-class V2OwnerPage extends StatelessWidget {
+class V2Page extends StatelessWidget {
   final List<Widget> children;
 
-  const V2OwnerPage({super.key, required this.children});
+  const V2Page({super.key, required this.children});
 
   @override
   Widget build(BuildContext context) {
@@ -32,13 +32,13 @@ class V2OwnerPage extends StatelessWidget {
   }
 }
 
-class V2OwnerHeader extends StatelessWidget {
+class V2PageHeader extends StatelessWidget {
   final String title;
   final String subtitle;
   final Widget? action;
   final Widget? menu;
 
-  const V2OwnerHeader({
+  const V2PageHeader({
     super.key,
     required this.title,
     required this.subtitle,
@@ -62,14 +62,14 @@ class V2OwnerHeader extends StatelessWidget {
                     title,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w900,
-                      color: v2OwnerInk,
+                      color: v2Ink,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: v2OwnerMuted,
+                      color: v2Muted,
                       fontWeight: FontWeight.w600,
                       height: 1.25,
                     ),
@@ -89,12 +89,12 @@ class V2OwnerHeader extends StatelessWidget {
   }
 }
 
-class V2OwnerSectionHeader extends StatelessWidget {
+class V2SectionHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
   final Widget? trailing;
 
-  const V2OwnerSectionHeader({
+  const V2SectionHeader({
     super.key,
     required this.title,
     this.subtitle,
@@ -113,7 +113,7 @@ class V2OwnerSectionHeader extends StatelessWidget {
               Text(
                 title,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: v2OwnerInk,
+                  color: v2Ink,
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -122,7 +122,7 @@ class V2OwnerSectionHeader extends StatelessWidget {
                 Text(
                   subtitle!,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: v2OwnerMuted,
+                    color: v2Muted,
                     fontWeight: FontWeight.w600,
                     height: 1.25,
                   ),
@@ -137,16 +137,16 @@ class V2OwnerSectionHeader extends StatelessWidget {
   }
 }
 
-class V2OwnerCard extends StatelessWidget {
+class V2Card extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
   final Color color;
 
-  const V2OwnerCard({
+  const V2Card({
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(16),
-    this.color = v2OwnerCard,
+    this.color = v2Card,
   });
 
   @override
@@ -155,7 +155,7 @@ class V2OwnerCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: v2OwnerLine),
+        border: Border.all(color: v2Line),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.035),
@@ -200,14 +200,17 @@ class V2StatusChip extends StatelessWidget {
               Icon(icon, color: textColor, size: 14),
               const SizedBox(width: 5),
             ],
-            Text(
-              label,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: textColor,
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                height: 1,
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                ),
               ),
             ),
           ],
@@ -235,27 +238,24 @@ class V2MetricChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.76),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: v2OwnerLine),
+        border: Border.all(color: v2Line),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: v2OwnerTeal, size: 18),
+            Icon(icon, color: v2Teal, size: 18),
             const SizedBox(width: 8),
             Text(
               value,
-              style: const TextStyle(
-                color: v2OwnerInk,
-                fontWeight: FontWeight.w900,
-              ),
+              style: const TextStyle(color: v2Ink, fontWeight: FontWeight.w900),
             ),
             const SizedBox(width: 4),
             Text(
               label,
               style: const TextStyle(
-                color: v2OwnerMuted,
+                color: v2Muted,
                 fontWeight: FontWeight.w700,
                 fontSize: 12,
               ),
@@ -330,16 +330,14 @@ class V2ProductImage extends StatelessWidget {
                     end: Alignment.bottomRight,
                   ),
                 ),
-                child: Center(child: Icon(icon, color: v2OwnerTeal, size: 30)),
+                child: Center(child: Icon(icon, color: v2Teal, size: 30)),
               )
             : Image.network(
                 url,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => DecoratedBox(
                   decoration: const BoxDecoration(color: Color(0xFFFFF4E8)),
-                  child: Center(
-                    child: Icon(icon, color: v2OwnerTeal, size: 30),
-                  ),
+                  child: Center(child: Icon(icon, color: v2Teal, size: 30)),
                 ),
               ),
       ),
@@ -347,13 +345,13 @@ class V2ProductImage extends StatelessWidget {
   }
 }
 
-class V2OwnerEmptyState extends StatelessWidget {
+class V2EmptyState extends StatelessWidget {
   final IconData icon;
   final String title;
   final String body;
   final Widget? action;
 
-  const V2OwnerEmptyState({
+  const V2EmptyState({
     super.key,
     required this.icon,
     required this.title,
@@ -363,17 +361,17 @@ class V2OwnerEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return V2OwnerCard(
+    return V2Card(
       color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: v2OwnerTeal, size: 30),
+          Icon(icon, color: v2Teal, size: 30),
           const SizedBox(height: 12),
           Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: v2OwnerInk,
+              color: v2Ink,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -381,7 +379,7 @@ class V2OwnerEmptyState extends StatelessWidget {
           Text(
             body,
             style: const TextStyle(
-              color: v2OwnerMuted,
+              color: v2Muted,
               fontWeight: FontWeight.w600,
               height: 1.3,
             ),
@@ -389,6 +387,44 @@ class V2OwnerEmptyState extends StatelessWidget {
           if (action != null) ...[const SizedBox(height: 14), action!],
         ],
       ),
+    );
+  }
+}
+
+class V2ResponsiveGrid extends StatelessWidget {
+  final int itemCount;
+  final double minTileWidth;
+  final double spacing;
+  final Widget Function(BuildContext context, int index) itemBuilder;
+
+  const V2ResponsiveGrid({
+    super.key,
+    required this.itemCount,
+    required this.itemBuilder,
+    this.minTileWidth = 340,
+    this.spacing = 12,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= minTileWidth * 2 + spacing
+            ? 2
+            : 1;
+        final width =
+            (constraints.maxWidth - (spacing * (columns - 1))) / columns;
+
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: List.generate(
+            itemCount,
+            (index) =>
+                SizedBox(width: width, child: itemBuilder(context, index)),
+          ),
+        );
+      },
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:homebased_project/v2/models/v2_marketplace.dart';
 import 'package:homebased_project/v2/state/v2_app_controller.dart';
+import 'package:homebased_project/v2/utils/v2_geo.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -34,6 +35,14 @@ void main() {
       final controller = V2AppController(loadPersistedState: false)
         ..simulateLogin(displayName: 'Alex');
 
+      expect(controller.currentLocation, isA<V2GeoPoint>());
+      expect(
+        V2Geo.distanceKm(
+          const V2GeoPoint(1.3009, 103.8389),
+          const V2GeoPoint(1.3009, 103.8389),
+        ),
+        0,
+      );
       expect(controller.userType, V2UserType.casual);
       expect(
         controller.nearbyStorefronts.length,
