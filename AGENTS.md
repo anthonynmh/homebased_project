@@ -9,13 +9,14 @@ accurate assumptions.
 
 ## Project Snapshot
 
-This is a Flutter/Dart app for Food 'n Friends (aka 'communitii'), a storefront platform for home-based businesses.
+This is a Flutter/Dart app for Communitii, a storefront platform for home-based businesses.
 prototype.
 
 The active app entrypoint is `lib/main.dart`, which boots into the frontend-only
-prototype in `lib/v2`. The v2 app uses mock data and in-memory state for nearby
-storefront discovery, subscriptions, catalog browsing, owner management, and
-storefront comments.
+product MVP in `lib/v2`. The v2 app uses mock data, local state, and
+`shared_preferences` persistence for storefront discovery, subscriptions,
+activity notifications, product management, owner storefront editing, and
+community discussion replies.
 
 Older Supabase-backed code and documentation still exist under areas such as
 `lib/mvp2`, `lib/backend`, and `documentation/backend`, but they are not part of
@@ -31,6 +32,7 @@ the active v2 prototype unless a task explicitly targets them.
 - `lib/v2/screens/`: v2 screens and shell.
 - `lib/v2/widgets/`: reusable v2 UI widgets and forms.
 - `lib/v2/utils/`: small v2 helpers such as geo calculations.
+- `lib/v2/README.md`: current v2 product MVP notes and development commands.
 - `assets/`: Flutter asset images.
 - `test/`: Flutter tests.
 - `documentation/`: project docs.
@@ -55,7 +57,8 @@ bash local_deployment/deploy_local.sh
 ```
 
 The active v2 prototype does not require `.env` files, Supabase dart defines,
-database migrations, production auth, storage, payments, or API services.
+database migrations, production auth, storage services, payments, real maps,
+uploads, or API services.
 
 ## Coding Notes
 
@@ -66,8 +69,8 @@ database migrations, production auth, storage, payments, or API services.
   real backend.
 - Use `ChangeNotifier`/`V2AppController` for v2 in-memory state.
 - Use the existing model and mock-data shapes before introducing new ones.
-- Preserve platform fallbacks around MapLibre support; desktop targets may use a
-  fallback surface instead of the native map widget.
+- The active Discover MVP uses a mock explore/map surface; preserve existing
+  MapLibre widgets only when a task explicitly touches them.
 - Keep generated/platform files untouched unless the task requires platform
   configuration changes.
 
