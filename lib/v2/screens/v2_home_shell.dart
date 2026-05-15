@@ -79,7 +79,7 @@ class _V2HomeShellState extends State<V2HomeShell> {
                     NavigationDestination(
                       icon: Icon(Icons.storefront_outlined),
                       selectedIcon: Icon(Icons.storefront),
-                      label: 'My Store',
+                      label: 'Stores',
                     ),
                     NavigationDestination(
                       icon: Icon(Icons.inventory_2_outlined),

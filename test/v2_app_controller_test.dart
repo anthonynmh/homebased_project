@@ -138,6 +138,29 @@ void main() {
       expect(controller.catalogItemById(item.id), isNull);
     });
 
+    test('owner creates and deletes a storefront with related local state', () {
+      final controller = V2AppController(loadPersistedState: false)
+        ..simulateSignup(displayName: 'Owner', userType: V2UserType.owner);
+
+      controller.createStorefront(
+        name: 'Owner Snacks',
+        description: 'Simple snacks for pickup.',
+        category: 'Snacks',
+        pickupArea: 'Bugis',
+      );
+
+      final storefront = controller.ownerStorefront!;
+      expect(storefront.name, 'Owner Snacks');
+      expect(controller.catalogFor(storefront.id), isNotEmpty);
+      expect(controller.threadsForStorefront(storefront.id), isNotEmpty);
+
+      controller.deleteStorefront(storefront.id);
+
+      expect(controller.storefrontById(storefront.id), isNull);
+      expect(controller.catalogFor(storefront.id), isEmpty);
+      expect(controller.threadsForStorefront(storefront.id), isEmpty);
+    });
+
     test('marks notifications as read', () {
       final controller = V2AppController(loadPersistedState: false)
         ..simulateLogin(displayName: 'Alex');

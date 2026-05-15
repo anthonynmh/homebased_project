@@ -394,11 +394,11 @@ class V2AppController extends ChangeNotifier {
     final storefront = V2Storefront(
       id: storefrontId,
       ownerId: user.id,
-      name: name.trim().isEmpty ? 'New home kitchen' : name.trim(),
+      name: name.trim().isEmpty ? 'New storefront' : name.trim(),
       description: description.trim().isEmpty
           ? 'A new frontend-only storefront.'
           : description.trim(),
-      category: category.trim().isEmpty ? 'Food' : category.trim(),
+      category: category.trim().isEmpty ? 'Local goods' : category.trim(),
       pickupArea: pickupArea.trim().isEmpty ? 'Near you' : pickupArea.trim(),
       location: location,
     );
@@ -406,10 +406,10 @@ class V2AppController extends ChangeNotifier {
     _storefronts.insert(0, storefront);
     addCatalogItem(
       storefrontId: storefrontId,
-      name: 'Sample food item',
-      description: 'Edit this item to preview catalog management.',
+      name: 'Sample listing',
+      description: 'Edit this listing to preview product management.',
       price: 12,
-      category: 'Food',
+      category: 'Product',
       status: V2ProductStatus.upcoming,
       imageUrl: null,
       notify: false,
@@ -456,6 +456,35 @@ class V2AppController extends ChangeNotifier {
     _saveAndNotify();
   }
 
+  void deleteStorefront(String storefrontId) {
+    if (!canManage(storefrontId)) return;
+
+    _storefronts.removeWhere((storefront) => storefront.id == storefrontId);
+    _catalogItems.removeWhere((item) => item.storefrontId == storefrontId);
+    _subscriptions.removeWhere(
+      (subscription) => subscription.storefrontId == storefrontId,
+    );
+    final threadIds = _threads
+        .where((thread) => thread.storefrontId == storefrontId)
+        .map((thread) => thread.id)
+        .toSet();
+    _threads.removeWhere((thread) => thread.storefrontId == storefrontId);
+    _comments.removeWhere(
+      (comment) =>
+          comment.storefrontId == storefrontId ||
+          threadIds.contains(comment.threadId),
+    );
+    _notifications.removeWhere(
+      (notification) => notification.storefrontId == storefrontId,
+    );
+    if (_selectedStorefrontId == storefrontId) {
+      _selectedStorefrontId = _storefronts.isEmpty
+          ? null
+          : _storefronts.first.id;
+    }
+    _saveAndNotify();
+  }
+
   void addCatalogItem({
     required String storefrontId,
     required String name,
@@ -473,12 +502,12 @@ class V2AppController extends ChangeNotifier {
       V2CatalogItem(
         id: 'item-local-$_createdCatalogItems',
         storefrontId: storefrontId,
-        name: name.trim().isEmpty ? 'New food item' : name.trim(),
+        name: name.trim().isEmpty ? 'New product' : name.trim(),
         description: description.trim().isEmpty
-            ? 'A frontend-only catalog item.'
+            ? 'A frontend-only product listing.'
             : description.trim(),
         price: price < 0 ? 0 : price,
-        category: category.trim().isEmpty ? 'Food' : category.trim(),
+        category: category.trim().isEmpty ? 'Product' : category.trim(),
         status: V2ProductStatus.values.contains(status)
             ? status
             : V2ProductStatus.live,
@@ -531,6 +560,45 @@ class V2AppController extends ChangeNotifier {
     final threads = threadsForStorefront(storefrontId);
     final threadId = threads.isEmpty ? 'thread-general' : threads.first.id;
     return postThreadReply(threadId: threadId, body: body);
+  }
+
+  V2DiscussionThread? createThread({
+    required String storefrontId,
+    required String title,
+    required String relatedLabel,
+    String? openingMessage,
+  }) {
+    final trimmedTitle = title.trim();
+    if (!canManage(storefrontId) || trimmedTitle.isEmpty) return null;
+
+    _createdThreads += 1;
+    final thread = V2DiscussionThread(
+      id: 'thread-local-$_createdThreads',
+      storefrontId: storefrontId,
+      title: trimmedTitle,
+      relatedLabel: relatedLabel.trim().isEmpty
+          ? 'Storefront update'
+          : relatedLabel.trim(),
+    );
+    _threads.insert(0, thread);
+
+    final body = openingMessage?.trim() ?? '';
+    if (body.isNotEmpty) {
+      _createdComments += 1;
+      _comments.add(
+        V2Comment(
+          id: 'comment-local-$_createdComments',
+          storefrontId: storefrontId,
+          threadId: thread.id,
+          userId: _currentUser!.id,
+          body: body,
+          createdAt: DateTime.now(),
+        ),
+      );
+    }
+
+    _saveAndNotify();
+    return thread;
   }
 
   bool postThreadReply({required String threadId, required String body}) {

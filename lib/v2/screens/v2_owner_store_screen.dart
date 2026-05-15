@@ -4,6 +4,7 @@ import 'package:homebased_project/v2/models/v2_marketplace.dart';
 import 'package:homebased_project/v2/screens/v2_storefront_detail_screen.dart';
 import 'package:homebased_project/v2/state/v2_app_controller.dart';
 import 'package:homebased_project/v2/widgets/v2_marketplace_forms.dart';
+import 'package:homebased_project/v2/widgets/v2_owner_widgets.dart';
 import 'package:homebased_project/v2/widgets/v2_storefront_card.dart';
 
 class V2OwnerStoreScreen extends StatelessWidget {
@@ -16,79 +17,107 @@ class V2OwnerStoreScreen extends StatelessWidget {
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
-        final storefront = controller.ownerStorefront;
+        final storefronts = controller.ownedStorefronts;
 
-        return SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'My Store',
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                color: const Color(0xFF17201D),
-                              ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          storefront == null
-                              ? 'Create a local storefront.'
-                              : '${storefront.name} · ${storefront.category}',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: const Color(0xFF647067),
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (storefront == null)
-                    FilledButton.icon(
-                      onPressed: () => _openCreateStorefront(context),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Create'),
-                    ),
-                ],
+        return V2OwnerPage(
+          children: [
+            V2OwnerHeader(
+              title: 'My Stores',
+              subtitle:
+                  'Manage your storefronts, listings, and customer updates.',
+              action: FilledButton.icon(
+                onPressed: () => _openCreateStorefront(context),
+                icon: const Icon(Icons.add_business_outlined),
+                label: Text(
+                  storefronts.isEmpty
+                      ? 'Create storefront'
+                      : 'Add another storefront',
+                ),
+              ),
+              menu: _StoreMenu(
+                storefront: storefronts.isEmpty ? null : storefronts.first,
+                onCreate: () => _openCreateStorefront(context),
+                onEdit: storefronts.isEmpty
+                    ? null
+                    : () => _openEditStorefront(context, storefronts.first),
+                onPreview: storefronts.isEmpty
+                    ? null
+                    : () => _openDetail(context, storefronts.first),
+                onDelete: storefronts.isEmpty
+                    ? null
+                    : () =>
+                          _confirmDeleteStorefront(context, storefronts.first),
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (storefronts.isEmpty)
+              V2OwnerEmptyState(
+                icon: Icons.storefront_outlined,
+                title: 'Create your first storefront',
+                body:
+                    'Tell shoppers what you offer and start building product interest.',
+                action: FilledButton.icon(
+                  onPressed: () => _openCreateStorefront(context),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Create storefront'),
+                ),
+              )
+            else ...[
+              _PortfolioSummary(
+                controller: controller,
+                storefronts: storefronts,
               ),
               const SizedBox(height: 16),
-              if (storefront == null)
-                const _EmptyPanel()
-              else ...[
-                _StoreProfilePanel(
-                  controller: controller,
-                  storefront: storefront,
-                  onEdit: () => _openEditStorefront(context, storefront),
-                ),
-                const SizedBox(height: 12),
-                _StatsPanel(controller: controller, storefront: storefront),
-                const SizedBox(height: 12),
-                Text(
-                  'Casual preview',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
+              const V2OwnerSectionHeader(
+                title: 'Storefronts',
+                subtitle:
+                    'Choose a storefront to manage details and preview it.',
+              ),
+              const SizedBox(height: 10),
+              ...storefronts.map(
+                (storefront) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _StorefrontManagementCard(
+                    controller: controller,
+                    storefront: storefront,
+                    onEdit: () => _openEditStorefront(context, storefront),
+                    onPreview: () => _openDetail(context, storefront),
+                    onDelete: () =>
+                        _confirmDeleteStorefront(context, storefront),
                   ),
                 ),
-                const SizedBox(height: 10),
-                V2StorefrontCard(
-                  storefront: storefront,
-                  distanceKm: controller.distanceFromCurrentKm(storefront),
-                  catalogCount: controller.catalogFor(storefront.id).length,
-                  subscriberCount: controller.subscriberCountFor(storefront.id),
-                  subscribed: controller.isSubscribed(storefront.id),
-                  owned: true,
-                  onOpen: () => _openDetail(context, storefront),
+              ),
+              const SizedBox(height: 4),
+              _SetupGuide(
+                storefront: storefronts.first,
+                controller: controller,
+              ),
+              const SizedBox(height: 16),
+              V2OwnerSectionHeader(
+                title: 'Public preview',
+                subtitle: 'How customers see this storefront.',
+                trailing: TextButton.icon(
+                  onPressed: () => _openDetail(context, storefronts.first),
+                  icon: const Icon(Icons.visibility_outlined, size: 18),
+                  label: const Text('Preview'),
                 ),
-              ],
+              ),
+              const SizedBox(height: 10),
+              V2StorefrontCard(
+                storefront: storefronts.first,
+                distanceKm: controller.distanceFromCurrentKm(storefronts.first),
+                catalogCount: controller
+                    .catalogFor(storefronts.first.id)
+                    .length,
+                subscriberCount: controller.subscriberCountFor(
+                  storefronts.first.id,
+                ),
+                subscribed: controller.isSubscribed(storefronts.first.id),
+                owned: false,
+                onOpen: () => _openDetail(context, storefronts.first),
+              ),
             ],
-          ),
+          ],
         );
       },
     );
@@ -156,175 +185,191 @@ class V2OwnerStoreScreen extends StatelessWidget {
       ),
     );
   }
+
+  Future<void> _confirmDeleteStorefront(
+    BuildContext context,
+    V2Storefront storefront,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete storefront?'),
+        content: Text(
+          'Delete ${storefront.name}, its products, subscriptions, and '
+          'discussion replies from local prototype state? This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFB42318),
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      controller.deleteStorefront(storefront.id);
+    }
+  }
 }
 
-class _StoreProfilePanel extends StatelessWidget {
+class _PortfolioSummary extends StatelessWidget {
+  final V2AppController controller;
+  final List<V2Storefront> storefronts;
+
+  const _PortfolioSummary({
+    required this.controller,
+    required this.storefronts,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final productCount = storefronts.fold<int>(
+      0,
+      (total, storefront) =>
+          total + controller.catalogFor(storefront.id).length,
+    );
+    final subscriberCount = storefronts.fold<int>(
+      0,
+      (total, storefront) =>
+          total + controller.subscriberCountFor(storefront.id),
+    );
+    final threadCount = storefronts.fold<int>(
+      0,
+      (total, storefront) =>
+          total + controller.threadsForStorefront(storefront.id).length,
+    );
+
+    return V2OwnerCard(
+      color: Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Business hub',
+            style: TextStyle(
+              color: v2OwnerInk,
+              fontWeight: FontWeight.w900,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Track what is live, what customers are asking about, and where to act next.',
+            style: TextStyle(
+              color: v2OwnerMuted,
+              fontWeight: FontWeight.w600,
+              height: 1.3,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              V2MetricChip(
+                icon: Icons.storefront_outlined,
+                label: 'storefronts',
+                value: '${storefronts.length}',
+              ),
+              V2MetricChip(
+                icon: Icons.inventory_2_outlined,
+                label: 'listings',
+                value: '$productCount',
+              ),
+              V2MetricChip(
+                icon: Icons.people_alt_outlined,
+                label: 'subscribers',
+                value: '$subscriberCount',
+              ),
+              V2MetricChip(
+                icon: Icons.forum_outlined,
+                label: 'threads',
+                value: '$threadCount',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StorefrontManagementCard extends StatelessWidget {
   final V2AppController controller;
   final V2Storefront storefront;
   final VoidCallback onEdit;
+  final VoidCallback onPreview;
+  final VoidCallback onDelete;
 
-  const _StoreProfilePanel({
+  const _StorefrontManagementCard({
     required this.controller,
     required this.storefront,
     required this.onEdit,
+    required this.onPreview,
+    required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 26,
-                  backgroundColor: const Color(0xFFFFF7ED),
-                  child: const Icon(Icons.storefront, color: Color(0xFF9A3412)),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        storefront.name,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      Text(
-                        '${storefront.category} · ${storefront.pickupArea}',
-                        style: const TextStyle(
-                          color: Color(0xFF647067),
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton.filledTonal(
-                  tooltip: 'Edit storefront',
-                  onPressed: onEdit,
-                  icon: const Icon(Icons.edit_outlined),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              storefront.description,
-              style: const TextStyle(
-                color: Color(0xFF39433E),
-                height: 1.35,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
+    final liveProducts = controller.productsFor(
+      storefront.id,
+      status: V2ProductStatus.live,
     );
-  }
-}
-
-class _StatsPanel extends StatelessWidget {
-  final V2AppController controller;
-  final V2Storefront storefront;
-
-  const _StatsPanel({required this.controller, required this.storefront});
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            _StatTile(
-              icon: Icons.restaurant_menu_outlined,
-              label: 'Products',
-              value:
-                  '${controller.productsFor(storefront.id, status: V2ProductStatus.live).length}',
-            ),
-            _StatTile(
-              icon: Icons.event_outlined,
-              label: 'Upcoming',
-              value:
-                  '${controller.productsFor(storefront.id, status: V2ProductStatus.upcoming).length}',
-            ),
-            _StatTile(
-              icon: Icons.people_alt_outlined,
-              label: 'Subscribers',
-              value: '${controller.subscriberCountFor(storefront.id)}',
-            ),
-            _StatTile(
-              icon: Icons.forum_outlined,
-              label: 'Threads',
-              value: '${controller.threadsForStorefront(storefront.id).length}',
-            ),
-          ],
-        ),
-      ),
+    final upcomingProducts = controller.productsFor(
+      storefront.id,
+      status: V2ProductStatus.upcoming,
     );
-  }
-}
+    final threads = controller.threadsForStorefront(storefront.id);
 
-class _StatTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-
-  const _StatTile({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 148,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF6F7F4),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFE2E8E2)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
+    return V2OwnerCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: const Color(0xFF176B87), size: 20),
-              const SizedBox(width: 9),
+              V2StorefrontAvatar(storefront: storefront, size: 64),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      value,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 18,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            storefront.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  color: v2OwnerInk,
+                                  fontWeight: FontWeight.w900,
+                                  height: 1.05,
+                                ),
+                          ),
+                        ),
+                        const V2StatusChip(
+                          label: 'Taking orders',
+                          icon: Icons.check_circle_outline,
+                          color: Color(0xFFECFDF5),
+                          textColor: Color(0xFF047857),
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 5),
                     Text(
-                      label,
-                      overflow: TextOverflow.ellipsis,
+                      '${storefront.category} · ${storefront.pickupArea}',
                       style: const TextStyle(
-                        color: Color(0xFF647067),
+                        color: v2OwnerMuted,
                         fontWeight: FontWeight.w700,
-                        fontSize: 12,
                       ),
                     ),
                   ],
@@ -332,38 +377,227 @@ class _StatTile extends StatelessWidget {
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 12),
+          Text(
+            storefront.description,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xFF39433E),
+              height: 1.35,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              V2MetricChip(
+                icon: Icons.inventory_2_outlined,
+                label: 'live',
+                value: '${liveProducts.length}',
+              ),
+              V2MetricChip(
+                icon: Icons.lightbulb_outline,
+                label: 'testing',
+                value: '${upcomingProducts.length}',
+              ),
+              V2MetricChip(
+                icon: Icons.people_alt_outlined,
+                label: 'subscribers',
+                value: '${controller.subscriberCountFor(storefront.id)}',
+              ),
+              V2MetricChip(
+                icon: Icons.chat_bubble_outline,
+                label: 'threads',
+                value: '${threads.length}',
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FilledButton.icon(
+                onPressed: onEdit,
+                icon: const Icon(Icons.tune_outlined, size: 18),
+                label: const Text('Manage'),
+              ),
+              OutlinedButton.icon(
+                onPressed: onPreview,
+                icon: const Icon(Icons.visibility_outlined, size: 18),
+                label: const Text('Preview'),
+              ),
+              IconButton(
+                tooltip: 'Delete storefront',
+                onPressed: onDelete,
+                icon: const Icon(Icons.delete_outline),
+                color: const Color(0xFFB42318),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
 
-class _EmptyPanel extends StatelessWidget {
-  const _EmptyPanel();
+class _SetupGuide extends StatelessWidget {
+  final V2Storefront storefront;
+  final V2AppController controller;
+
+  const _SetupGuide({required this.storefront, required this.controller});
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: const Padding(
-        padding: EdgeInsets.all(18),
-        child: Column(
-          children: [
-            Icon(Icons.storefront_outlined, size: 34, color: Color(0xFF647067)),
-            SizedBox(height: 10),
-            Text(
-              'No owner storefront yet.',
-              style: TextStyle(
-                color: Color(0xFF39433E),
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ],
-        ),
+    final hasLiveProduct = controller
+        .productsFor(storefront.id, status: V2ProductStatus.live)
+        .isNotEmpty;
+    final hasTest = controller
+        .productsFor(storefront.id, status: V2ProductStatus.upcoming)
+        .isNotEmpty;
+    final hasThread = controller.threadsForStorefront(storefront.id).isNotEmpty;
+
+    return V2OwnerCard(
+      color: Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const V2OwnerSectionHeader(
+            title: 'Storefront setup',
+            subtitle: 'A simple guide for turning a page into a business hub.',
+          ),
+          const SizedBox(height: 12),
+          _ChecklistRow(
+            complete: storefront.description.trim().isNotEmpty,
+            label: 'Add profile details',
+          ),
+          _ChecklistRow(
+            complete: hasLiveProduct,
+            label: 'Add first live product or service',
+          ),
+          const _ChecklistRow(
+            complete: false,
+            label: 'Set pickup, delivery, or fulfillment details',
+          ),
+          _ChecklistRow(
+            complete: hasTest,
+            label: 'Test demand before committing supply',
+          ),
+          _ChecklistRow(complete: hasThread, label: 'Post a customer update'),
+          const _ChecklistRow(
+            complete: false,
+            label: 'Share storefront with customers',
+          ),
+        ],
       ),
     );
   }
 }
+
+class _ChecklistRow extends StatelessWidget {
+  final bool complete;
+  final String label;
+
+  const _ChecklistRow({required this.complete, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 9),
+      child: Row(
+        children: [
+          Icon(
+            complete ? Icons.check_circle : Icons.radio_button_unchecked,
+            color: complete ? const Color(0xFF047857) : v2OwnerMuted,
+            size: 19,
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: complete ? v2OwnerInk : v2OwnerMuted,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StoreMenu extends StatelessWidget {
+  final V2Storefront? storefront;
+  final VoidCallback onCreate;
+  final VoidCallback? onEdit;
+  final VoidCallback? onPreview;
+  final VoidCallback? onDelete;
+
+  const _StoreMenu({
+    required this.storefront,
+    required this.onCreate,
+    required this.onEdit,
+    required this.onPreview,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<_StoreAction>(
+      tooltip: 'Storefront actions',
+      icon: const Icon(Icons.more_vert),
+      onSelected: (action) {
+        switch (action) {
+          case _StoreAction.create:
+            onCreate();
+          case _StoreAction.edit:
+            onEdit?.call();
+          case _StoreAction.preview:
+            onPreview?.call();
+          case _StoreAction.delete:
+            onDelete?.call();
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: _StoreAction.create,
+          child: ListTile(
+            leading: const Icon(Icons.add_business_outlined),
+            title: Text(
+              storefront == null ? 'Create storefront' : 'Add storefront',
+            ),
+          ),
+        ),
+        if (storefront != null) ...[
+          const PopupMenuItem(
+            value: _StoreAction.edit,
+            child: ListTile(
+              leading: Icon(Icons.edit_outlined),
+              title: Text('Edit storefront'),
+            ),
+          ),
+          const PopupMenuItem(
+            value: _StoreAction.preview,
+            child: ListTile(
+              leading: Icon(Icons.visibility_outlined),
+              title: Text('Public preview'),
+            ),
+          ),
+          const PopupMenuItem(
+            value: _StoreAction.delete,
+            child: ListTile(
+              leading: Icon(Icons.delete_outline, color: Color(0xFFB42318)),
+              title: Text('Delete storefront'),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+enum _StoreAction { create, edit, preview, delete }

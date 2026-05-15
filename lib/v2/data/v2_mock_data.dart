@@ -210,26 +210,26 @@ List<V2Subscription> buildV2MockSubscriptions() {
 }
 
 List<V2DiscussionThread> buildV2MockThreads() {
-  return const [
-    V2DiscussionThread(
+  return [
+    const V2DiscussionThread(
       id: 'thread-mika-orders',
       storefrontId: 'sf-mika-bakes',
       title: 'Friday cake orders',
       relatedLabel: 'Pandan chiffon cake',
     ),
-    V2DiscussionThread(
+    const V2DiscussionThread(
       id: 'thread-nora-sweetness',
       storefrontId: 'sf-nora-kitchen',
       title: 'Less sweet options',
       relatedLabel: 'Assorted kueh box',
     ),
-    V2DiscussionThread(
+    const V2DiscussionThread(
       id: 'thread-loaf-friday',
       storefrontId: 'sf-loaf-lab',
       title: 'Friday focaccia demand',
       relatedLabel: 'Rosemary focaccia slab',
     ),
-    V2DiscussionThread(
+    const V2DiscussionThread(
       id: 'thread-cream-weekend',
       storefrontId: 'sf-cream-corner',
       title: 'Weekend puff drop',

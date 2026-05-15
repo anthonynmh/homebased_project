@@ -209,16 +209,17 @@ class _V2CatalogItemFormSheetState extends State<V2CatalogItemFormSheet> {
   void initState() {
     super.initState();
     final item = widget.item;
-    _nameController = TextEditingController(
-      text: item?.name ?? 'New food item',
-    );
+    _nameController = TextEditingController(text: item?.name ?? 'New product');
     _descriptionController = TextEditingController(
-      text: item?.description ?? 'A simple food item for the catalog.',
+      text:
+          item?.description ?? 'A simple product listing for your storefront.',
     );
     _priceController = TextEditingController(
       text: item == null ? '12.00' : item.price.toStringAsFixed(2),
     );
-    _categoryController = TextEditingController(text: item?.category ?? 'Food');
+    _categoryController = TextEditingController(
+      text: item?.category ?? 'Product',
+    );
     _imageUrlController = TextEditingController(text: item?.imageUrl ?? '');
     _status = item?.status ?? widget.initialStatus;
   }
@@ -346,7 +347,7 @@ class _V2CatalogItemFormSheetState extends State<V2CatalogItemFormSheet> {
               child: FilledButton.icon(
                 onPressed: _submit,
                 icon: const Icon(Icons.restaurant_menu_outlined),
-                label: const Text('Save product'),
+                label: const Text('Save listing'),
               ),
             ),
           ],

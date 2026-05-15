@@ -30,7 +30,7 @@ Casual users see:
 
 Storefront owners see:
 
-- `My Store`
+- `My Stores`
 - `Products`
 - `Community`
 - `Account`
