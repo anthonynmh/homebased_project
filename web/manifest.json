@@ -1,11 +1,11 @@
 {
-    "name": "homebased_project",
-    "short_name": "homebased_project",
+    "name": "Communitii",
+    "short_name": "Communitii",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Storefront discovery and social commerce for home-based businesses.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

@@ -11,7 +11,7 @@ class V2App extends StatelessWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Food n Friends V2',
+      title: 'Communitii V2',
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(

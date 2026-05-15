@@ -20,7 +20,7 @@ class AuthHeader extends StatelessWidget {
           Icon(Icons.local_cafe, size: 56, color: Color(0xFFFFB885)),
           SizedBox(height: 12),
           Text(
-            "Food 'n Friends",
+            "Communitii",
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,

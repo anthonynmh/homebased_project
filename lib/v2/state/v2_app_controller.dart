@@ -10,7 +10,7 @@ import 'package:homebased_project/v2/models/v2_marketplace.dart';
 import 'package:homebased_project/v2/utils/v2_geo.dart';
 
 class V2AppController extends ChangeNotifier {
-  static const _storageKey = 'homebased_project.v2.prototype_state';
+  static const _storageKey = 'communitii.v2.prototype_state';
 
   final Map<String, String> _userNamesById = buildV2MockUserNames();
   List<V2Storefront> _storefronts = buildV2MockStorefronts();

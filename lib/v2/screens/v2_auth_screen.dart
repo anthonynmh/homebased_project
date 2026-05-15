@@ -64,7 +64,7 @@ class _V2AuthScreenState extends State<V2AuthScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "Food 'n Friends",
+                                  'Communitii',
                                   style: Theme.of(context)
                                       .textTheme
                                       .headlineSmall
