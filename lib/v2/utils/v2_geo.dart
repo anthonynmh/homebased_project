@@ -1,12 +1,12 @@
 import 'dart:math' as math;
 
-import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:homebased_project/v2/models/v2_marketplace.dart';
 
 class V2Geo {
-  static const LatLng singaporeCenter = LatLng(1.3009, 103.8389);
+  static const V2GeoPoint singaporeCenter = V2GeoPoint(1.3009, 103.8389);
   static const double radiusKm = 2.0;
 
-  static double distanceKm(LatLng a, LatLng b) {
+  static double distanceKm(V2GeoPoint a, V2GeoPoint b) {
     const earthRadiusKm = 6371.0;
     final dLat = _degreesToRadians(b.latitude - a.latitude);
     final dLon = _degreesToRadians(b.longitude - a.longitude);
@@ -23,7 +23,7 @@ class V2Geo {
     return 2 * earthRadiusKm * math.asin(math.sqrt(h));
   }
 
-  static LatLng offsetFromCenter({
+  static V2GeoPoint offsetFromCenter({
     required double northMeters,
     required double eastMeters,
   }) {
@@ -32,18 +32,18 @@ class V2Geo {
         eastMeters /
         (111320.0 * math.cos(_degreesToRadians(singaporeCenter.latitude)));
 
-    return LatLng(
+    return V2GeoPoint(
       singaporeCenter.latitude + latOffset,
       singaporeCenter.longitude + lonOffset,
     );
   }
 
-  static List<LatLng> circlePolygon(
-    LatLng center,
+  static List<V2GeoPoint> circlePolygon(
+    V2GeoPoint center,
     double radiusKm, {
     int points = 96,
   }) {
-    final coordinates = <LatLng>[];
+    final coordinates = <V2GeoPoint>[];
     final distanceRatio = radiusKm / 6371.0;
     final centerLat = _degreesToRadians(center.latitude);
     final centerLon = _degreesToRadians(center.longitude);
@@ -61,7 +61,9 @@ class V2Geo {
             math.cos(distanceRatio) - math.sin(centerLat) * math.sin(lat),
           );
 
-      coordinates.add(LatLng(_radiansToDegrees(lat), _radiansToDegrees(lon)));
+      coordinates.add(
+        V2GeoPoint(_radiansToDegrees(lat), _radiansToDegrees(lon)),
+      );
     }
 
     return coordinates;

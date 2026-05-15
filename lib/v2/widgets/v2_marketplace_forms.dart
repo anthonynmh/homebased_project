@@ -6,6 +6,7 @@ typedef V2StorefrontFormSubmit =
     void Function({
       required String name,
       required String description,
+      required String category,
       required String pickupArea,
     });
 
@@ -14,7 +15,9 @@ typedef V2CatalogItemFormSubmit =
       required String name,
       required String description,
       required double price,
-      required String availability,
+      required String category,
+      required String status,
+      required String imageUrl,
     });
 
 class V2StorefrontFormSheet extends StatefulWidget {
@@ -36,6 +39,7 @@ class V2StorefrontFormSheet extends StatefulWidget {
 class _V2StorefrontFormSheetState extends State<V2StorefrontFormSheet> {
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
+  late final TextEditingController _categoryController;
   late final TextEditingController _pickupAreaController;
 
   @override
@@ -50,6 +54,9 @@ class _V2StorefrontFormSheetState extends State<V2StorefrontFormSheet> {
           storefront?.description ??
           'Small-batch food prepared for nearby pickups.',
     );
+    _categoryController = TextEditingController(
+      text: storefront?.category ?? 'Bakery',
+    );
     _pickupAreaController = TextEditingController(
       text: storefront?.pickupArea ?? 'Near you',
     );
@@ -59,6 +66,7 @@ class _V2StorefrontFormSheetState extends State<V2StorefrontFormSheet> {
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
+    _categoryController.dispose();
     _pickupAreaController.dispose();
     super.dispose();
   }
@@ -103,12 +111,28 @@ class _V2StorefrontFormSheetState extends State<V2StorefrontFormSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            TextField(
-              controller: _pickupAreaController,
-              decoration: const InputDecoration(
-                labelText: 'Pickup area',
-                border: OutlineInputBorder(),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _categoryController,
+                    decoration: const InputDecoration(
+                      labelText: 'Category',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: _pickupAreaController,
+                    decoration: const InputDecoration(
+                      labelText: 'Location',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             TextField(
@@ -136,9 +160,11 @@ class _V2StorefrontFormSheetState extends State<V2StorefrontFormSheet> {
   }
 
   void _submit() {
-    if (_nameController.text.trim().isEmpty) {
+    if (_nameController.text.trim().isEmpty ||
+        _categoryController.text.trim().isEmpty ||
+        _pickupAreaController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Add a storefront name first.')),
+        const SnackBar(content: Text('Add name, category, and location.')),
       );
       return;
     }
@@ -146,6 +172,7 @@ class _V2StorefrontFormSheetState extends State<V2StorefrontFormSheet> {
     widget.onSubmit(
       name: _nameController.text,
       description: _descriptionController.text,
+      category: _categoryController.text,
       pickupArea: _pickupAreaController.text,
     );
     Navigator.of(context).pop();
@@ -155,12 +182,14 @@ class _V2StorefrontFormSheetState extends State<V2StorefrontFormSheet> {
 class V2CatalogItemFormSheet extends StatefulWidget {
   final String title;
   final V2CatalogItem? item;
+  final String initialStatus;
   final V2CatalogItemFormSubmit onSubmit;
 
   const V2CatalogItemFormSheet({
     super.key,
     required this.title,
     this.item,
+    this.initialStatus = V2ProductStatus.live,
     required this.onSubmit,
   });
 
@@ -172,22 +201,27 @@ class _V2CatalogItemFormSheetState extends State<V2CatalogItemFormSheet> {
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
   late final TextEditingController _priceController;
-  late String _availability;
+  late final TextEditingController _categoryController;
+  late final TextEditingController _imageUrlController;
+  late String _status;
 
   @override
   void initState() {
     super.initState();
     final item = widget.item;
-    _nameController = TextEditingController(
-      text: item?.name ?? 'New food item',
-    );
+    _nameController = TextEditingController(text: item?.name ?? 'New product');
     _descriptionController = TextEditingController(
-      text: item?.description ?? 'A simple food item for the catalog.',
+      text:
+          item?.description ?? 'A simple product listing for your storefront.',
     );
     _priceController = TextEditingController(
       text: item == null ? '12.00' : item.price.toStringAsFixed(2),
     );
-    _availability = item?.availability ?? V2Availability.available;
+    _categoryController = TextEditingController(
+      text: item?.category ?? 'Product',
+    );
+    _imageUrlController = TextEditingController(text: item?.imageUrl ?? '');
+    _status = item?.status ?? widget.initialStatus;
   }
 
   @override
@@ -195,6 +229,8 @@ class _V2CatalogItemFormSheetState extends State<V2CatalogItemFormSheet> {
     _nameController.dispose();
     _descriptionController.dispose();
     _priceController.dispose();
+    _categoryController.dispose();
+    _imageUrlController.dispose();
     super.dispose();
   }
 
@@ -233,7 +269,7 @@ class _V2CatalogItemFormSheetState extends State<V2CatalogItemFormSheet> {
             TextField(
               controller: _nameController,
               decoration: const InputDecoration(
-                labelText: 'Food item name',
+                labelText: 'Product title',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -265,27 +301,45 @@ class _V2CatalogItemFormSheetState extends State<V2CatalogItemFormSheet> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _availability,
+                  child: TextField(
+                    controller: _categoryController,
                     decoration: const InputDecoration(
-                      labelText: 'Availability',
+                      labelText: 'Category',
                       border: OutlineInputBorder(),
                     ),
-                    items: V2Availability.values
-                        .map(
-                          (value) => DropdownMenuItem(
-                            value: value,
-                            child: Text(V2Availability.label(value)),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      if (value == null) return;
-                      setState(() => _availability = value);
-                    },
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _imageUrlController,
+              decoration: const InputDecoration(
+                labelText: 'Image URL',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(
+                    value: V2ProductStatus.live,
+                    icon: Icon(Icons.check_circle_outline),
+                    label: Text('Live'),
+                  ),
+                  ButtonSegment(
+                    value: V2ProductStatus.upcoming,
+                    icon: Icon(Icons.event_outlined),
+                    label: Text('Upcoming'),
+                  ),
+                ],
+                selected: {_status},
+                onSelectionChanged: (selection) {
+                  setState(() => _status = selection.first);
+                },
+              ),
             ),
             const SizedBox(height: 18),
             SizedBox(
@@ -293,7 +347,7 @@ class _V2CatalogItemFormSheetState extends State<V2CatalogItemFormSheet> {
               child: FilledButton.icon(
                 onPressed: _submit,
                 icon: const Icon(Icons.restaurant_menu_outlined),
-                label: const Text('Save food item'),
+                label: const Text('Save listing'),
               ),
             ),
           ],
@@ -304,9 +358,14 @@ class _V2CatalogItemFormSheetState extends State<V2CatalogItemFormSheet> {
 
   void _submit() {
     final price = double.tryParse(_priceController.text.trim());
-    if (_nameController.text.trim().isEmpty || price == null) {
+    if (_nameController.text.trim().isEmpty ||
+        _descriptionController.text.trim().isEmpty ||
+        _categoryController.text.trim().isEmpty ||
+        price == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Add a name and valid price first.')),
+        const SnackBar(
+          content: Text('Add title, description, category, and valid price.'),
+        ),
       );
       return;
     }
@@ -315,7 +374,9 @@ class _V2CatalogItemFormSheetState extends State<V2CatalogItemFormSheet> {
       name: _nameController.text,
       description: _descriptionController.text,
       price: price,
-      availability: _availability,
+      category: _categoryController.text,
+      status: _status,
+      imageUrl: _imageUrlController.text,
     );
     Navigator.of(context).pop();
   }

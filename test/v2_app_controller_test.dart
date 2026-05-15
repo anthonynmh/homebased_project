@@ -1,19 +1,49 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:homebased_project/v2/models/v2_marketplace.dart';
 import 'package:homebased_project/v2/state/v2_app_controller.dart';
+import 'package:homebased_project/v2/utils/v2_geo.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('V2AppController storefront prototype', () {
-    test('simulates auth and filters nearby storefronts to the 2km radius', () {
-      final controller = V2AppController();
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+    });
+
+    test('simulates auth and account type selection', () {
+      final controller = V2AppController(loadPersistedState: false);
 
       expect(controller.isLoggedIn, isFalse);
 
-      controller.simulateLogin(displayName: 'Alex');
+      controller.simulateLogin(
+        displayName: 'Alex',
+        email: 'alex@example.test',
+        userType: V2UserType.owner,
+      );
 
       expect(controller.isLoggedIn, isTrue);
       expect(controller.currentUser?.displayName, 'Alex');
+      expect(controller.currentUser?.email, 'alex@example.test');
+      expect(controller.userType, V2UserType.owner);
+      expect(controller.ownerStorefront?.name, 'Loaf Lab');
+    });
+
+    test('switches modes and filters nearby storefronts to radius', () {
+      final controller = V2AppController(loadPersistedState: false)
+        ..simulateLogin(displayName: 'Alex');
+
+      expect(controller.currentLocation, isA<V2GeoPoint>());
+      expect(
+        V2Geo.distanceKm(
+          const V2GeoPoint(1.3009, 103.8389),
+          const V2GeoPoint(1.3009, 103.8389),
+        ),
+        0,
+      );
+      expect(controller.userType, V2UserType.casual);
       expect(
         controller.nearbyStorefronts.length,
         lessThan(controller.allStorefronts.length),
@@ -26,16 +56,22 @@ void main() {
         ),
         isTrue,
       );
+
+      controller.setUserType(V2UserType.owner);
+
+      expect(controller.userType, V2UserType.owner);
     });
 
-    test('subscribes, comments, and unsubscribes using frontend state', () {
-      final controller = V2AppController()..simulateLogin(displayName: 'Alex');
+    test('subscribes, replies to discussions, and unsubscribes', () {
+      final controller = V2AppController(loadPersistedState: false)
+        ..simulateLogin(displayName: 'Alex');
       const storefrontId = 'sf-mika-bakes';
+      final thread = controller.threadsForStorefront(storefrontId).first;
 
       expect(controller.isSubscribed(storefrontId), isFalse);
       expect(
-        controller.postComment(
-          storefrontId: storefrontId,
+        controller.postThreadReply(
+          threadId: thread.id,
           body: 'Interested in the next batch.',
         ),
         isFalse,
@@ -45,14 +81,14 @@ void main() {
 
       expect(controller.isSubscribed(storefrontId), isTrue);
       expect(
-        controller.postComment(
-          storefrontId: storefrontId,
+        controller.postThreadReply(
+          threadId: thread.id,
           body: 'Interested in the next batch.',
         ),
         isTrue,
       );
       expect(
-        controller.commentsFor(storefrontId).last.body,
+        controller.commentsForThread(thread.id).last.body,
         'Interested in the next batch.',
       );
 
@@ -61,36 +97,114 @@ void main() {
       expect(controller.isSubscribed(storefrontId), isFalse);
     });
 
-    test('owner creates a storefront and manages catalog items', () {
-      final controller = V2AppController()
+    test('owner creates, edits, and deletes live and upcoming products', () {
+      final controller = V2AppController(loadPersistedState: false)
         ..simulateSignup(displayName: 'Owner', userType: V2UserType.owner);
+      final storefront = controller.ownerStorefront!;
 
-      final beforeOwned = controller.ownedStorefronts.length;
-
-      controller.createStorefront(
-        name: 'Owner Snacks',
-        description: 'Simple snacks for nearby pickup.',
-        pickupArea: 'Orchard',
+      controller.addCatalogItem(
+        storefrontId: storefront.id,
+        name: 'Fresh tart',
+        description: 'Lemon tart for pickup.',
+        price: 9,
+        category: 'Tarts',
+        status: V2ProductStatus.live,
+        imageUrl: 'https://example.test/tart.jpg',
       );
-
-      final storefront = controller.ownedStorefronts.first;
-      expect(controller.ownedStorefronts.length, beforeOwned + 1);
-      expect(storefront.name, 'Owner Snacks');
-      expect(controller.catalogFor(storefront.id), isNotEmpty);
-
-      final item = controller.catalogFor(storefront.id).first;
-      controller.updateCatalogItem(
-        itemId: item.id,
-        name: 'Edited snack box',
-        description: 'Updated catalog item.',
-        price: 15,
-        availability: V2Availability.available,
+      controller.addCatalogItem(
+        storefrontId: storefront.id,
+        name: 'Weekend bun',
+        description: 'A Saturday-only bun.',
+        price: 7,
+        category: 'Bread',
+        status: V2ProductStatus.upcoming,
       );
 
       expect(
-        controller.catalogFor(storefront.id).first.name,
-        'Edited snack box',
+        controller.productsFor(storefront.id, status: V2ProductStatus.live),
+        isNotEmpty,
       );
+      expect(
+        controller.productsFor(storefront.id, status: V2ProductStatus.upcoming),
+        isNotEmpty,
+      );
+
+      final item = controller.catalogFor(storefront.id).last;
+      controller.updateCatalogItem(
+        itemId: item.id,
+        name: 'Edited weekend bun',
+        description: 'Updated catalog item.',
+        price: 8,
+        category: 'Buns',
+        status: V2ProductStatus.live,
+      );
+
+      expect(controller.catalogItemById(item.id)?.name, 'Edited weekend bun');
+      expect(controller.catalogItemById(item.id)?.status, V2ProductStatus.live);
+
+      controller.deleteCatalogItem(item.id);
+
+      expect(controller.catalogItemById(item.id), isNull);
+    });
+
+    test('owner creates and deletes a storefront with related local state', () {
+      final controller = V2AppController(loadPersistedState: false)
+        ..simulateSignup(displayName: 'Owner', userType: V2UserType.owner);
+
+      controller.createStorefront(
+        name: 'Owner Snacks',
+        description: 'Simple snacks for pickup.',
+        category: 'Snacks',
+        pickupArea: 'Bugis',
+      );
+
+      final storefront = controller.ownerStorefront!;
+      expect(storefront.name, 'Owner Snacks');
+      expect(controller.catalogFor(storefront.id), isNotEmpty);
+      expect(controller.threadsForStorefront(storefront.id), isNotEmpty);
+
+      controller.deleteStorefront(storefront.id);
+
+      expect(controller.storefrontById(storefront.id), isNull);
+      expect(controller.catalogFor(storefront.id), isEmpty);
+      expect(controller.threadsForStorefront(storefront.id), isEmpty);
+    });
+
+    test('marks notifications as read', () {
+      final controller = V2AppController(loadPersistedState: false)
+        ..simulateLogin(displayName: 'Alex');
+
+      expect(controller.unreadNotificationCount, greaterThan(0));
+
+      controller.markAllNotificationsRead();
+
+      expect(controller.unreadNotificationCount, 0);
+      expect(controller.notifications.every((item) => item.read), isTrue);
+    });
+
+    test('restores useful prototype state from shared preferences', () async {
+      final controller = V2AppController(loadPersistedState: false)
+        ..simulateLogin(displayName: 'Alex')
+        ..subscribe('sf-mika-bakes')
+        ..markAllNotificationsRead();
+
+      await Future<void>.delayed(Duration.zero);
+
+      final restored = V2AppController(loadPersistedState: false);
+      await restored.loadPersistedStateFromDisk();
+
+      expect(restored.isLoggedIn, isTrue);
+      expect(restored.currentUser?.displayName, 'Alex');
+      expect(restored.isSubscribed('sf-mika-bakes'), isTrue);
+      expect(restored.unreadNotificationCount, 0);
+
+      await controller.deleteMockAccount();
+      await Future<void>.delayed(Duration.zero);
+
+      final cleared = V2AppController(loadPersistedState: false);
+      await cleared.loadPersistedStateFromDisk();
+
+      expect(cleared.isLoggedIn, isFalse);
     });
   });
 }

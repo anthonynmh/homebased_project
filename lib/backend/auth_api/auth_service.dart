@@ -51,7 +51,7 @@ class AuthService {
   Future<bool> signInWithGoogle() async {
     return await supabase.auth.signInWithOAuth(
       OAuthProvider.google,
-      redirectTo: 'https://foodnfriends.app/',
+      redirectTo: 'https://communitii.app/',
       // redirectTo: 'http://localhost:8000/', // for local testing
       authScreenLaunchMode: kIsWeb
           ? LaunchMode.platformDefault
@@ -63,7 +63,7 @@ class AuthService {
   Future<void> sendPasswordResetEmail({required String email}) async {
     await _supabase.auth.resetPasswordForEmail(
       email,
-      redirectTo: 'https://foodnfriends.app/',
+      redirectTo: 'https://communitii.app/',
       // redirectTo: 'http://localhost:8000/', // for local testing
     );
   }
